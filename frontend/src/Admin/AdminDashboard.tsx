@@ -9,6 +9,7 @@ import GalleryManager from './components/GalleryManager';
 import VolunteerSubmissionsView from './components/VolunteerSubmissionsView';
 import ContactMessagesView from './components/ContactMessagesView';
 import StoriesManager from './components/stories';
+import ThemeToggle from './ThemeToggle'; 
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
@@ -21,6 +22,14 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
+       <div className="flex-1 flex flex-col">
+        {/* ✅ Moved Header here */}
+        <header className="flex items-center justify-end px-6 py-4 theme-surface theme-border border-b theme-fade">
+  <div>
+    <ThemeToggle />
+  </div>
+</header>
+
       <main className="flex-1 p-8 overflow-y-auto">
         {activeView === 'dashboard' && <DashboardView />}
         {activeView === 'clients' && <ClientManager />}
@@ -30,6 +39,7 @@ const AdminDashboard = () => {
         {activeView === 'volunteers' && <VolunteerSubmissionsView />}
         {activeView === 'contact' && <ContactMessagesView />}
       </main>
+    </div>
     </div>
   );
 };

@@ -14,7 +14,7 @@ export interface IClient {
 const ClientSchema = new Schema<IClient>(
   {
     status: { type: String, enum: ["Recovered", "Under Recovery", "New"], required: true },
-    id: { type: String, required: true },
+    id: { type: String, required: true, unique: true },
     address: { type: String, required: true },
     name: { type: String, required: true },
     contact: { type: String, required: true },

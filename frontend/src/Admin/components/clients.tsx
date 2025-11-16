@@ -324,9 +324,126 @@ const kpiThemes = {
   yellow: "bg-[#FFF3BF] text-[#7B5E00] dark:bg-[#78350F]/40 dark:text-[#FCD34D]",
 };
 
+function EditClientForm({
+  client,
+  onClose,
+  onSave,
+}: {
+  client: Client;
+  onClose: () => void;
+  onSave: (updated: Client) => void;
+}) {
+  const [form, setForm] = useState<Client>(client);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // Validate fields like in AddClientForm
+    try {
+      const res = await fetch(`/api/clients/${client.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("Failed to update client");
+      const updated = await res.json();
+      onSave(updated.data || form);
+      onClose();
+    } catch (err) {
+      console.error("Edit failed", err);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+  {/* Name */}
+  <Label>Name</Label>
+  <Input
+    value={form.name}
+    onChange={(e) => setForm({ ...form, name: e.target.value })}
+    placeholder="Enter full name"
+  />
+
+  {/* Contact */}
+  <Label>Contact</Label>
+  <Input
+    value={form.contact}
+    onChange={(e) => setForm({ ...form, contact: e.target.value })}
+    placeholder="+91-XXXXXXXXXX"
+  />
+
+  {/* Address */}
+  <Label>Address</Label>
+  <Input
+    value={form.address}
+    onChange={(e) => setForm({ ...form, address: e.target.value })}
+    placeholder="Enter full address"
+  />
+
+  {/* Join Date */}
+  <Label>Join Date</Label>
+  <Input
+    type="date"
+    value={form.joinDate}
+    onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
+  />
+
+  {/* Status */}
+  <Label>Status</Label>
+  <Select
+    value={form.status}
+    onValueChange={(value) => setForm({ ...form, status: value as Client["status"] })}
+  >
+    <SelectTrigger>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="New">New</SelectItem>
+      <SelectItem value="Under Recovery">Under Recovery</SelectItem>
+      <SelectItem value="Recovered">Recovered</SelectItem>
+    </SelectContent>
+  </Select>
+
+  {/* Program */}
+  <Label>Program</Label>
+  <Select
+    value={form.program}
+    onValueChange={(value) => setForm({ ...form, program: value as Client["program"] })}
+  >
+    <SelectTrigger>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="Program A">Program A</SelectItem>
+      <SelectItem value="Program B">Program B</SelectItem>
+      <SelectItem value="Program C">Program C</SelectItem>
+    </SelectContent>
+  </Select>
+
+  {/* Notes */}
+  <Label>Client's Condition / Problem</Label>
+  <Input
+    value={form.notes}
+    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+    placeholder="Describe condition or issue"
+  />
+
+  {/* Footer */}
+  <DialogFooter>
+    <Button type="button" onClick={onClose}>Cancel</Button>
+    <Button type="submit">Save</Button>
+  </DialogFooter>
+</form>
+  );
+}
+
+
 export default function ClientsDashboard() {
   const [clients, setClients] = useState<Client[]>([]);
   const { toast } = useToast?.() || { toast: (x: any) => console.log(x) };
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+
 
   // Fetch clients and unwrap 'data' from backend response
   useEffect(() => {
@@ -763,6 +880,8 @@ const programs = ["Program A", "Program B", "Program C"] as const;
                 data={filtered}
                 setSelectedClient={setSelectedClient}
                 setViewOpen={setViewOpen}
+                setEditingClient={setEditingClient}
+                setEditOpen={setEditOpen}
               />
             </CardContent>
           </Card>
@@ -843,6 +962,26 @@ const programs = ["Program A", "Program B", "Program C"] as const;
             )}
           </DialogContent>
         </Dialog>
+          
+          {/* Edit Client Modal */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Edit Client</DialogTitle>
+    </DialogHeader>
+    {editingClient && (
+      <EditClientForm
+        client={editingClient}
+        onClose={() => setEditOpen(false)}
+        onSave={(updatedClient) => {
+          setClients((prev) =>
+            prev.map((c) => (c.id === updatedClient.id ? updatedClient : c))
+          );
+        }}
+      />
+    )}
+  </DialogContent>
+</Dialog>
       </div>
     </TooltipProvider>
   );
@@ -987,6 +1126,8 @@ function PaginatedTable({
   data,
   setSelectedClient,
   setViewOpen,
+  setEditingClient,
+  setEditOpen,
 }: {
   data: Client[];
   setSelectedClient: (client: Client) => void;
@@ -1046,7 +1187,12 @@ function PaginatedTable({
                   >
                     View
                   </Button>
-                  <Button size="sm" variant="secondary">
+                  <Button size="sm" variant="secondary"
+                  onClick={() => {
+                  setEditingClient(client); // pass the row’s client object
+                  setEditOpen(true);
+                }}
+      >
                     Edit
                   </Button>
                 </TableCell>
