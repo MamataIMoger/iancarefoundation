@@ -31,7 +31,7 @@ router.post(
   "/",
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await dbConnect()
-    const { name, imageUrl } = req.body
+    const { name, imageUrl } = req.body;
 
     if (!name || !imageUrl) {
       res.status(400).json({ error: "Missing name or imageUrl" })

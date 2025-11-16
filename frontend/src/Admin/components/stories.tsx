@@ -25,28 +25,38 @@ type ModalState =
 export default function AdminStoriesManager() {
   const [stories, setStories] = useState<Story[]>([]);
   const [isAdmin, setIsAdmin] = useState(true);
-  const [viewMode, setViewMode] = useState<"approved" | "pending" | "rejected">("approved");
+  const [viewMode, setViewMode] = useState<"approved" | "pending" | "rejected" | "all">("pending");
   const [activeModal, setActiveModal] = useState<ModalState>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const storiesPerPage = 6;
 
   useEffect(() => {
-    setLoading(true);
-    fetch("/api/stories?admin=true")
-      .then((res) => res.json())
-      .then((data) => {
-        setStories(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  setLoading(true);
+  fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`)
+    .then((res) => res.json())
+    .then((data) => {
+      const normalized = data.map((s: any) => ({
+        ...s,
+        status: s.approved ? "approved" : "pending", // ✅ map approved flag
+      }));
+      setStories(normalized);
+      setLoading(false);
+    })
+    .catch(() => setLoading(false));
+}, []);
+
 
   // ✅ Normalize status values to lowercase
   const filteredStories = stories.filter((s) => {
-    const status = (s.status || "").toLowerCase();
-    return isAdmin ? status === viewMode : status === "approved";
-  });
+  const status = (s.status || "").toLowerCase();
+  if (!isAdmin) return status === "approved";
+  if (viewMode === "approved") return status === "approved";
+  if (viewMode === "pending") return status === "pending";
+  if (viewMode === "rejected") return status === "rejected";
+  return true; // show all if no filter
+});
+
 
   const totalPages = Math.ceil(filteredStories.length / storiesPerPage);
   const currentStories = filteredStories.slice(
@@ -54,25 +64,56 @@ export default function AdminStoriesManager() {
     currentPage * storiesPerPage
   );
 
-  const updateStory = async (id: string, updatedFields: Partial<Story>) => {
+
+const updateStory = async (id: string, updatedFields: Partial<Story>) => {
   setLoading(true);
-  await fetch(`/api/stories?id=${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedFields),
-  });
+
+  // Only handle approved flag — backend doesn't support "rejected"
+  const approved =
+    updatedFields.status === "approved"
+      ? true
+      : updatedFields.status === "rejected"
+      ? false
+      : undefined;
+
+  if (approved !== undefined) {
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`,{
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ approved }),
+    });
+  }
+
+  // Refresh stories
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
+  const data = await res.json();
+  const normalized = data.map((s: any) => ({
+    ...s,
+    status: s.approved ? "approved" : "pending", // still no true "rejected"
+  }));
+  setStories(normalized);
   setLoading(false);
 };
 
 
+
+
   const deleteStory = async (id: string) => {
-    setLoading(true);
-    await fetch(`/api/stories?id=${id}`, { method: "DELETE" });
-    const res = await fetch("/api/stories?admin=true");
-    const data = await res.json();
-    setStories(data);
-    setLoading(false);
-  };
+  setLoading(true);
+  await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`, 
+    { method: "DELETE" });
+
+  // Refresh stories
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
+  const data = await res.json();
+  const normalized = data.map((s: any) => ({
+    ...s,
+    status: s.approved ? "approved" : "pending",
+  }));
+  setStories(normalized);
+  setLoading(false);
+};
+
 
   return (
     <div
@@ -89,22 +130,20 @@ export default function AdminStoriesManager() {
       </p>
 
 
-      {/* Admin/Reader Toggle */}
-      <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
-  <span className="font-bold" style={{ color: 'var(--accent)' }}>
+     <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
+  <span className="font-bold text-accent">
     {isAdmin ? "Administrator (Moderation Access)" : "Reader (View Only)"}
   </span>
   <button
     onClick={() => setIsAdmin(!isAdmin)}
-    className="py-2 px-4 rounded-lg font-bold text-xs shadow-md transition"
-    style={{
-      backgroundColor: isAdmin ? 'var(--accent)' : 'var(--primary)',
-      color: isAdmin ? 'var(--card)' : 'var(--card-foreground)',
-    }}
+    className={`py-2 px-4 rounded-lg font-bold text-xs shadow-md transition ${
+      isAdmin ? 'bg-accent text-card' : 'bg-primary text-card-foreground'
+    }`}
   >
     Switch to {isAdmin ? "Reader" : "Admin"} View
   </button>
 </div>
+
 
 
 
@@ -141,6 +180,17 @@ export default function AdminStoriesManager() {
           >
             Rejected ({stories.filter((s) => (s.status || "").toLowerCase() === "rejected").length})
           </button>
+          <button
+  onClick={() => setViewMode("all")}
+  className={`py-2 px-6 rounded-full font-semibold ${
+    viewMode === "all"
+      ? "bg-[#FFD100] text-[#005691]"
+      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+  }`}
+>
+  All ({stories.length})
+</button>
+
         </div>
       )
       }

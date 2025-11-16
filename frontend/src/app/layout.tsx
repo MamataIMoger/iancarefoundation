@@ -1,26 +1,12 @@
-// app/layout.tsx
-'use client';
-
-import ThemeProvider from '@/Admin/theme/ThemeProvider';
+// app/layout.tsx (for public pages)
 import "../styles/globals.css";
-import ThemeToggle from '@/Admin/ThemeToggle';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>   
-      <body className="admin font-sans">
-    {/* Wrap all visible UI inside ThemeProvider */}
-    <ThemeProvider>
-      <div className="theme-fade transition-colors duration-500 ease-in-out">
-        <header className="flex items-center justify-between px-6 py-4 theme-surface theme-border border-b theme-fade">
-          <div className="text-xl font-semibold theme-accent">IanCare Admin</div>
-          <ThemeToggle />
-        </header>
-
-        <main className="p-6">{children}</main>
-      </div>
-    </ThemeProvider>
-  </body>
-</html>
+    <html lang="en">
+      <body className="font-sans">
+        <main className="pt-[80px]">{children}</main>
+      </body>
+    </html>
   );
 }

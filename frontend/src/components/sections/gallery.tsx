@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 /* ---------- Types ---------- */
 interface Album {
   _id?: string;
-  title: string;
-  description?: string; // made optional to avoid errors
+  name: string;
   imageUrl: string;
   createdAt?: string;
 }
@@ -16,13 +15,24 @@ function HeroGallery() {
     <header
       className="relative text-white overflow-hidden"
       style={{
-        backgroundImage: "url('/meditation1.png')",
+        backgroundImage: "url('/bg3.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
         minHeight: "90vh",
       }}
     >
+      {/* 🔹 Overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "linear-gradient(rgba(15,134,191,0.65), rgba(4,78,146,0.70))",
+          backdropFilter: "blur(3px)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Content */}
       <div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
@@ -41,6 +51,8 @@ function HeroGallery() {
           </div>
         </div>
       </div>
+
+      {/* Decorative SVG wave */}
       <svg
         viewBox="0 0 1440 200"
         className="w-full h-40 absolute bottom-0 left-0"
@@ -55,6 +67,7 @@ function HeroGallery() {
   );
 }
 
+
 /* ---------- Album Card ---------- */
 const AlbumCard: React.FC<{ album: Album }> = ({ album }) => {
   const [showModal, setShowModal] = useState(false);
@@ -62,23 +75,17 @@ const AlbumCard: React.FC<{ album: Album }> = ({ album }) => {
   return (
     <>
       <article className="bg-white rounded-xl overflow-hidden border border-gray-300 shadow-lg flex flex-col h-full">
-        <img src={album.imageUrl} alt={album.title} className="h-48 w-full object-cover" />
+        <img src={album.imageUrl} alt={album.name} className="h-48 w-full object-cover" />
         <div className="p-6 flex flex-col justify-between flex-grow">
           <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm text-gray-500">
-                {album.createdAt ? new Date(album.createdAt).toLocaleDateString() : ""}
-              </span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">{album.title}</h3>
-            <p className="text-gray-700 mb-6 leading-relaxed">
-              {album.description
-                ? album.description.length > 100
-                  ? album.description.substring(0, 100) + "..."
-                  : album.description
-                : "No description available"}
-            </p>
-          </div>
+  <div className="flex justify-between items-start mb-4">
+    <span className="text-sm text-gray-500">
+      {album.createdAt ? new Date(album.createdAt).toLocaleDateString() : ""}
+    </span>
+  </div>
+  <h3 className="text-xl font-bold text-gray-900 mb-3">{album.name}</h3>
+</div>
+
           <div className="flex justify-end mt-4">
             <button
               onClick={() => setShowModal(true)}
@@ -100,11 +107,9 @@ const AlbumCard: React.FC<{ album: Album }> = ({ album }) => {
             className="bg-white rounded-xl shadow-2xl p-6 max-w-lg md:max-w-3xl w-full max-h-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">{album.title}</h2>
-            <img src={album.imageUrl} alt={album.title} className="mb-4 rounded-lg" />
-            <p className="text-gray-700 leading-relaxed mb-6 whitespace-pre-line">
-              {album.description || "No description available"}
-            </p>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">{album.name}</h2>
+            <img src={album.imageUrl} alt={album.name} className="mb-4 rounded-lg" />
+            <h3>{album.name}</h3>
             <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(false)}
@@ -129,7 +134,8 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/gallery")
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery`)
+
         if (!res.ok) throw new Error("Failed to fetch albums");
         const data: Album[] = await res.json();
         setAlbums(data);

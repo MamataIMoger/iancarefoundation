@@ -20,7 +20,7 @@ router.get("/", asyncHandler(async (req, res) => {
 // POST /api/story → Submit a new story
 router.post("/", asyncHandler(async (req, res) => {
   const { title, content, author, category } = req.body
-  const newStory = await Story.create({ title, content, author, category })
+  const newStory = await Story.create({ title, content, author, category, approved: false })
   res.status(201).json(newStory)
 }))
 
@@ -31,5 +31,11 @@ router.put("/:id", asyncHandler(async (req, res) => {
   const updated = await Story.findByIdAndUpdate(id, { approved }, { new: true })
   res.status(200).json(updated)
 }))
+
+router.delete("/:id", asyncHandler(async (req, res) => {
+  await Story.findByIdAndDelete(req.params.id);
+  res.status(200).json({ message: "Story deleted" });
+}))
+
 
 export default router

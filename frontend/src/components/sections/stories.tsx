@@ -19,13 +19,24 @@ function HeroStories() {
     <header
       className="relative text-white overflow-hidden"
       style={{
-        backgroundImage: "url('/meditation1.png')",
+        backgroundImage: "url('/bg4.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
         minHeight: "90vh",
       }}
     >
+      {/* 🔹 Overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "linear-gradient(rgba(15,134,191,0.65), rgba(4,78,146,0.70))",
+          backdropFilter: "blur(3px)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Content */}
       <div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
@@ -47,6 +58,8 @@ function HeroStories() {
           </div>
         </div>
       </div>
+
+      {/* Decorative SVG wave */}
       <svg
         viewBox="0 0 1440 200"
         className="w-full h-40 absolute bottom-0 left-0"
@@ -60,6 +73,7 @@ function HeroStories() {
     </header>
   );
 }
+
 
 // Story Card
 const StoryCard: React.FC<{ story: Story }> = ({ story }) => {
@@ -142,7 +156,7 @@ export default function StoriesPage() {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/story`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`);
         if (!res.ok) throw new Error("Failed to fetch stories");
         const data: Story[] = await res.json();
         setStories(data.filter((s) => s.approved));
@@ -186,7 +200,7 @@ export default function StoriesPage() {
   const submitConfirmedStory = async () => {
     if (!pendingStory) return;
     try {
-      await fetch("/api/stories", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingStory),

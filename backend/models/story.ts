@@ -4,7 +4,7 @@ export interface IStory {
   title: string
   content: string
   author: string
-  category?: "General" | "Recovery" | "Inspiration"
+  category?: "General" | "Recovery"
   approved?: boolean
   createdAt?: Date
   updatedAt?: Date
@@ -17,7 +17,7 @@ const StorySchema = new Schema<IStory>(
     author: { type: String, required: true },
     category: {
       type: String,
-      enum: ["General", "Recovery", "Inspiration"],
+      enum: ["General", "Recovery"],
       default: "General",
     },
     approved: { type: Boolean, default: false },

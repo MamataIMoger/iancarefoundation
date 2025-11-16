@@ -1,10 +1,10 @@
 import { Schema, model, models, Model } from "mongoose"
 
 export interface IGallery {
-  name: string
-  imageUrl: string
-  createdAt?: Date
-  updatedAt?: Date
+  name: string;
+  imageUrl: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const GallerySchema = new Schema<IGallery>(
@@ -13,7 +13,9 @@ const GallerySchema = new Schema<IGallery>(
     imageUrl: { type: String, required: true },
   },
   { timestamps: true }
-)
+);
+
+
 
 const Gallery: Model<IGallery> = models.Gallery || model<IGallery>("Gallery", GallerySchema)
 
