@@ -9,6 +9,7 @@ export interface VolunteerDocument extends Document {
   address?: string
   timeCommitment: string[]
   status: 'pending' | 'approved' | 'rejected'
+  dob?: Date  // Add this line for Date of Birth
 }
 
 const VolunteerSchema: Schema<VolunteerDocument> = new Schema(
@@ -25,6 +26,7 @@ const VolunteerSchema: Schema<VolunteerDocument> = new Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+    dob: { type: Date },  // <-- Add DOB here
   },
   { timestamps: true }
 )

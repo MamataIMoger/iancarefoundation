@@ -9,7 +9,7 @@ interface Story {
   content: string;
   author: string;
   category?: string;
-  status: "approved" | "pending" | "rejected" | string; // allow string for API mismatch
+  status: "approved" | "pending" | "rejected" | string;
   createdAt?: string;
 }
 
@@ -31,32 +31,35 @@ export default function AdminStoriesManager() {
   const [loading, setLoading] = useState(true);
   const storiesPerPage = 6;
 
+  /* ---------- Load Stories ---------- */
   useEffect(() => {
-  setLoading(true);
-  fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`)
-    .then((res) => res.json())
-    .then((data) => {
-      const normalized = data.map((s: any) => ({
-        ...s,
-        status: s.approved ? "approved" : "pending", // ✅ map approved flag
-      }));
-      setStories(normalized);
-      setLoading(false);
-    })
-    .catch(() => setLoading(false));
-}, []);
+    setLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`)
+      .then((res) => res.json())
+      .then((data) => {
+        const normalized = data.map((s: any) => ({
+          ...s,
+          status: s.approved
+            ? "approved"
+            : s.rejected
+            ? "rejected"
+            : "pending",
+        }));
+        setStories(normalized);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-
-  // ✅ Normalize status values to lowercase
+  /* ---------- Filtering ---------- */
   const filteredStories = stories.filter((s) => {
-  const status = (s.status || "").toLowerCase();
-  if (!isAdmin) return status === "approved";
-  if (viewMode === "approved") return status === "approved";
-  if (viewMode === "pending") return status === "pending";
-  if (viewMode === "rejected") return status === "rejected";
-  return true; // show all if no filter
-});
-
+    const status = (s.status || "").toLowerCase();
+    if (!isAdmin) return status === "approved";
+    if (viewMode === "approved") return status === "approved";
+    if (viewMode === "pending") return status === "pending";
+    if (viewMode === "rejected") return status === "rejected";
+    return true;
+  });
 
   const totalPages = Math.ceil(filteredStories.length / storiesPerPage);
   const currentStories = filteredStories.slice(
@@ -64,148 +67,127 @@ export default function AdminStoriesManager() {
     currentPage * storiesPerPage
   );
 
+  /* ---------- Update Story ---------- */
+  const updateStory = async (id: string, updatedFields: Partial<Story>) => {
+    setLoading(true);
 
-const updateStory = async (id: string, updatedFields: Partial<Story>) => {
-  setLoading(true);
+    const approved =
+      updatedFields.status === "approved"
+        ? true
+        : updatedFields.status === "rejected"
+        ? false
+        : undefined;
 
-  // Only handle approved flag — backend doesn't support "rejected"
-  const approved =
-    updatedFields.status === "approved"
-      ? true
-      : updatedFields.status === "rejected"
-      ? false
-      : undefined;
+    if (approved !== undefined) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approved }),
+      });
+    }
 
-  if (approved !== undefined) {
-    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`,{
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ approved }),
-    });
-  }
+    // refresh stories
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
+    const data = await res.json();
+    const normalized = data.map((s: any) => ({
+      ...s,
+      status: s.approved ? "approved" : s.rejected ? "rejected" : "pending",
+    }));
 
-  // Refresh stories
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
-  const data = await res.json();
-  const normalized = data.map((s: any) => ({
-    ...s,
-    status: s.approved ? "approved" : "pending", // still no true "rejected"
-  }));
-  setStories(normalized);
-  setLoading(false);
-};
+    setStories(normalized);
+    setLoading(false);
+  };
 
-
-
-
+  /* ---------- Delete Story ---------- */
   const deleteStory = async (id: string) => {
-  setLoading(true);
-  await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`, 
-    { method: "DELETE" });
+    setLoading(true);
 
-  // Refresh stories
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
-  const data = await res.json();
-  const normalized = data.map((s: any) => ({
-    ...s,
-    status: s.approved ? "approved" : "pending",
-  }));
-  setStories(normalized);
-  setLoading(false);
-};
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories/${id}`, {
+      method: "DELETE",
+    });
 
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories?admin=true`);
+    const data = await res.json();
+    const normalized = data.map((s: any) => ({
+      ...s,
+      status: s.approved ? "approved" : s.rejected ? "rejected" : "pending",
+    }));
+
+    setStories(normalized);
+    setLoading(false);
+  };
 
   return (
     <div
       className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen font-sans transition-colors duration-500"
-      style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+      style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
     >
       <h1 className="text-4xl md:text-5xl font-extrabold text-[#005691] mb-2 pt-8 text-center">
         Stories Manager
       </h1>
-      <p className="text-lg mb-8 border-b-2 pb-4"
-        style={{ color: 'var(--muted-foreground)', borderColor: 'var(--border)' }}
+      <p
+        className="text-lg mb-8 border-b-2 pb-4"
+        style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}
       >
         Review and moderate user-submitted stories of healing and growth.
       </p>
 
+      {/* Admin Toggle */}
+      <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
+        <span className="font-bold text-accent">
+          {isAdmin ? "Administrator (Moderation Access)" : "Reader (View Only)"}
+        </span>
+        <button
+          onClick={() => setIsAdmin(!isAdmin)}
+          className={`py-2 px-4 rounded-lg font-bold text-xs shadow-md transition ${
+            isAdmin ? "bg-accent text-card" : "bg-primary text-card-foreground"
+          }`}
+        >
+          Switch to {isAdmin ? "Reader" : "Admin"} View
+        </button>
+      </div>
 
-     <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
-  <span className="font-bold text-accent">
-    {isAdmin ? "Administrator (Moderation Access)" : "Reader (View Only)"}
-  </span>
-  <button
-    onClick={() => setIsAdmin(!isAdmin)}
-    className={`py-2 px-4 rounded-lg font-bold text-xs shadow-md transition ${
-      isAdmin ? 'bg-accent text-card' : 'bg-primary text-card-foreground'
-    }`}
-  >
-    Switch to {isAdmin ? "Reader" : "Admin"} View
-  </button>
-</div>
-
-
-
-
-      {/* View Filters */}
+      {/* Filters */}
       {isAdmin && (
         <div className="mb-8 flex space-x-4 justify-center">
-          <button
-            onClick={() => setViewMode("approved")}
-            className={`py-2 px-6 rounded-full font-semibold ${
-              viewMode === "approved"
-                ? "bg-[#FFD100] text-[#005691]"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Approved ({stories.filter((s) => (s.status || "").toLowerCase() === "approved").length})
-          </button>
-          <button
-            onClick={() => setViewMode("pending")}
-            className={`py-2 px-6 rounded-full font-semibold ${
-              viewMode === "pending"
-                ? "bg-[#FFD100] text-[#005691]"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Pending ({stories.filter((s) => (s.status || "").toLowerCase() === "pending").length})
-          </button>
-          <button
-            onClick={() => setViewMode("rejected")}
-            className={`py-2 px-6 rounded-full font-semibold ${
-              viewMode === "rejected"
-                ? "bg-[#FFD100] text-[#005691]"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Rejected ({stories.filter((s) => (s.status || "").toLowerCase() === "rejected").length})
-          </button>
-          <button
-  onClick={() => setViewMode("all")}
-  className={`py-2 px-6 rounded-full font-semibold ${
-    viewMode === "all"
-      ? "bg-[#FFD100] text-[#005691]"
-      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-  }`}
->
-  All ({stories.length})
-</button>
+          {["approved", "pending", "rejected"].map((key) => (
+            <button
+              key={key}
+              onClick={() => setViewMode(key as any)}
+              className={`py-2 px-6 rounded-full font-semibold ${
+                viewMode === key
+                  ? "bg-[#FFD100] text-[#005691]"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {key[0].toUpperCase() + key.slice(1)} (
+              {stories.filter((s) => (s.status || "").toLowerCase() === key).length})
+            </button>
+          ))}
 
+          <button
+            onClick={() => setViewMode("all")}
+            className={`py-2 px-6 rounded-full font-semibold ${
+              viewMode === "all"
+                ? "bg-[#FFD100] text-[#005691]"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            All ({stories.length})
+          </button>
         </div>
-      )
-      }
-
-
+      )}
 
       {/* Pagination */}
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-      
+
       {/* Story Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
         {currentStories.map((story) => (
           <article
             key={story._id}
-            className="bg-card text-card-foreground rounded-xl border border-border shadow-xl transition duration-500">
+            className="bg-card text-card-foreground rounded-xl border border-border shadow-xl transition duration-500"
+          >
             <div className="p-6 flex flex-col justify-between flex-grow">
               <div>
                 <div className="flex justify-between items-start mb-3">
@@ -219,6 +201,7 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
                 <h3 className="text-2xl font-bold text-[#005691] mb-3">{story.title}</h3>
                 <p className="text-gray-700 mb-4 leading-relaxed line-clamp-4">{story.content}</p>
               </div>
+
               <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100 flex-wrap gap-3">
                 <button
                   onClick={() => setActiveModal({ type: "read", story })}
@@ -226,14 +209,16 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
                 >
                   Read More →
                 </button>
+
                 {isAdmin && (
                   <div className="flex gap-3 items-center">
-                    {(story.status || "").toLowerCase() === "approved" && (
+                    {story.status === "approved" && (
                       <span className="text-green-700 font-semibold px-3 py-1 rounded-full border border-green-700 bg-green-50">
                         Approved
                       </span>
                     )}
-                    {(story.status || "").toLowerCase() === "pending" && (
+
+                    {story.status === "pending" && (
                       <>
                         <span className="text-yellow-700 font-semibold px-3 py-1 rounded-full border border-yellow-700 bg-yellow-50">
                           Pending
@@ -252,11 +237,13 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
                         </button>
                       </>
                     )}
-                    {(story.status || "").toLowerCase() === "rejected" && (
+
+                    {story.status === "rejected" && (
                       <span className="text-red-700 font-semibold px-3 py-1 rounded-full border border-red-700 bg-red-50">
                         Rejected
                       </span>
                     )}
+
                     <button
                       onClick={() => setActiveModal({ type: "delete", story })}
                       className="text-red-500 font-semibold hover:text-red-700 transition"
@@ -271,7 +258,7 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
         ))}
       </div>
 
-           {/* Modals */}
+      {/* Modals */}
       {activeModal?.type === "read" && (
         <Modal title={activeModal.story.title} onClose={() => setActiveModal(null)}>
           <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -281,17 +268,16 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
       )}
 
       {activeModal?.type === "approve" && (
-  <ConfirmModal
-    title="Confirm Approve"
-    message={`Do you want to approve "${activeModal.story.title}"?`}
-    onCancel={() => setActiveModal(null)}
-    onConfirm={async () => {
-      await updateStory(activeModal.story._id, { status: "approved" });
-      setActiveModal({ type: "success", message: "Story approved successfully!" });
-    }}
-  />
-)}
-
+        <ConfirmModal
+          title="Confirm Approve"
+          message={`Do you want to approve "${activeModal.story.title}"?`}
+          onCancel={() => setActiveModal(null)}
+          onConfirm={async () => {
+            await updateStory(activeModal.story._id, { status: "approved" });
+            setActiveModal({ type: "success", message: "Story approved successfully!" });
+          }}
+        />
+      )}
 
       {activeModal?.type === "reject" && (
         <ConfirmModal
@@ -306,17 +292,16 @@ const updateStory = async (id: string, updatedFields: Partial<Story>) => {
       )}
 
       {activeModal?.type === "delete" && (
-  <ConfirmModal
-    title="Confirm Delete"
-    message={`Are you sure you want to permanently delete "${activeModal.story.title}"?`}
-    onCancel={() => setActiveModal(null)}
-    onConfirm={async () => {
-      await deleteStory(activeModal.story._id);
-      setActiveModal({ type: "success", message: "Story deleted successfully!" });
-    }}
-  />
-)}
-
+        <ConfirmModal
+          title="Confirm Delete"
+          message={`Are you sure you want to permanently delete "${activeModal.story.title}"?`}
+          onCancel={() => setActiveModal(null)}
+          onConfirm={async () => {
+            await deleteStory(activeModal.story._id);
+            setActiveModal({ type: "success", message: "Story deleted successfully!" });
+          }}
+        />
+      )}
 
       {activeModal?.type === "success" && (
         <SuccessModal message={activeModal.message} onClose={() => setActiveModal(null)} />
@@ -332,6 +317,7 @@ const Pagination: React.FC<{
   onPageChange: (page: number) => void;
 }> = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
+
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
@@ -343,6 +329,7 @@ const Pagination: React.FC<{
       >
         Prev
       </button>
+
       {pages.map((page) => (
         <button
           key={page}
@@ -356,6 +343,7 @@ const Pagination: React.FC<{
           {page}
         </button>
       ))}
+
       <button
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}
@@ -383,16 +371,19 @@ const Modal: React.FC<{
       onClick={(e) => e.stopPropagation()}
     >
       <h2 className="text-3xl font-bold text-[#005691] mb-6">{title}</h2>
+
       {showCloseX && (
         <button
           onClick={onClose}
           aria-label="Close"
           className="absolute top-4 right-4 text-2xl font-bold text-gray-500 hover:text-gray-800"
         >
-          &times;
+          ×
         </button>
       )}
+
       {children}
+
       {!showCloseX && (
         <div className="flex justify-end mt-6">
           <button
@@ -407,6 +398,7 @@ const Modal: React.FC<{
   </div>
 );
 
+/* ---------- Confirm Modal ---------- */
 const ConfirmModal: React.FC<{
   title: string;
   message: string;
@@ -423,6 +415,7 @@ const ConfirmModal: React.FC<{
     >
       <h3 className="text-lg font-bold text-[#005691] mb-4">{title}</h3>
       <p className="text-gray-700 mb-6">{message}</p>
+
       <div className="flex justify-end space-x-3">
         <button
           className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
@@ -441,6 +434,7 @@ const ConfirmModal: React.FC<{
   </div>
 );
 
+/* ---------- Success Modal ---------- */
 const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
   message,
   onClose,
@@ -454,6 +448,7 @@ const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
       onClick={(e) => e.stopPropagation()}
     >
       <p className="text-lg font-semibold mb-4">{message}</p>
+
       <button
         className="px-6 py-3 bg-[#FFD100] text-[#005691] rounded-lg hover:bg-amber-500 transition font-bold"
         onClick={onClose}
@@ -464,11 +459,17 @@ const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
   </div>
 );
 
-/* ---------- Animations ---------- */
+/* ---------- Animation ---------- */
 <style jsx>{`
   @keyframes modalIn {
-    0% { opacity: 0; transform: translateY(12px) scale(0.98); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+    0% {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
   .animate-modalIn {
     animation: modalIn 0.25s ease-out forwards;

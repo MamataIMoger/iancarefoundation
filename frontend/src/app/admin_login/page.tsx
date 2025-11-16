@@ -1,9 +1,7 @@
-import Admin_Login from "@/Admin/admin_login"
+// app/admin_login/page.tsx
+import AdminLogin from "../../components/sections/admin_login"; // adjust path if your tsconfig uses different alias
+export const metadata = { title: "Admin Login" };
 
-export default function AboutPage() {
-  return (
-    <main>
-      <Admin_Login/>
-    </main>
-  )
+export default function Page() {
+  return <AdminLogin />;
 }

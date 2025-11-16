@@ -13,7 +13,7 @@ interface Story {
   createdAt?: string;
 }
 
-// Hero Section Component
+/* -------------------- HERO SECTION -------------------- */
 function HeroStories() {
   return (
     <header
@@ -26,7 +26,6 @@ function HeroStories() {
         minHeight: "90vh",
       }}
     >
-      {/* 🔹 Overlay */}
       <div
         className="absolute inset-0"
         style={{
@@ -36,17 +35,15 @@ function HeroStories() {
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
             Personal Growth Stories
           </h1>
           <p className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed">
-            Discover how real people rebuilt their lives through care,
-            courage, and community. Each story reflects our belief that
-            healing is possible — and no journey is too far when walked with
-            compassion.
+            Discover how real people rebuilt their lives through care, courage,
+            and community. Each story reflects that healing is possible — and no
+            journey is too far when walked with compassion.
           </p>
           <div className="mt-8">
             <a
@@ -59,7 +56,6 @@ function HeroStories() {
         </div>
       </div>
 
-      {/* Decorative SVG wave */}
       <svg
         viewBox="0 0 1440 200"
         className="w-full h-40 absolute bottom-0 left-0"
@@ -74,8 +70,7 @@ function HeroStories() {
   );
 }
 
-
-// Story Card
+/* -------------------- STORY CARD -------------------- */
 const StoryCard: React.FC<{ story: Story }> = ({ story }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -112,6 +107,7 @@ const StoryCard: React.FC<{ story: Story }> = ({ story }) => {
         </div>
       </article>
 
+      {/* Modal */}
       {showModal && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
@@ -140,24 +136,29 @@ const StoryCard: React.FC<{ story: Story }> = ({ story }) => {
   );
 };
 
-// Main StoriesPage Component
+/* -------------------- MAIN STORIES PAGE -------------------- */
 export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
   const [showForm, setShowForm] = useState(false);
   const [submittedStory, setSubmittedStory] = useState<Story | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [pendingStory, setPendingStory] = useState<Story | null>(null);
 
   const postsPerPage = 6;
 
-  // Fetch stories
+  /* ---------- Fetch Stories ---------- */
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`
+        );
         if (!res.ok) throw new Error("Failed to fetch stories");
+
         const data: Story[] = await res.json();
         setStories(data.filter((s) => s.approved));
       } catch (err) {
@@ -167,49 +168,55 @@ export default function StoriesPage() {
     fetchStories();
   }, []);
 
-  // Pagination helpers
+  /* ---------- Pagination ---------- */
   const totalPages = Math.ceil(stories.length / postsPerPage);
+
   const currentStories = stories.slice(
     (currentPage - 1) * postsPerPage,
     currentPage * postsPerPage
   );
 
-  const goToPage = (num: number) => {
-    if (num < 1 || num > totalPages) return;
-    setCurrentPage(num);
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    setCurrentPage(p);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle form submit - show confirmation dialog
+  /* ---------- Form Handling ---------- */
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-    const formData = new FormData(form);
+    const data = new FormData(form);
+
     const newStory: Story = {
-      title: formData.get("title") as string,
-      content: formData.get("content") as string,
-      author: formData.get("author") as string,
-      category: formData.get("category") as string,
+      title: data.get("title") as string,
+      content: data.get("content") as string,
+      author: data.get("author") as string,
+      category: data.get("category") as string,
       approved: false,
     };
+
     setPendingStory(newStory);
     setShowSubmitConfirm(true);
   };
 
-  // Submit story after confirmation
+  /* ---------- Submit to Backend ---------- */
   const submitConfirmedStory = async () => {
     if (!pendingStory) return;
+
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingStory),
       });
+
       setSubmittedStory(pendingStory);
       setShowConfirmation(true);
-    } catch (error) {
-      console.error("Error submitting story:", error);
+    } catch (err) {
+      console.error("Error submitting story:", err);
     }
+
     setShowSubmitConfirm(false);
     setPendingStory(null);
     setShowForm(false);
@@ -217,14 +224,15 @@ export default function StoriesPage() {
 
   return (
     <div className="font-['Inter',_sans-serif'] bg-white">
-      {/* Hero */}
       <HeroStories />
 
-      {/* Stories Grid */}
       <main id="stories" className="py-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
+
+          {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Community Stories</h2>
+
             <button
               onClick={() => setShowForm(true)}
               className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -233,8 +241,11 @@ export default function StoriesPage() {
             </button>
           </div>
 
+          {/* No Stories */}
           {stories.length === 0 ? (
-            <p className="text-center text-gray-500 py-12">No stories available yet.</p>
+            <p className="text-center text-gray-500 py-12">
+              No stories available yet.
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentStories.map((story, index) => (
@@ -243,7 +254,7 @@ export default function StoriesPage() {
             </div>
           )}
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center space-x-3 mt-8">
               <button
@@ -253,17 +264,21 @@ export default function StoriesPage() {
               >
                 Previous
               </button>
+
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
                   onClick={() => goToPage(i + 1)}
                   className={`px-4 py-2 rounded ${
-                    currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+                    currentPage === i + 1
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200"
                   }`}
                 >
                   {i + 1}
                 </button>
               ))}
+
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -276,7 +291,7 @@ export default function StoriesPage() {
         </div>
       </main>
 
-      {/* Add Story Modal */}
+      {/* ------------ Add Story Modal ------------ */}
       {showForm && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
@@ -286,7 +301,10 @@ export default function StoriesPage() {
             className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">Submit Your Story</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">
+              Submit Your Story
+            </h2>
+
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <input
                 type="text"
@@ -295,6 +313,7 @@ export default function StoriesPage() {
                 required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               />
+
               <textarea
                 name="content"
                 placeholder="Your Story"
@@ -302,6 +321,7 @@ export default function StoriesPage() {
                 rows={6}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               />
+
               <input
                 type="text"
                 name="author"
@@ -309,6 +329,7 @@ export default function StoriesPage() {
                 required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               />
+
               <select
                 name="category"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
@@ -316,6 +337,7 @@ export default function StoriesPage() {
                 <option value="general">General</option>
                 <option value="healed">Healed</option>
               </select>
+
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
@@ -324,6 +346,7 @@ export default function StoriesPage() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -336,7 +359,7 @@ export default function StoriesPage() {
         </div>
       )}
 
-      {/* Submit Confirmation Modal */}
+      {/* ------------ Submit Confirmation ------------ */}
       {showSubmitConfirm && pendingStory && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
@@ -348,12 +371,18 @@ export default function StoriesPage() {
           >
             <h2 className="text-xl font-bold mb-4">Confirm Submission</h2>
             <p className="mb-4">Are you sure you want to submit this story?</p>
+
             <article className="bg-gray-100 border border-gray-300 rounded p-4 mb-4">
-              <h3 className="text-lg font-semibold mb-1">{pendingStory.title}</h3>
+              <h3 className="text-lg font-semibold mb-1">
+                {pendingStory.title}
+              </h3>
               <p className="text-gray-700">
-                {pendingStory.content.length > 200 ? pendingStory.content.substring(0, 200) + "..." : pendingStory.content}
+                {pendingStory.content.length > 200
+                  ? pendingStory.content.substring(0, 200) + "..."
+                  : pendingStory.content}
               </p>
             </article>
+
             <div className="flex justify-end space-x-4">
               <button
                 className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
@@ -361,6 +390,7 @@ export default function StoriesPage() {
               >
                 Cancel
               </button>
+
               <button
                 className="px-4 py-2 rounded bg-amber-600 text-white hover:bg-amber-700"
                 onClick={submitConfirmedStory}
@@ -372,7 +402,7 @@ export default function StoriesPage() {
         </div>
       )}
 
-      {/* Post-submission Confirmation Popup */}
+      {/* ------------ Submitted Story Modal ------------ */}
       {showConfirmation && submittedStory && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
@@ -383,14 +413,25 @@ export default function StoriesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold mb-4">Story Submitted!</h2>
-            <p className="mb-4 font-semibold text-gray-800">Admin will confirm soon.</p>
+            <p className="mb-4 font-semibold text-gray-800">
+              Admin will review your story soon.
+            </p>
+
             <article className="bg-gray-100 border border-gray-300 rounded p-4">
-              <h3 className="text-xl font-semibold mb-2">{submittedStory.title}</h3>
-              <p className="mb-2 text-gray-700">{submittedStory.content}</p>
+              <h3 className="text-xl font-semibold mb-2">
+                {submittedStory.title}
+              </h3>
+
+              <p className="mb-2 text-gray-700">
+                {submittedStory.content}
+              </p>
+
               <p className="text-sm text-gray-500">
-                By: {submittedStory.author} | Category: {submittedStory.category || "General"}
+                By: {submittedStory.author} | Category:{" "}
+                {submittedStory.category || "General"}
               </p>
             </article>
+
             <div className="flex justify-end mt-4">
               <button
                 className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -402,6 +443,7 @@ export default function StoriesPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
