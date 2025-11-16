@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Pencil, Trash2 } from "lucide-react";
 
 interface GalleryItem {
   _id?: string;
@@ -182,11 +182,12 @@ const GalleryManager = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/gallery", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: albumName.trim(), imageUrl: selectedImageBase64 }),
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: albumName.trim(), imageUrl: selectedImageBase64 }),
+});
+
       const newAlbum = await res.json();
       if (!res.ok) throw new Error(newAlbum.message || "Failed to publish album.");
       const albumWithDate: GalleryItem = {
@@ -211,8 +212,8 @@ const GalleryManager = () => {
   };
 
   const handleEditImage = async (id: string | null) => {
-    if (!id || !selectedImageBase64) {
-      setError("Please select a new image to update.");
+    if (!id || !selectedImageBase64 || !albumName.trim()) {
+      setError("Please select a new image and a valid album name to update.");
       return;
     }
     setIsSubmitting(true);
@@ -221,20 +222,20 @@ const GalleryManager = () => {
       const res = await fetch(`/api/gallery/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: selectedImageBase64 }),
+        body: JSON.stringify({ imageUrl: selectedImageBase64, name: albumName.trim() }),
       });
       const updatedAlbum = await res.json();
-            if (!res.ok) throw new Error(updatedAlbum.message || "Failed to update image.");
+            if (!res.ok) throw new Error(updatedAlbum.message || "Failed to update album.");
       setAlbums((prev) =>
         prev.map((item) =>
           item._id === id || item.id === id
-            ? { ...item, imageUrl: updatedAlbum.imageUrl }
+            ? { ...item, imageUrl: updatedAlbum.imageUrl, name: updatedAlbum.name }
             : item
         )
       );
       handleCancelEdit();
     } catch (e) {
-      setError((e as Error).message || "Failed to update image.");
+      setError((e as Error).message || "Failed to update album.");
     } finally {
       setIsSubmitting(false);
     }
@@ -315,6 +316,28 @@ const GalleryManager = () => {
                   : handleAddAlbum
               }
             >
+              {editingAlbumId && (
+  <div className="mb-4">
+    <label
+      htmlFor="editAlbumName"
+      className="block text-sm font-medium mb-1"
+      style={{ color: "var(--muted-foreground)" }}
+    >
+      Edit Album Title
+    </label>
+    <input
+      id="editAlbumName"
+      type="text"
+      value={albumName}
+      onChange={(e) => setAlbumName(e.target.value)}
+      placeholder="Update album title"
+      required
+      className="w-full p-3 border rounded-lg bg-muted text-foreground border-border focus:ring-[var(--accent)] focus:border-[var(--accent)] transition duration-150 shadow-sm"
+      disabled={isSubmitting}
+    />
+  </div>
+)}
+
               {!editingAlbumId && (
                 <div className="mb-4">
                   <label
@@ -445,25 +468,28 @@ const GalleryManager = () => {
                       Published: {formatDate(item.createdAt)}
                     </p>
                   </div>
+
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        handleCancelEdit();
-                        setEditingAlbumId(item._id ?? item.id ?? null);
-                      }}
-                      className="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-50"
-                      title="Edit Featured Image"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteInitiate(item)}
-                      className="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"
-                      title="Delete Album"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+  <button
+    onClick={() => {
+      handleCancelEdit();
+      setEditingAlbumId(item._id ?? item.id ?? null);
+      setAlbumName(item.name); // Pre-fill name
+    }}
+    className="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-50"
+    title="Edit Featured Image"
+  >
+    <Pencil className="w-5 h-5" />
+  </button>
+  <button
+    onClick={() => handleDeleteInitiate(item)}
+    className="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"
+    title="Delete Album"
+  >
+    <Trash2 className="w-5 h-5" />
+  </button>
+</div>
+
                 </div>
               </div>
             ))}

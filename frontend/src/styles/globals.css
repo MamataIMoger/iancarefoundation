@@ -38,7 +38,7 @@
   --muted: oklch(0.967 0.001 286.375); /* Light Gray */
   --muted-foreground: oklch(0.552 0.016 285.938);
 
-  --accent: oklch(0.967 0.001 286.375); /* Middle Blue */
+  --accent: oklch(31.925% 0.20663 266.303); /* Middle Blue */
   --accent-2: #3b82f6; /* Lighter Blue */
   --success: #facc15; /* Bright Yellow */
 

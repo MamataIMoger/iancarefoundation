@@ -306,13 +306,15 @@ export default function GetInvolvedPage() {
         ref={headerRef}
         className="relative text-white overflow-hidden"
         style={{
-          backgroundImage: "url('/meditation4.png')",
+          backgroundImage: "url('/bg2.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
           minHeight: "70vh",
         }}
       >
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f86bf]/70 to-[#08a0d6]/65 backdrop-blur-[2px]" />
+
         <motion.div
           className="relative z-10 container mx-auto px-6 lg:px-8 py-74.5 text-center"
           initial="hidden"

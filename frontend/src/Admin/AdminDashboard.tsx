@@ -10,6 +10,7 @@ import VolunteerSubmissionsView from "./components/VolunteerSubmissionsView";
 import ContactMessagesView from "./components/ContactMessagesView";
 import StoriesManager from "./components/stories";
 import ConsultRequest from "./components/consult-request";
+import ThemeToggle from "./ThemeToggle";
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-500">
 
-      {/* FIXED Sidebar (NO WIDTH WRAPPER!) */}
+      {/* ---------- FIXED SIDEBAR ---------- */}
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -26,17 +27,28 @@ const AdminDashboard = () => {
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 p-4 sm:p-8 overflow-y-auto sm:ml-64 transition-all duration-300">
-        {activeView === "dashboard" && <DashboardView />}
-        {activeView === "clients" && <ClientManager />}
-        {activeView === "blog" && <BlogManager />}
-        {activeView === "gallery" && <GalleryManager />}
-        {activeView === "stories" && <StoriesManager />}
-        {activeView === "volunteers" && <VolunteerSubmissionsView />}
-        {activeView === "contact" && <ContactMessagesView />}
-        {activeView === "Consult-request" && <ConsultRequest />}
-      </main>
+      {/* ---------- MAIN AREA ---------- */}
+      <div className="flex-1 flex flex-col sm:ml-64 transition-all duration-300">
+
+        {/* ---------- TOP HEADER ---------- */}
+        <header className="flex items-center justify-end px-6 py-4 theme-surface theme-border border-b theme-fade">
+          <ThemeToggle />
+        </header>
+
+        {/* ---------- PAGE CONTENT ---------- */}
+        <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
+
+          {activeView === "dashboard" && <DashboardView />}
+          {activeView === "clients" && <ClientManager />}
+          {activeView === "blog" && <BlogManager />}
+          {activeView === "gallery" && <GalleryManager />}
+          {activeView === "stories" && <StoriesManager />}
+          {activeView === "volunteers" && <VolunteerSubmissionsView />}
+          {activeView === "contact" && <ContactMessagesView />}
+          {activeView === "Consult-request" && <ConsultRequest />}
+
+        </main>
+      </div>
     </div>
   );
 };

@@ -1,327 +1,267 @@
-import React from 'react';
+// app/about/page.js
+"use client";
 
-// --- Icon Components (Inline SVG for reliability and consistency) ---
-// Heart Icon (Vision)
+import React, { useRef } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+
+// --- Icon Components (image-based placeholders) ---
 const HeartIcon = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/vision-icon.png" // Replace with actual image filename
-    alt="Heart Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/vision-icon.png" alt="Heart Icon" className={className} style={style} />
 );
-
 const TargetIcon = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/mission-icon.png" // Replace with actual image filename
-    alt="Target Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/mission-icon.png" alt="Target Icon" className={className} style={style} />
 );
-
-// --- Value Icons (Re-using existing SVGs) ---
 const IconCompassion = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/compassion.png" // Replace with actual image filename
-    alt="Compassion Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/compassion.png" alt="Compassion Icon" className={className} style={style} />
 );
 const IconIntegrity = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/integrity.png" // Replace with actual image filename
-    alt="Integrity Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/integrity.png" alt="Integrity Icon" className={className} style={style} />
 );
 const IconInclusivity = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/inclusivity.png" // Replace with actual image filename
-    alt="Inclusivity Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/inclusivity.png" alt="Inclusivity Icon" className={className} style={style} />
 );
 const IconTransformation = ({ className = "w-6 h-6", style = {} }) => (
-  <img
-    src="/transformation.png" // Replace with actual image filename
-    alt="Transformation Icon"
-    className={className}
-    style={style}
-  />
+  <img src="/transformation.png" alt="Transformation Icon" className={className} style={style} />
 );
 
-const About = () => {
-    // --- Soft, Calming Color Palette for Values ---
-    const VALUE_COLORS = {
-        // Keeping sky blue as the main cool accent color
-        blue: { color: "text-sky-700", bg: "bg-sky-50", border: "border-sky-300", shadow: "shadow-[0_15px_30px_rgba(56,189,248,0.15)]" },
-        // Maintaining yellow/gold for the warm accent
-        yellow: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-300", shadow: "shadow-[0_15px_30px_rgba(251,191,36,0.15)]" },
-    };
+export default function About() {
+  const headerRef = useRef(null);
+  const router = useRouter();
 
-    const coreValues = [
-        {
-            title: "Compassion",
-            desc: "Healing with love and respect for every soul, without judgment.",
-            icon: IconCompassion,
-            ...VALUE_COLORS.yellow,
-        },
-        {
-            title: "Integrity",
-            desc: "Serving the community with honesty and full transparency.",
-            icon: IconIntegrity,
-            ...VALUE_COLORS.blue,
-        },
-        {
-            title: "Inclusivity",
-            desc: "Caring beyond religion, background, or social status.",
-            icon: IconInclusivity,
-            ...VALUE_COLORS.yellow,
-        },
-        {
-            title: "Transformation",
-            desc: "Changing lives through awareness and positive, mindful action.",
-            icon: IconTransformation,
-            ...VALUE_COLORS.blue,
-        },
-    ];
+  // Page-level animations (plain JS objects)
+  const pageContainer = {
+    hidden: { opacity: 0, y: 8 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.12, when: "beforeChildren" },
+    },
+  };
 
-    // Placeholder images updated for an emotional, serene theme
-    const imageStory = "/happy-people2.png"; // Local image for better control
-    const imageCentre = "/sarva-dharma-sangama-centre.jpg"; // Local image for better control
-    const imageVision = "/people1.jpeg"; // Local image for better control
-    const imageMission = "/people7.png"; // Local image for better control
+  // NOTE: use 'show' as the visible state name (must match parent animate)
+  // and avoid string `ease` that may trigger TS typing issues.
+  const fadeUp = {
+    hidden: { opacity: 0, y: 18 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 }, // removed `ease` string
+    },
+  };
 
-    // --- Soft Gradient for Header (Pale yellow to pale blue) ---
-    const headerGradientStyle = {
-        background: 'linear-gradient(90deg, #fefce8 0%, #f0f9ff 100%)',
-    };
+  const heroFade = {
+    hidden: { opacity: 0, y: 28 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.75 }, // removed `ease` string
+    },
+  };
 
-    return (
-        // Universal base background is light yellow
-        <section id="about" className="bg-yellow-50 text-gray-900 min-h-screen overflow-hidden">
+  const VALUE_COLORS = {
+    blue: {
+      color: "text-sky-700",
+      bg: "bg-sky-50",
+      border: "border-sky-200",
+      shadow: "shadow-[0_20px_50px_rgba(14,165,233,0.08)]",
+    },
+    yellow: {
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      shadow: "shadow-[0_20px_50px_rgba(249,115,22,0.06)]",
+    },
+  };
 
-            {/* 1. Our Story Section - Lighter Yellow Background with Elevated Card and Image */}
-<div className="pt-20 pb-32 sm:pt-32 sm:pb-40 bg-yellow-100/70">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div
-      className="p-8 md:p-16 rounded-[2.5rem] shadow-2xl shadow-yellow-200 relative overflow-hidden transform hover:scale-[1.005] hover:translate-y-[-5px] transition duration-500"
-      style={{
-        willChange: 'transform, box-shadow',
-        backgroundImage: 'url("/yellownature.jpg")', // Replace with your actual image
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundBlendMode: 'overlay',
-        backgroundColor: 'rgba(255, 255, 255, 0.45)', // soft white overlay
-      }}
+  const coreValues = [
+    { title: "Compassion", desc: "Healing with love and respect for every soul.", icon: IconCompassion, ...VALUE_COLORS.yellow },
+    { title: "Integrity", desc: "Serving the community with honesty and full transparency.", icon: IconIntegrity, ...VALUE_COLORS.blue },
+    { title: "Inclusivity", desc: "Caring beyond religion, background, or social status.", icon: IconInclusivity, ...VALUE_COLORS.yellow },
+    { title: "Transformation", desc: "Changing lives through awareness and positive, mindful action.", icon: IconTransformation, ...VALUE_COLORS.blue },
+  ];
+
+  const imageStory = "/happy-people2.png";
+  const imageCentre = "/sarva-dharma-sangama-centre.jpg";
+  const imageVision = "/people1.jpeg";
+  const imageMission = "/people7.png";
+
+  return (
+    <motion.section
+      id="about"
+      className="min-h-screen font-['Inter',_sans-serif'] text-gray-900 bg-gray-50"
+      initial="hidden"
+      animate="show"    // parent uses "show"
+      variants={pageContainer}
     >
-      <div className="relative grid md:grid-cols-2 gap-12 lg:gap-24 items-center mt-8 backdrop-blur-sm">
-        <div className="order-1 relative rounded-xl overflow-hidden">
-  {/* Overlay */}
-  <div className="absolute inset-0 bg-yellow-100/40 pointer-events-none z-10"></div>
+      {/* ------------------ HERO (KEEP EXACTLY AS-IS) ------------------ */}
+      <header
+        ref={headerRef}
+        className="relative text-white overflow-hidden"
+        style={{
+          backgroundImage: "url('/nature4.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          minHeight: "70vh",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(rgba(15,134,191,0.65), rgba(4,78,146,0.70))",
+            backdropFilter: "blur(3px)",
+            willChange: "opacity, transform",
+            zIndex: 0,
+          }}
+        />
 
-  {/* Image */}
-  <img
-    src={imageStory}
-    alt="Ian Cares Foundation"
-    className="w-full h-auto object-cover rounded-xl scale-100 will-change-transform"
-  />
-</div>
-
-
-
-
-        {/* Text Content */}
-        <div className="order-2 space-y-6">
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 pb-4 inline-block relative">
-            Our Story
-            <span className="absolute bottom-0 left-0 w-2/2 h-1 bg-amber-300 rounded-full"></span>
-          </h2>
-          <p className="text-xl text-gray-700 leading-relaxed font-medium flex justify-content text-center">
-            Born out of love and loss, Ian Cares Foundation was established in memory of Ian Austin Mascarenhas — a young soul who inspired compassion and care. After his tragic passing in 2017, his family turned grief into a mission to fight the “3 Ds” — Drinks, Drugs, and Depression — helping others find strength and purpose again.          </p>
-          <p className="text-lg text-gray-900 italic border-l-4 border-sky-300 pl-4 font-bold">
-            We carry this legacy forward, committed to providing holistic care built on the strength of faith and a supportive community.
+        <motion.div
+          className="relative z-10 container mx-auto px-6 lg:px-8 py-75 text-center"
+          initial="hidden"
+          animate="show"      // match heroFade key
+          variants={heroFade}
+        >
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">About IAN Cares Foundation</h1>
+          <p className="mt-6 text-xl md:text-2xl max-w-3xl mx-auto text-white/90">
+            Spreading hope, compassion, and healing through unity and faith.
           </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        </motion.div>
 
+        <svg viewBox="0 0 1440 200" className="w-full h-40 absolute bottom-0 left-0" preserveAspectRatio="none">
+          <path d="M0,64 C240,120 480,120 720,80 C960,40 1200,0 1440,48 L1440,200 L0,200 Z" fill="#ffffff" />
+        </svg>
+      </header>
 
+      {/* ------------------ LAYOUT: SIDEBAR + MAIN CONTENT ------------------ */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* SIDEBAR (left column) */}
+        <aside className="lg:col-span-3">
+          <motion.div className="sticky top-24 rounded-2xl p-6 bg-white border border-gray-100 shadow-md" variants={fadeUp} initial="hidden" animate="show">
+            <h4 className="text-lg font-bold text-sky-800">On this page</h4>
+            <nav className="mt-4 flex flex-col gap-2 text-sm">
+              <a href="#vision" className="py-2 px-3 rounded-md hover:bg-sky-50">Vision</a>
+              <a href="#mission" className="py-2 px-3 rounded-md hover:bg-sky-50">Mission</a>
+              <a href="#story" className="py-2 px-3 rounded-md hover:bg-sky-50">Our Story</a>
+              <a href="#values" className="py-2 px-3 rounded-md hover:bg-sky-50">Core Values</a>
+              <a href="#centre" className="py-2 px-3 rounded-md hover:bg-sky-50">Our Centre</a>
+            </nav>
 
-            {/* 2. Vision & Mission Section - Subtle Yellow-White Background with Floating Cards */}
-            <section className="relative bg-yellow-50 py-24 overflow-hidden"> {/* Distinct yellow-white */}
-                <div className="max-w-6xl mx-auto px-6 md:px-12 space-y-24">
-                    
+            <div className="mt-6 border-t pt-4">
+              <p className="text-sm text-gray-600">Quick contact</p>
+              <a href="/contact" className="mt-3 inline-block w-full text-center px-4 py-2 bg-sky-600 text-white rounded-full font-semibold">Contact Us</a>
+            </div>
+          </motion.div>
+        </aside>
 
-                    {/* Vision Row - Text on Left, Image on Right */}
-                    <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-center">
-                        {/* Left: Vision Text Card (Subtle Blue Container, more prominent shadow) */}
-                        <div className="space-y-6 p-10 rounded-3xl bg-sky-50 shadow-xl shadow-sky-100 transform hover:translate-y-[-8px] transition duration-500 border border-sky-200"
-                             style={{ willChange: 'transform, box-shadow' }}>
-                            <HeartIcon className="w-12 h-12 text-sky-600" />
-                            <h3 className="text-3xl font-extrabold text-sky-800">Vision: Healing</h3>
-                            <p className="text-xl text-gray-700 leading-relaxed">
-                                To create a world where every individual lives free from the burdens of addiction and emotional discrimination, embracing healing, unity, and a deeper faith for a complete recovery.
-                            </p>
-                        </div>
-
-                        <div className="absolute inset-0 bg-yellow-100/20 pointer-events-none z-10"></div>
-
-                        {/* Right: Vision Image - Elevated with softer shadows */}
-                        <div className="relative h-[350px] overflow-hidden rounded-xl shadow-xl shadow-sky-100 transform hover:scale-[1.02] transition duration-500"
-                             style={{ willChange: 'transform, box-shadow' }}>
-                            <img
-                                src={imageVision}
-                                alt="Vision of Unity"
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-sky-500/10"></div>
-                        </div>
-                    </div>
-
-                    {/* Mission Row - Image on Left, Text Card on Right */}
-                    <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-center">
-                        {/* Left: Mission Image - Elevated with softer shadows */}
-                        <div className="relative h-[350px] overflow-hidden rounded-xl shadow-xl shadow-amber-100 transform hover:scale-[1.02] transition duration-500 md:order-1 order-2"
-                             style={{ willChange: 'transform, box-shadow' }}>
-                            <img
-                                src={imageMission}
-                                alt="Mission of Holistic Recovery"
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-amber-500/10"></div>
-                        </div>
-
-                        {/* Right: Mission Text Card (Subtle Yellow Container, more prominent shadow) */}
-                        <div className="space-y-6 p-10 rounded-3xl bg-amber-100 shadow-xl shadow-amber-100 transform hover:translate-y-[-8px] transition duration-500 border border-amber-200 md:order-2 order-1"
-                             style={{ willChange: 'transform, box-shadow' }}>
-                            <TargetIcon className="w-12 h-12 text-amber-600" />
-                            <h3 className="text-3xl font-extrabold text-sky-800">Mission: Recovery</h3>
-                            <p className="text-xl text-gray-700 leading-relaxed">
-                                To provide comprehensive, holistic recovery programs that nurture the mind, body, and soul. We integrate professional therapy, spiritual grounding, and essential family support services.
-                            </p>
-                            <button className="text-sky-600 font-semibold text-base hover:text-sky-800 transition duration-300 flex items-center pt-2">
-                                Our Programs
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
+        {/* MAIN (right column) */}
+        <main className="lg:col-span-9 space-y-8">
+          {/* VISION & MISSION (stacked cards) */}
+          <motion.section id="vision" className="space-y-6" variants={fadeUp} initial="hidden" animate="show">
+            <div className="grid md:grid-cols-2 gap-6 items-center">
+              <article className="relative p-6 rounded-2xl bg-white border border-gray-100 shadow-md">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-50 border border-sky-100 mb-4">
+                  <HeartIcon className="w-6 h-6" />
                 </div>
-            </section>
+                <h3 className="text-2xl font-extrabold text-sky-800 mb-2">Vision: Healing</h3>
+                <p className="text-base text-gray-700 leading-relaxed">
+                  We envision a world where every individual lives free from addiction, emotional suffering, and social stigma — a world where faith and compassion become the pillars of healing. Through targeted awareness, quality education, and community support, we restore hope and help people rediscover inner strength and rebuild relationships.
+                </p>
+              </article>
 
-            {/* 3. Core Values Section - Slightly Deeper Yellow Background with Floating Cards */}
-            <div className="bg-yellow-100 py-20 sm:py-32"> {/* A slightly deeper yellow shade */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-4xl font-extrabold text-gray-900 text-center mb-16">
-                        <span className="text-amber-600">Core</span> Values
-                    </h2>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {coreValues.map((value, idx) => (
-                            <div
-                                key={idx}
-                                // White Card background with more prominent shadow and subtle lift on hover
-                                className={`p-8 rounded-[2rem] bg-white flex flex-col items-center text-center
-                                  border-b-4 ${value.border} cursor-pointer
-                                  ${value.shadow}
-                                  transform hover:scale-[1.03] hover:-translate-y-2 transition duration-300 relative overflow-hidden`}
-                                style={{ willChange: 'transform, box-shadow' }}
-                            >
-                                <div className={`p-5 rounded-full ${value.bg} mb-5 relative z-10 shadow-lg`}>
-                                  <value.icon className={`m-10 h-10 ${value.color}`} />
-                                </div>
-                                <h4 className="text-2xl font-extrabold text-gray-800 mb-2 relative z-10">{value.title}</h4>
-                                <p className="text-gray-600 text-base relative z-10">{value.desc}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+              <div className="rounded-2xl overflow-hidden shadow-2xl">
+                <img src={imageVision} alt="Vision of Unity" className="w-full h-64 md:h-80 object-cover" />
+              </div>
             </div>
 
-            <div className="bg-white py-20 sm:py-32">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div
-      className="relative rounded-[2rem] p-12 md:p-20 border-4 border-sky-300 transform hover:scale-[1.005] transition duration-500 overflow-hidden"
-      style={{
-        backgroundImage: 'url("/people5.jpeg")', // Replace with actual filename
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        boxShadow: '0 15px 30px -5px rgba(37, 99, 235, 0.12)',
-        willChange: 'transform, box-shadow',
-      }}
-    >
-      {/* White overlay that covers entire container */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-0 rounded-[2rem]" />
+            <div className="grid md:grid-cols-2 gap-6 items-center" id="mission">
+              <div className="rounded-2xl overflow-hidden shadow-2xl">
+                <img src={imageMission} alt="Mission" className="w-full h-64 md:h-80 object-cover" />
+              </div>
 
-      {/* Content sits above the overlay */}
-      <div className="relative z-10">
-        <p className="text-3xl md:text-4xl text-sky-900 font-serif italic text-center leading-snug tracking-wide">
-          "The greatest journey is the one where we find compassion within ourselves, and extend it to all."
-        </p>
-        <p className="text-center mt-8 text-lg font-semibold text-sky-800/80">— Ian Cares Philosophy</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-            {/* 5. Centre Section - Base Pale Yellow Background with Elevated White Card */}
-            <div className="bg-yellow-50 py-20 sm:py-32"> {/* Base pale yellow */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-[2rem] p-10 md:p-16 shadow-2xl shadow-yellow-200 border-t-8 border-sky-500 transform hover:translate-y-[-5px] transition duration-500"
-                         style={{ willChange: 'transform, box-shadow' }}>
-                        <div className="grid lg:grid-cols-2 gap-10 items-center">
-                            <div>
-                                <h3 className="text-4xl md:text-4xl font-extrabold text-center mb-6 relative pb-2 inline-block text-sky-900">
-  The Sarva Dharma Sangama Centre
-  <span className="absolute bottom-0 left-0 w-full h-1 bg-amber-500 rounded-full"></span>
-</h3>
-
-
-
-                                <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                                  Located at Quila, Kinnigoli, Sarva Dharma Sangama is a one-of-a-kind rehabilitation and wellness centre — bringing together spirituality, counselling, and community care under one roof.                                </p>
-                                <p className="text-xl text-sky-700 font-semibold italic border-l-4 border-amber-500 pl-4">
-                                  "When faiths unite, healing begins."                                </p>
-                                {/* Action button (BLUE BUTTON) */}
-                                <button className="mt-8 px-8 py-3 bg-sky-600 text-white font-bold rounded-full shadow-lg shadow-sky-300/50 hover:bg-sky-700 transition duration-300">
-                                    Visit Us
-                                </button>
-                            </div>
-                            <div className="hidden lg:block">
-                                <img
-                                    src={imageCentre}
-                                    alt="Sarva Dharma Sangama Centre"
-                                    className="w-full h-auto rounded-3xl shadow-2xl shadow-gray-300/80 object-cover border-4 border-white transform hover:scale-[1.01] transition duration-500"
-                                    style={{ willChange: 'transform, box-shadow' }}
-                                />
-                            </div>
-                        </div>
-                    </div>
+              <article className="relative p-6 rounded-2xl bg-amber-50 border border-amber-200 shadow-md">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100 border border-amber-200 mb-4">
+                  <TargetIcon className="w-6 h-6" />
                 </div>
+                <h3 className="text-2xl font-extrabold text-sky-800 mb-2">Mission: Recovery</h3>
+                <p className="text-base text-gray-700 leading-relaxed">
+                  Providing holistic, compassionate, faith-inspired recovery programs that nurture mind, body, and soul. We combine professional counselling, evidence-based therapies, spiritual guidance, and family support to create long-term change.
+                </p>
+              </article>
             </div>
+          </motion.section>
 
-        </section>
-    );
-};
+          {/* OUR STORY (unchanged content) */}
+          <motion.section id="story" className="bg-gradient-to-b from-white to-gray-50 rounded-2xl p-6 shadow-inner" variants={fadeUp} initial="hidden" animate="show">
+            <div className="grid md:grid-cols-2 gap-6 items-start">
+              <div>
+                <h2 className="text-4xl font-extrabold text-gray-900 mb-4">How we Started</h2>
+                <p className="text-lg text-gray-700 leading-relaxed mb-4">
+                  Born out of love, loss, and a steadfast desire to help others, Ian Cares Foundation was established in memory of Ian Austin Mascarenhas — a young person whose kindness inspired everyone who knew him.
+                  Following Ian's tragic passing in 2017, family and friends transformed grief into purpose: to fight the “3 Ds” — Drinks, Drugs, and Depression — and to create accessible pathways to recovery and hope.
+                </p>
+                <p className="text-lg text-gray-700 leading-relaxed mb-4">
+                  What began as a personal mission grew into a community movement focused on mental wellbeing, compassionate care, and faith-led restoration. Today, the Foundation stands as a beacon of support — providing counselling, family programs, community outreach, and education to those who need it most.
+                </p>
+                <p className="text-lg font-semibold italic text-sky-700 border-l-4 border-sky-300 pl-4">
+                  We carry this legacy forward, committed to providing holistic care built on faith and community.
+                </p>
+              </div>
 
-export default function App() {
-    return (
-        <>
-            {/* We assume Tailwind is loaded, but include the CDN for completeness in a single-file environment. */}
-            <script src="https://cdn.tailwindcss.com"></script>
-            <About />
-        </>
-    );
+              <div>
+                <img src={imageStory} alt="Ian Cares Foundation" className="w-full rounded-xl shadow-lg object-cover h-72 md:h-80" />
+              </div>
+            </div>
+          </motion.section>
+
+          {/* CORE VALUES (grid) */}
+          <motion.section id="values" className="py-4" variants={fadeUp} initial="hidden" animate="show">
+            <h3 className="text-2xl md:text-3xl font-extrabold mb-4"><span className="text-amber-600">Core</span> Values</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {coreValues.map((v, i) => (
+                <motion.div key={i} className={`p-4 rounded-2xl bg-white border ${v.border} ${v.shadow}`} whileHover={{ y: -6 }}>
+                  <div className={`w-12 h-12 flex items-center justify-center rounded-lg mb-3 ${v.bg} border ${v.border}`}>
+                    <v.icon className={`w-7 h-7 ${v.color}`} />
+                  </div>
+                  <h4 className="text-lg font-bold mb-1">{v.title}</h4>
+                  <p className="text-sm text-gray-600">{v.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+
+          {/* QUOTE */}
+          <motion.section className="py-6" variants={fadeUp} initial="hidden" animate="show">
+            <div className="relative rounded-xl p-6 border-2 border-sky-100 bg-white shadow">
+              <p className="text-lg md:text-2xl text-sky-900 font-serif italic leading-tight text-center">
+                "The greatest journey is the one where we find compassion within ourselves, and extend it to all."
+              </p>
+              <p className="mt-3 text-center text-sky-700 font-semibold">— Ian Cares Philosophy</p>
+            </div>
+          </motion.section>
+
+          {/* CENTRE */}
+          <motion.section id="centre" className="py-4" variants={fadeUp} initial="hidden" animate="show">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl border-t-8 border-sky-500 grid md:grid-cols-2 gap-6 items-center">
+              <div>
+                <h3 className="text-2xl font-extrabold text-sky-900 mb-2">The Sarva Dharma Sangama Centre</h3>
+                <p className="text-gray-700 mb-2">Located in Quila, Kinnigoli, the Centre is a rehabilitation and wellness sanctuary rooted in unity and faith.</p>
+                <p className="text-gray-700 mb-2">Programs include group therapy, meditation, family reintegration, and vocational support.</p>
+                <div className="mt-4 flex gap-3">
+                  <button onClick={() => router.push("/contact")} className="px-4 py-2 bg-sky-600 text-white rounded-full font-semibold">Visit Us</button>
+                </div>
+              </div>
+
+              <div className="rounded-xl overflow-hidden shadow-lg">
+                <img src={imageCentre} alt="Sarva Dharma Sangama Centre" className="w-full h-64 md:h-80 object-cover" />
+              </div>
+            </div>
+          </motion.section>
+        </main>
+      </div>
+    </motion.section>
+  );
 }

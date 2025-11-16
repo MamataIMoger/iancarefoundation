@@ -22,17 +22,15 @@ router.get(
   "/",
   asyncHandler(async (req: ExpressRequest, res: ExpressResponse) => {
     const isAdmin = req.query.admin === "true";
-
     const filter = isAdmin ? {} : { status: "approved" };
 
     const stories = await Story.find(filter).sort({ createdAt: -1 });
-
     res.status(200).json(stories);
   })
 );
 
 /* ----------------------------------------------------
-   POST /api/stories → Create a new story
+   POST /api/stories → Create a new story (pending by default)
 ---------------------------------------------------- */
 router.post(
   "/",
@@ -49,10 +47,29 @@ router.post(
       content,
       author,
       category,
-      status: "pending",
+      status: "pending", // default status
     });
 
     res.status(201).json(story);
+  })
+);
+
+/* ----------------------------------------------------
+   Alternative POST /api/story → Submit new story (approved=false)
+   (kept for compatibility if you want a simpler endpoint)
+---------------------------------------------------- */
+router.post(
+  "/story",
+  asyncHandler(async (req: ExpressRequest, res: ExpressResponse) => {
+    const { title, content, author, category } = req.body;
+    const newStory = await Story.create({
+      title,
+      content,
+      author,
+      category,
+      approved: false,
+    });
+    res.status(201).json(newStory);
   })
 );
 
@@ -65,9 +82,7 @@ router.put(
     const { id } = req.params;
     const updateData = req.body; // e.g., { status: "approved" }
 
-    const story = await Story.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const story = await Story.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!story) {
       res.status(404).json({ message: "Story not found" });
@@ -79,7 +94,7 @@ router.put(
 );
 
 /* ----------------------------------------------------
-   DELETE /api/stories?id=123 → delete
+   DELETE /api/stories?id=123 → delete by query param
 ---------------------------------------------------- */
 router.delete(
   "/",
@@ -99,6 +114,18 @@ router.delete(
     }
 
     res.json({ success: true });
+  })
+);
+
+/* ----------------------------------------------------
+   DELETE /api/stories/:id → delete by route param
+---------------------------------------------------- */
+router.delete(
+  "/:id",
+  asyncHandler(async (req: ExpressRequest<{ id: string }>, res: ExpressResponse) => {
+    const { id } = req.params;
+    await Story.findByIdAndDelete(id);
+    res.status(200).json({ message: "Story deleted" });
   })
 );
 

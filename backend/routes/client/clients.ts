@@ -24,6 +24,26 @@ router.get("/", async (_req, res) => {
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message }) // ✅ standardized error
   }
-})
+});
+
+// PUT /api/clients/:id → Update client by ID
+router.put("/:id", async (req, res) => {
+  await dbConnect();
+  try {
+    const { id } = req.params;
+    const updated = await ClientModel.findOneAndUpdate({ id }, req.body, {
+      new: true,
+    });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: "Client not found" });
+    }
+
+    res.status(200).json({ success: true, data: updated });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 export default router;

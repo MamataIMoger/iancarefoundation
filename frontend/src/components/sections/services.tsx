@@ -150,7 +150,7 @@ const PageStyles: React.FC = () => (
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      background-image: url('/nature6.jpg');
+      background-image: url('/bg3.jpg');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;

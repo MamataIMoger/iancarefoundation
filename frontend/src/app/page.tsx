@@ -1,3 +1,4 @@
+// File: frontend/src/app/page.tsx
 import Header from "@/components/sections/header"
 import Hero from "@/components/sections/hero"
 import WhyUs from "@/components/sections/why-us"

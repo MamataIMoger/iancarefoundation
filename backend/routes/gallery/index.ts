@@ -31,7 +31,7 @@ router.post(
   "/",
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await dbConnect()
-    const { name, imageUrl } = req.body
+    const { name, imageUrl } = req.body;
 
     if (!name || !imageUrl) {
       res.status(400).json({ error: "Missing name or imageUrl" })
@@ -52,28 +52,29 @@ router.post(
 router.put(
   "/:id",
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    await dbConnect()
-    const { id } = req.params
-    const { imageUrl } = req.body
+    await dbConnect();
+    const { id } = req.params;
+    const { imageUrl, name } = req.body;
 
-    if (!imageUrl) {
-      res.status(400).json({ error: "Missing imageUrl" })
-      return
+    if (!imageUrl || !name) {
+      res.status(400).json({ error: "Missing imageUrl or name" });
+      return;
     }
 
     try {
-      const updated = await Gallery.findByIdAndUpdate(id, { imageUrl }, { new: true })
+      const updated = await Gallery.findByIdAndUpdate(id, { imageUrl, name }, { new: true });
       if (!updated) {
-        res.status(404).json({ error: "Album not found" })
-        return
+        res.status(404).json({ error: "Album not found" });
+        return;
       }
-      res.status(200).json(updated)
+      res.status(200).json(updated);
     } catch (error: any) {
-      console.error("❌ Error updating album:", error.message)
-      res.status(500).json({ error: "Failed to update album" })
+      console.error("❌ Error updating album:", error.message);
+      res.status(500).json({ error: "Failed to update album" });
     }
   })
-)
+);
+
 
 // DELETE /api/gallery/:id → Delete an album
 router.delete(

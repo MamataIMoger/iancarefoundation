@@ -225,13 +225,15 @@ useEffect(() => {
       <header
         className="relative text-white overflow-hidden"
         style={{
-          backgroundImage: "url('/meditation1.png')",
+          backgroundImage: "url('/bg5.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
           minHeight: "90vh",
         }}
       >
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f86bf]/70 to-[#08a0d6]/65 backdrop-blur-[2px]" />
+
        {/* <div className="absolute inset-0 bg-linear-to-b from-[#0f86bf]/60 to-[#08a0d6]/70 backdrop-blur-[2px]" />*/}
         <HeroAnimatedContent />
         <svg
