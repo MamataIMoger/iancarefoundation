@@ -54,9 +54,9 @@ export default function AdminStoriesManager() {
     currentPage * storiesPerPage
   );
 
-  const updateStory = async (id: string, updatedFields: Partial<Story>) => {
+const updateStory = async (id: string, updatedFields: Partial<Story>) => {
   setLoading(true);
-  await fetch(`/api/stories?id=${id}`, {
+  await fetch(`/api/stories/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedFields),
@@ -65,14 +65,16 @@ export default function AdminStoriesManager() {
 };
 
 
+
   const deleteStory = async (id: string) => {
     setLoading(true);
-    await fetch(`/api/stories?id=${id}`, { method: "DELETE" });
+    await fetch(`/api/stories/${id}`, { method: "DELETE" });
     const res = await fetch("/api/stories?admin=true");
     const data = await res.json();
     setStories(data);
     setLoading(false);
   };
+
 
   return (
     <div
@@ -90,21 +92,21 @@ export default function AdminStoriesManager() {
 
 
       {/* Admin/Reader Toggle */}
-      <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
-  <span className="font-bold" style={{ color: 'var(--accent)' }}>
-    {isAdmin ? "Administrator (Moderation Access)" : "Reader (View Only)"}
-  </span>
-  <button
-    onClick={() => setIsAdmin(!isAdmin)}
-    className="py-2 px-4 rounded-lg font-bold text-xs shadow-md transition"
-    style={{
-      backgroundColor: isAdmin ? 'var(--accent)' : 'var(--primary)',
-      color: isAdmin ? 'var(--card)' : 'var(--card-foreground)',
-    }}
-  >
-    Switch to {isAdmin ? "Reader" : "Admin"} View
-  </button>
-</div>
+    <div className="flex justify-between items-center mb-6 bg-muted p-3 rounded-xl shadow-inner border border-border">
+      <span className="font-bold" style={{ color: 'var(--accent)' }}>
+        {isAdmin ? "Administrator (Moderation Access)" : "Reader (View Only)"}
+      </span>
+      <button
+        onClick={() => setIsAdmin(!isAdmin)}
+        className="py-2 px-4 rounded-lg font-bold text-xs shadow-md transition"
+        style={{
+          backgroundColor: isAdmin ? 'var(--accent)' : 'var(--primary)',
+          color: isAdmin ? 'var(--card)' : 'var(--card-foreground)',
+        }}
+      >
+        Switch to {isAdmin ? "Reader" : "Admin"} View
+      </button>
+    </div>
 
 
 

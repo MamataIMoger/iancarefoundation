@@ -1,17 +1,43 @@
-// We import the main dashboard component which contains the layout and logic.
-import Admin from '@/Admin/AdminDashboard'; 
-//import Admin from '../../components/admin-dashboard'; 
+//app/admin/page.tsx
+"use client";
 
-/**
- * AdminPage Component
- * This component acts as the public-facing route handler for /Admin. 
- * It renders the full Admin Dashboard.
- * * NOTE: In a production Next.js application, this file should be protected by
- * middleware or server-side checks to redirect users who are not administrators.
- */
-export default function AdminPage() {
-  return (
-    // The AdminDashboard component handles its own full-screen layout.
-    <Admin />
-  );
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import AdminDashboard from "@/Admin/AdminDashboard";
+
+export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/admin/admin-me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+
+        if (res.ok) {
+          setAuthorized(true);
+        } else {
+          router.replace("/admin_login");
+        }
+      } catch {
+        router.replace("/admin_login");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkAuth();
+  }, [router]);
+
+  if (loading)
+    return <div className="p-6 text-gray-600">Checking admin session...</div>;
+
+  if (!authorized) return null;
+
+  return <AdminDashboard/>;
 }

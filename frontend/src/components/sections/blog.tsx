@@ -118,10 +118,11 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h3>
             <p className="text-gray-700 mb-6 leading-relaxed">
-              {post.content.length > 120
-                ? post.content.substring(0, 120) + "..."
-                : post.content}
-            </p>
+            {stripHtml(post.content).length > 120
+              ? stripHtml(post.content).substring(0, 120) + "..."
+              : stripHtml(post.content)}
+          </p>
+
           </div>
           <div className="flex justify-end mt-4">
             <button
@@ -154,9 +155,11 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
                   "https://placehold.co/400x400/e5e7eb/4b5563?text=Image+Not+Found";
               }}
             />
-            <p className="text-gray-700 leading-relaxed mb-6 whitespace-pre-line">
-              {post.content}
-            </p>
+           <div
+            className="text-gray-700 leading-relaxed mb-6"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+
             <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(false)}
@@ -172,6 +175,12 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
   );
 };
 
+const stripHtml = (html: string) => {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || "";
+};
+
 /* ---------- Main Blog Component with Pagination ---------- */
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -181,19 +190,21 @@ export default function Blog() {
 useEffect(() => {
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/blog`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`);
       if (!res.ok) throw new Error("Failed to fetch posts");
+
       const raw = await res.json();
       const posts = raw.data || [];
+
+      // Only show published posts
       setPosts(posts.filter((p: BlogPost) => p.status === "published"));
     } catch (err) {
       console.error("❌ Error fetching posts:", err);
     }
   };
+
   fetchPosts();
 }, []);
-
-
 
   // Pagination calculation
   const totalPages = Math.ceil(posts.length / postsPerPage);

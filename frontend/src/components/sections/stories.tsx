@@ -142,7 +142,7 @@ export default function StoriesPage() {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/story`);
+        const res = await fetch(`/api/stories`);
         if (!res.ok) throw new Error("Failed to fetch stories");
         const data: Story[] = await res.json();
         setStories(data.filter((s) => s.approved));

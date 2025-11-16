@@ -26,7 +26,7 @@ router.post(
   "/",
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await dbConnect();
-    const { fullName, email, phone, gender, address, timeCommitment } = req.body;
+const { fullName, email, phone, gender, address, timeCommitment, dob } = req.body;
 
     if (!fullName || !email || !phone) {
       res.status(400).json({ success: false, message: "Missing required fields" });
@@ -44,18 +44,17 @@ router.post(
       res.status(409).json({ success: false, message: "Phone already registered" });
       return;
     }
-
-    const newVolunteer = new Volunteer({
-      fullName,
-      email,
-      phone,
-      gender,
-      address,
-      timeCommitment,
-      status: "pending",
-    });
-
-    await newVolunteer.save();
+      const newVolunteer = new Volunteer({
+        fullName,
+        email,
+        phone,
+        gender,
+        address,
+        timeCommitment,
+        dob,  // include dob from request body
+        status: "pending",
+      });
+      await newVolunteer.save();
     console.log("📩 Volunteer submitted:", newVolunteer._id);
     res.status(201).json({ success: true, data: newVolunteer });
   })
