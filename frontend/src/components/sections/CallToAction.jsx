@@ -11,8 +11,6 @@ export default function CallToAction() {
     const el = containerRef.current;
     if (!el) return;
 
-
-
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia &&
@@ -36,10 +34,8 @@ export default function CallToAction() {
     return () => obs.disconnect();
   }, []);
 
-
   const base = 900; // animation duration
   const s1 = 160; // stagger delay
-
 
   return (
     <section
@@ -47,9 +43,7 @@ export default function CallToAction() {
       className="relative py-14 md:py-18 -mt-8"
       style={{ backgroundColor: "#F5E6BE" }}
     >
-
       {/* Top curved white band */}
-
       <svg
         className="absolute -top-12 left-0 w-full pointer-events-none"
         viewBox="0 0 1440 220"
@@ -64,9 +58,7 @@ export default function CallToAction() {
         />
       </svg>
 
-
       {/* soft drop shadow under band */}
-
       <div
         aria-hidden="true"
         style={{
@@ -86,8 +78,6 @@ export default function CallToAction() {
       />
 
       {/* MAIN CONTENT */}
-
-
       <div
         className="relative max-w-7xl mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-8 items-center"
         style={{ zIndex: 5 }}
@@ -100,31 +90,25 @@ export default function CallToAction() {
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(22px)",
               transition: `opacity ${base}ms ease ${s1 * 1}ms, transform ${base}ms ease ${s1 * 1}ms`,
-
             }}
           >
             The Sooner You Seek Help,
             <span
               className="block text-[#B98B2F]"
               style={{
-
                 opacity: visible ? 1 : 0,
                 transform: visible ? "translateY(0)" : "translateY(22px)",
-                transition: `opacity ${base}ms ease ${s1 * 2}ms, transform ${base}ms ease ${s1 * 2}ms`,
-
-                display: "block",
-                opacity: visible ? 1 : 0,
-                transform: visible ? "translateY(0px)" : "translateY(22px)",
                 transition: `opacity ${base}ms cubic-bezier(.19,1,.22,1) ${
                   s1 * 1 + 120
-                }ms, transform ${base}ms cubic-bezier(.19,1,.22,1) ${s1 * 1 + 120}ms`,
-
+                }ms, transform ${base}ms cubic-bezier(.19,1,.22,1) ${
+                  s1 * 1 + 120
+                }ms`,
+                display: "block",
               }}
             >
               The Better Are The Chances to Recovery
             </span>
           </h2>
-
 
           <p
             className="text-sm md:text-base text-[#0B3D43]/80"
@@ -132,7 +116,6 @@ export default function CallToAction() {
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(26px)",
               transition: `opacity ${base}ms ease ${s1 * 3}ms, transform ${base}ms ease ${s1 * 3}ms`,
-
             }}
           >
             Don’t wait for tomorrow.{" "}
@@ -142,22 +125,17 @@ export default function CallToAction() {
           </p>
         </div>
 
-
         {/* RIGHT BUTTON */}
         <div className="flex md:justify-end" style={{ paddingTop: 36 }}>
-          {/* ✅ Updated Link destination */}
           <Link
             href="/services#booking=1"
             scroll={true}
-
             className="bg-[#FFC72C] text-[#0B3D43] font-semibold py-3 px-8 md:py-4 md:px-10 rounded-full 
                        text-sm md:text-base shadow-[0_10px_30px_rgba(3,35,38,0.18)] hover:translate-y-[-3px] transform transition-all duration-300"
             style={{
               opacity: visible ? 1 : 0,
-
               transform: visible ? "translateY(0)" : "translateY(16px)",
               transition: `opacity ${base}ms ease ${s1 * 4}ms, transform ${base}ms ease ${s1 * 4}ms`,
-
             }}
           >
             Book a Confidential Consultation ➜
@@ -165,9 +143,7 @@ export default function CallToAction() {
         </div>
       </div>
 
-
       {/* subtle bottom fade to footer */}
-
       <svg
         className="absolute bottom-0 left-0 w-full pointer-events-none"
         viewBox="0 0 1440 80"
