@@ -1,5 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { easeOut } from "framer-motion";
+
 
 /* ---------- Types ---------- */
 interface Album {
@@ -9,11 +12,37 @@ interface Album {
   createdAt?: string;
 }
 
+/* -------------------- Variants -------------------- */
+const heroContainer = {
+  hidden: { opacity: 0, y: 30 },   // start faded out and shifted down
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: easeOut,   // ✅ fixed: use imported easeOut
+      staggerChildren: 0.2, // animate children one after another
+    },
+  },
+};
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: easeOut,   // ✅ fixed: no string, use easeOut
+    },
+  },
+};
+
 /* ---------- Hero Section ---------- */
 function HeroGallery() {
   return (
     <header
-      className="relative text-white overflow-hidden"
+      className="relative text-white overflow-hidden mt-14"
       style={{
         backgroundImage: "url('/bg3.jpg')",
         backgroundSize: "cover",
@@ -32,25 +61,38 @@ function HeroGallery() {
         }}
       />
 
-      {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
-            Foundation Gallery
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed">
-            Explore albums capturing moments of joy, compassion, and transformation.
-          </p>
-          <div className="mt-8">
-            <a
-              href="#gallery"
-              className="inline-block px-6 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
-            >
-              View Albums
-            </a>
-          </div>
-        </div>
-      </div>
+      /* -------------------- Content -------------------- */
+<div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
+  <motion.div
+    className="max-w-3xl mx-auto"
+    variants={heroContainer}
+    initial="hidden"
+    animate="show"
+  >
+    <motion.h1
+      variants={heroItem}
+      className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight"
+    >
+      Foundation Gallery
+    </motion.h1>
+
+    <motion.p
+      variants={heroItem}
+      className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed"
+    >
+      Explore albums capturing moments of joy, compassion, and transformation.
+    </motion.p>
+
+    <motion.div variants={heroItem} className="mt-8">
+      <a
+        href="#gallery"
+        className="inline-block px-6 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
+      >
+        View Albums
+      </a>
+    </motion.div>
+  </motion.div>
+</div>
 
       {/* Decorative SVG wave */}
       <svg

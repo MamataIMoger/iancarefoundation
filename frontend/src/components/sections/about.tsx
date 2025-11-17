@@ -89,7 +89,7 @@ export default function About() {
   return (
     <motion.section
       id="about"
-      className="min-h-screen font-['Inter',_sans-serif'] text-gray-900 bg-gray-50"
+      className="min-h-screen font-['Inter',_sans-serif'] text-gray-900 bg-gray-50 mt-14"
       initial="hidden"
       animate="show"    // parent uses "show"
       variants={pageContainer}
