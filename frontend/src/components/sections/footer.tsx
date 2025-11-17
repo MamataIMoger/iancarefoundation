@@ -234,13 +234,12 @@ export default function IANCaresFooter(): React.JSX.Element {
                 Terms
               </Link>
             </div>
-          </div>
-        </div>
-
-        <div className="py-4">
+            <div className="py-4">
           <Link href="/admin_login" className="hover:text-[#FFC72C] transition-colors">
             Admin Login
           </Link>
+        </div>
+          </div>
         </div>
       </div>
     </footer>
