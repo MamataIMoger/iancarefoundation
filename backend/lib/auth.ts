@@ -15,8 +15,8 @@ export function signAdminToken(adminId: string) {
 export function setAdminCookie(res: Response, token: string) {
   const cookie = serialize(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",   // 🔥 MUST BE LAX IN DEV
-    secure: true,     // 🔥 NO HTTPS → must be false
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production", // ✅ only true in Render
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   });
@@ -24,17 +24,19 @@ export function setAdminCookie(res: Response, token: string) {
   res.setHeader("Set-Cookie", cookie);
 }
 
+
 export function clearAdminCookie(res: Response) {
   const cookie = serialize(COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
   });
 
   res.setHeader("Set-Cookie", cookie);
 }
+
 
 export async function getCurrentAdmin(req: Request) {
   const secret = process.env.JWT_SECRET;
