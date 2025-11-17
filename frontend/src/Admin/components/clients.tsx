@@ -1087,14 +1087,14 @@ function AddClientForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white text-black dark:bg-[#1F2937] dark:text-[#F3F4F6] border border-border">
-                  <SelectItem value="Program A" className="hover:bg-muted">
-                    Program A
+                  <SelectItem value="Drug Addict" className="hover:bg-muted">
+                    Drug Addict
                   </SelectItem>
-                  <SelectItem value="Program B" className="hover:bg-muted">
-                    Program B
+                  <SelectItem value="Alcohol Addict" className="hover:bg-muted">
+                    Alcohol Addict
                   </SelectItem>
-                  <SelectItem value="Program C" className="hover:bg-muted">
-                    Program C
+                  <SelectItem value="General" className="hover:bg-muted">
+                    General
                   </SelectItem>
                 </SelectContent>
               </Select>
