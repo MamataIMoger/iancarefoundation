@@ -2,11 +2,11 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "workspaces": ["frontend", "backend"],
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "lint": "eslint .",
-    "start": "next start"
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "start": "npm run start --workspace backend"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
