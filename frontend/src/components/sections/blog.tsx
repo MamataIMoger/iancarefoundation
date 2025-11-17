@@ -220,7 +220,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="font-['Inter',_sans-serif'] bg-white">
+    <div className="font-['Inter',_sans-serif'] bg-white mt-14">
       {/* HERO */}
       <header
         className="relative text-white overflow-hidden"

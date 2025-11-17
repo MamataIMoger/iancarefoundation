@@ -149,7 +149,7 @@ const Contact: React.FC = () => {
 // MAIN PAGE
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white mt-15">
       <main className="flex-grow">
         <Contact />
       </main>

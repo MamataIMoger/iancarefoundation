@@ -300,7 +300,7 @@ export default function GetInvolvedPage() {
   useParallax(headerRef, overlayRef);
 
   return (
-    <section className="font-['Inter',_sans-serif'] bg-white text-gray-900 overflow-hidden">
+    <section className="font-['Inter',_sans-serif'] bg-white text-gray-900 overflow-hidden mt-14">
       {/* HERO */}
       <header
         ref={headerRef}

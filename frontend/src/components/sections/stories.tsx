@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { easeOut } from "framer-motion";
 
 // Types
 interface Story {
@@ -13,11 +15,39 @@ interface Story {
   createdAt?: string;
 }
 
+/* -------------------- Variants -------------------- */
+const heroContainer = {
+  hidden: { opacity: 0, y: 30 },   // start faded out and shifted down
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: easeOut,   // ✅ fixed: use imported easeOut
+      staggerChildren: 0.2, // animate children one after another
+    },
+  },
+};
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: easeOut,   // ✅ fixed: no string, use easeOut
+    },
+  },
+};
+
 /* -------------------- HERO SECTION -------------------- */
 function HeroStories() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <header
-      className="relative text-white overflow-hidden"
+      className="relative text-white overflow-hidden mt-14"
       style={{
         backgroundImage: "url('/bg4.jpg')",
         backgroundSize: "cover",
@@ -37,22 +67,34 @@ function HeroStories() {
 
       <div className="relative z-10 container mx-auto px-6 lg:px-8 py-28 text-center">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
-            Personal Growth Stories
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed">
-            Discover how real people rebuilt their lives through care, courage,
-            and community. Each story reflects that healing is possible — and no
-            journey is too far when walked with compassion.
-          </p>
-          <div className="mt-8">
-            <a
-              href="#stories"
-              className="inline-block px-6 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
+          <motion.div
+            className="hero-inner"
+            variants={heroContainer}
+            initial={shouldReduceMotion ? "show" : "hidden"}
+            animate="show"
+          >
+            <motion.h1 variants={heroItem} className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
+              Personal Growth Stories
+            </motion.h1>
+
+            <motion.p
+              variants={heroItem}
+              className="mt-6 text-lg md:text-xl text-white/90 leading-relaxed"
             >
-              Read All Stories
-            </a>
-          </div>
+              Discover how real people rebuilt their lives through care, courage,
+              and community. Each story reflects that healing is possible — and no
+              journey is too far when walked with compassion.
+            </motion.p>
+
+            <div className="mt-8">
+              <a
+                href="#stories"
+                className="inline-block px-6 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
+              >
+                Read All Stories
+              </a>
+            </div>
+          </motion.div>
         </div>
       </div>
 

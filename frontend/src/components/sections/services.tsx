@@ -632,7 +632,7 @@ export default function ServicesPage() {
       )}
 
       {/* Hero section */}
-      <header className="hero" role="banner" aria-hidden={false}>
+      <header className="hero mt-14" role="banner" aria-hidden={false}>
         <div className="hero-overlay" />
         <motion.div className="hero-inner" variants={heroContainer} initial={shouldReduceMotion ? "show" : "hidden"} animate="show">
           <motion.p variants={heroSub as any} style={{ color: ACCENT_SECONDARY_YELLOW, fontWeight: 700, letterSpacing: ".08em", marginBottom: ".6rem", textTransform: "uppercase" }}>
