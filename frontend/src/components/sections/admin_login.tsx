@@ -24,12 +24,13 @@ export default function AdminLogin() {
 
     try {
       // ✅ FIXED: Correct backend route
-      const res = await fetch("http://localhost:5000/api/admin/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // ✅ ensures cookie is sent/received
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    });
+
 
       const data = await res.json().catch(() => null);
 
