@@ -314,6 +314,8 @@ interface Client {
   address?: string;
 }
 
+
+
 // Utility to format integers with commas (en-IN)
 const nf = new Intl.NumberFormat("en-IN");
 
@@ -1132,6 +1134,8 @@ function PaginatedTable({
   data: Client[];
   setSelectedClient: (client: Client) => void;
   setViewOpen: (open: boolean) => void;
+  setEditingClient: (client: Client) => void;   // Add this
+  setEditOpen: (open: boolean) => void;         // Add this
 }) {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);

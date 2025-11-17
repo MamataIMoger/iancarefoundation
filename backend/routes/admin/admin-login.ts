@@ -1,4 +1,3 @@
-//routes/admin/admin-login.ts 
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import connectDB from "../../config/mongodb";
@@ -10,6 +9,8 @@ export default async function handler(req: Request, res: Response) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  console.log("Login attempt body:", req.body); // ✅ Debug
+
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password required" });
@@ -18,24 +19,39 @@ export default async function handler(req: Request, res: Response) {
   await connectDB();
 
   const normalizedEmail = email.toLowerCase().trim();
-  const admin = await Admin.findOne({ email: normalizedEmail, active: true });
+  const admin = await Admin.findOne({ email: normalizedEmail });
 
   if (!admin) {
     console.error("Login failed: no admin found for", normalizedEmail);
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
+  console.log("Admin found:", {
+    email: admin.email,
+    active: admin.active,
+    mustChangePassword: admin.mustChangePassword,
+  });
+
+  if (!admin.active) {
+    return res.status(403).json({ error: "Account is inactive" });
+  }
+
   const ok = await bcrypt.compare(password, admin.passwordHash);
+  console.log("Password match:", ok);
+
   if (!ok) {
-    console.error("Login failed: password mismatch for", normalizedEmail);
     return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  if (admin.mustChangePassword) {
+    return res.status(403).json({ error: "Password reset required" });
   }
 
   const token = signAdminToken(admin._id.toString());
   setAdminCookie(res, token);
 
   return res.status(200).json({
-    success: true, // ✅ explicit success flag
+    success: true,
     email: admin.email,
     role: admin.role,
   });

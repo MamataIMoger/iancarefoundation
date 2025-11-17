@@ -1,8 +1,7 @@
 {
-  "name": "my-v0-project",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["frontend", "backend"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

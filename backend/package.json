@@ -5,31 +5,38 @@
   "scripts": {
     "dev": "nodemon server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "ts-node server.ts",
+    "seed": "ts-node scripts/seed-admin.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cookie": "^1.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.19.4",
     "nodemailer": "^7.0.10"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/formidable": "^3.4.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24",
+    "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.3",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }
