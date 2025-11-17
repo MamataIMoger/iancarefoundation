@@ -1,4 +1,3 @@
-//frontend/src/components/sections/admin-login.tsx
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,13 +23,13 @@ export default function AdminLogin() {
     }
 
     try {
-          const res = await fetch("/api/admin/admin-login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        });
-
+      // ✅ FIXED: Correct backend route
+      const res = await fetch("http://localhost:5000/api/admin/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // ✅ ensures cookie is sent/received
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await res.json().catch(() => null);
 
@@ -40,6 +39,7 @@ export default function AdminLogin() {
         return;
       }
 
+      // ✅ After successful login, cookie is set by backend
       router.push("/admin");
     } catch {
       setErrorPopup("Server error. Try again.");
@@ -77,7 +77,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@iancaress.org"
+              placeholder="realadmin1@clientdomain.org"
               required
               className="w-full p-3 bg-white dark:bg-gray-700 border border-[#CCCCCC] dark:border-gray-600 rounded-lg focus:border-[#004D99] focus:ring-2 focus:ring-[#004D99]/30 outline-none transition placeholder-gray-400 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100"
             />
@@ -91,7 +91,7 @@ export default function AdminLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Admin@123"
+              placeholder="SecurePass123!"
               required
               className="w-full p-3 bg-white dark:bg-gray-700 border border-[#CCCCCC] dark:border-gray-600 rounded-lg focus:border-[#004D99] focus:ring-2 focus:ring-[#004D99]/30 outline-none transition placeholder-gray-400 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100"
             />

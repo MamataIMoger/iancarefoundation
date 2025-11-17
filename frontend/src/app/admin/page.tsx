@@ -1,4 +1,3 @@
-//app/admin/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,11 +12,10 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch("/api/admin/admin-me", {
+        const res = await fetch("http://localhost:5000/api/admin/admin-me", { // ✅ Fixed URL
           method: "GET",
           credentials: "include",
         });
-
 
         if (res.ok) {
           setAuthorized(true);
@@ -39,5 +37,5 @@ export default function AdminDashboardPage() {
 
   if (!authorized) return null;
 
-  return <AdminDashboard/>;
+  return <AdminDashboard />;
 }

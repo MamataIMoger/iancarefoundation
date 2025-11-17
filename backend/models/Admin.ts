@@ -6,6 +6,8 @@ export interface AdminDocument extends Document {
   passwordHash: string;
   role: "admin" | "superadmin";
   active: boolean;
+  mustChangePassword: boolean; // ✅ added
+  sessionVersion: number;      // ✅ optional, since you had it in DB
   resetToken?: string | null;
   resetTokenExpiresAt?: Date | null;
   createdAt: Date;
@@ -18,6 +20,8 @@ const AdminSchema = new Schema<AdminDocument>(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ["admin", "superadmin"], default: "admin" },
     active: { type: Boolean, default: true },
+    mustChangePassword: { type: Boolean, default: true }, // ✅ declare in schema
+    sessionVersion: { type: Number, default: 1 },         // ✅ declare in schema
     resetToken: { type: String, default: null },
     resetTokenExpiresAt: { type: Date, default: null },
   },
