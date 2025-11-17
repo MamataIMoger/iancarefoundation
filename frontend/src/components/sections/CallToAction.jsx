@@ -127,19 +127,20 @@ export default function CallToAction() {
 
         {/* RIGHT BUTTON */}
         <div className="flex md:justify-end" style={{ paddingTop: 36 }}>
-          <Link
-            href="/services#booking=1"
-            scroll={true}
-            className="bg-[#FFC72C] text-[#0B3D43] font-semibold py-3 px-8 md:py-4 md:px-10 rounded-full 
-                       text-sm md:text-base shadow-[0_10px_30px_rgba(3,35,38,0.18)] hover:translate-y-[-3px] transform transition-all duration-300"
-            style={{
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(16px)",
-              transition: `opacity ${base}ms ease ${s1 * 4}ms, transform ${base}ms ease ${s1 * 4}ms`,
-            }}
-          >
-            Book a Confidential Consultation ➜
-          </Link>
+          <a
+  href="/services#booking=1"
+  className={`bg-[#FFC72C] text-[#0B3D43] font-semibold py-3 px-8 md:py-4 md:px-10 rounded-full 
+              text-sm md:text-base shadow-[0_10px_30px_rgba(3,35,38,0.18)] hover:translate-y-[-3px] 
+              transform transition-all duration-300`}
+  style={{
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(16px)",
+    transition: `opacity ${base}ms ease ${s1 * 4}ms, transform ${base}ms ease ${s1 * 4}ms`,
+  }}
+>
+  Book a Confidential Consultation ➜
+</a>
+
         </div>
       </div>
 
