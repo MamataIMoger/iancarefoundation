@@ -12,10 +12,11 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/admin-me", { // ✅ Fixed URL
-          method: "GET",
-          credentials: "include",
-        });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-me`, {
+        method: "GET",
+        credentials: "include",
+      });
+
 
         if (res.ok) {
           setAuthorized(true);

@@ -16,7 +16,7 @@ export function setAdminCookie(res: Response, token: string) {
   const cookie = serialize(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",   // 🔥 MUST BE LAX IN DEV
-    secure: false,     // 🔥 NO HTTPS → must be false
+    secure: true,     // 🔥 NO HTTPS → must be false
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   });
