@@ -13,16 +13,17 @@ export function signAdminToken(adminId: string) {
 }
 
 export function setAdminCookie(res: Response, token: string) {
-  const cookie = serialize(COOKIE_NAME, token, {
+  const cookie = serialize("adminToken", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production", // ✅ only true in Render
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 7 * 24 * 60 * 60,
   });
 
   res.setHeader("Set-Cookie", cookie);
 }
+
 
 
 export function clearAdminCookie(res: Response) {
