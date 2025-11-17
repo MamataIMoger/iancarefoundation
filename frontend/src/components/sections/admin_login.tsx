@@ -24,7 +24,7 @@ export default function AdminLogin() {
 
     try {
       // ✅ FIXED: Correct backend route
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin-login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
