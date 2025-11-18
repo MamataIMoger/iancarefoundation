@@ -27,10 +27,15 @@ const timeCommitmentOptions = [
   { value: "OneTime", label: "One-Time Events Only" },
 ];
 
-const commitmentMap = timeCommitmentOptions.reduce(
-  (acc, option) => ({ ...acc, [option.value]: option.label }),
-  {}
+const commitmentMap: Record<string, string> = timeCommitmentOptions.reduce(
+  (acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  },
+  {} as Record<string, string>
 );
+
+
 
 /* -------------------------------------
    Submission Interface
