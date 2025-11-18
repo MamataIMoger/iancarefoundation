@@ -37,12 +37,16 @@ const ConsultRequestSchema = new Schema<IConsultRequest>(
       enum: ["Pending", "Accepted", "Contacted", "Rejected"],
       default: "Pending",
     },
-    contactedHistory: [
-      {
-        contactedBy: { type: String },
-        contactedAt: { type: Date, default: Date.now },
-      },
-    ],
+    contactedHistory: {
+  type: [
+    {
+      contactedBy: { type: String },
+      contactedAt: { type: Date, default: Date.now },
+    }
+  ],
+  default: [],
+},
+
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

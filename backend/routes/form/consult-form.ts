@@ -1,9 +1,9 @@
-//backend/routes/consult-form.ts
+// backend/routes/admin/consult-form.ts
 import { Request, Response } from "express";
 import connectDB from "../../config/mongodb";
 import ConsultRequest from "../../models/ConsultRequest";
 
-export default async function handler(req: Request, res: Response) {
+const consultFormHandler = async (req: Request, res: Response) =>  {
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, message: "Method not allowed" });
   }
@@ -32,3 +32,5 @@ export default async function handler(req: Request, res: Response) {
     return res.status(500).json({ success: false, message: "Failed to submit request" });
   }
 }
+
+export default consultFormHandler;

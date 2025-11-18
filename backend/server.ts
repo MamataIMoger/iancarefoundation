@@ -24,10 +24,10 @@ import meHandler from "./routes/admin/admin-me";
 import changePasswordHandler from "./routes/admin/admin-change-password";
 import requestResetHandler from "./routes/admin/admin-request-reset";
 import resetPasswordHandler from "./routes/admin/admin-reset-password";
-import bookConsultHandler from "./routes/admin/book-consult";
-import consultFormHandler from "./routes/admin/consult-form";
-import consultRequestsHandler from "./routes/admin/consult-requests";
-import updateConsultStatusHandler from "./routes/admin/consult-request/status";
+import bookConsultHandler from "./routes/book/book-consult";
+import consultFormHandler from "./routes/form/consult-form";
+import consultRequestsHandler from "./routes/request/consult-requests";
+import updateConsultStatusHandler from "./routes/consult-request/status";
 
 const app = express();
 const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
@@ -37,6 +37,7 @@ app.use(cors({
   origin: allowedOrigin,
   credentials: true
 }));
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
@@ -64,12 +65,12 @@ app.get("/api/admin/admin-me", meHandler);
 app.post("/api/admin/change-password", changePasswordHandler);
 app.post("/api/admin/admin-request-reset", requestResetHandler);
 app.post("/api/admin/admin-reset-password", resetPasswordHandler);
-app.post("/api/admin/book-consult", bookConsultHandler);
-app.get("/api/admin/book-consult", bookConsultHandler);
-app.patch("/api/admin/book-consult", bookConsultHandler);
-app.post("/api/admin/consult-form", consultFormHandler);
-app.get("/api/admin/consult-requests", consultRequestsHandler);
-app.post("/api/admin/consult-request/status", updateConsultStatusHandler);
+app.post("/api/book", bookConsultHandler);
+app.get("/api/book", bookConsultHandler);
+app.patch("/api/book", bookConsultHandler);
+app.post("/api/form", consultFormHandler);
+app.get("/api/request", consultRequestsHandler);
+app.post("/api/request", updateConsultStatusHandler);
 
 // Server start
 const PORT = process.env.PORT || 5000;

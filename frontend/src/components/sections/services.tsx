@@ -399,7 +399,7 @@ function ConsultFormInner({ onClose }: { onClose?: () => void }) {
     delete raw.service_other;
 
     try {
-      const response = await fetch("/api/admin/consult-form", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(raw),
@@ -547,6 +547,7 @@ export default function ServicesPage() {
   const moreRef = React.useRef<HTMLDivElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const [showModal, setShowModal] = React.useState(false);
+
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
