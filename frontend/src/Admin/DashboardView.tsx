@@ -81,7 +81,7 @@ const DashboardView: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/`);
         const data = await res.json();
 
         const transformed = {
