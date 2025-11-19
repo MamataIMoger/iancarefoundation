@@ -21,7 +21,7 @@ export default function WhatWeOffer() {
       title: "De-addiction & Rehabilitation Programs",
       icon: BrainCircuit,
       description:
-        "Holistic recovery plans tailored to long-term sobriety and mental wellness, integrating cognitive behavioral therapy and group support.",
+        "Holistic recovery plans tailored to long-term sobriety and mental wellness, integrating cognitive behavioral therapy and group support. Personalized detox and therapy sessions designed to strengthen resilience and prevent relapse.",
       number: "01",
       image: "/aadict.jpg",
     },
@@ -29,7 +29,7 @@ export default function WhatWeOffer() {
       title: "Depression & Anxiety Counselling",
       icon: CloudLightning,
       description:
-        "Professional support using evidence-based approaches like CBT and mindfulness techniques to effectively manage mood and anxiety disorders.",
+        "Professional support using evidence-based approaches like CBT and mindfulness techniques to effectively manage mood and anxiety disorders. A safe, supportive space to restore balance, build emotional resilience, and improve overall mental well-being.",
       number: "02",
       image: "/depression.jpg",
     },
@@ -37,7 +37,7 @@ export default function WhatWeOffer() {
       title: "Youth Awareness & Motivation Workshops",
       icon: Users2,
       description:
-        "Building resilience, confidence, and internal purpose in young adults through engaging, highly interactive sessions and mentorship.",
+        "Building resilience, confidence, and internal purpose in young adults through engaging, highly interactive sessions and mentorship. Inspiring youth to make informed choices, overcome challenges, and unlock their full potential.",
       number: "03",
       image: "/youthawarness.jpg",
     },
@@ -45,7 +45,7 @@ export default function WhatWeOffer() {
       title: "Family & Relationship Therapy",
       icon: HeartHandshake,
       description:
-        "Strengthening emotional bonds, improving communication, and resolving conflicts within families, couples, and significant relationships.",
+        "Strengthening emotional bonds, improving communication, and resolving conflicts within families, couples, and significant relationships. Guided sessions that foster empathy, trust, and healthier ways of understanding one another.",
       number: "04",
       image: "/parents.jpg",
     },
@@ -53,7 +53,7 @@ export default function WhatWeOffer() {
       title: "Yoga, Meditation & Lifestyle Guidance",
       icon: HandMetal,
       description:
-        "Integrating holistic practices like breathwork, meditation, and nutritional advice for profound mental peace and stress reduction.",
+        "Integrating holistic practices like breathwork, meditation, and nutritional advice for profound mental peace and stress reduction. Daily lifestyle guidance that cultivates inner harmony, boosts energy, and supports long-term wellness.",
       number: "05",
       image: "/meditate.jpg",
     },
@@ -61,7 +61,7 @@ export default function WhatWeOffer() {
       title: "Skill-Building & Personal Growth",
       icon: TrendingUp,
       description:
-        "Workshops designed to maximize individual potential, covering essential life skills, emotional intelligence, and effective leadership principles.",
+        "Workshops designed to maximize individual potential, covering essential life skills, emotional intelligence, and effective leadership principles. Practical training that boosts confidence, decision-making, and real-world problem-solving abilities.",
       number: "06",
       image: "/skill.jpg",
     },
@@ -375,12 +375,6 @@ export default function WhatWeOffer() {
                   <p className="mt-3 text-base font-light" style={{ color: DARK_TEXT, opacity: 0.95, lineHeight: 1.6 }}>
                     {s.description}
                   </p>
-
-                  <div className="mt-5">
-                    <button className="flex items-center gap-2 text-sm font-semibold" style={{ color: primaryColor }}>
-                      View Details <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
               </article>
             );

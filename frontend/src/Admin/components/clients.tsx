@@ -438,14 +438,12 @@ function EditClientForm({
   </Select>
 
   {/* Notes */}
-  <DialogDescription>
   <Label>Client's Condition / Problem</Label>
   <Input
     value={form.notes}
     onChange={(e) => setForm({ ...form, notes: e.target.value })}
     placeholder="Describe condition or issue"
   />
-  </DialogDescription>
 
   {/* Footer */}
   <DialogFooter>
@@ -992,7 +990,7 @@ if (!res.ok) {
               </DialogTitle>
             </DialogHeader>
               
-            <DialogDescription>
+            <DialogDescription asChild>
             {selectedClient && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted dark:bg-[#111827] rounded-md">
                 {/* Image */}
@@ -1052,7 +1050,7 @@ if (!res.ok) {
     <DialogHeader>
       <DialogTitle>Edit Client</DialogTitle>
     </DialogHeader>
-    <DialogDescription>
+    <DialogDescription asChild>
     {editingClient && (
       <EditClientForm
         client={editingClient}
@@ -1090,7 +1088,7 @@ function AddClientForm({
           <DialogTitle>Add Client</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
-          <DialogDescription>
+          <DialogDescription asChild>
           <div className="grid grid-cols-1 gap-3">
             <div>
               <Label htmlFor="name" className="block mb-2">

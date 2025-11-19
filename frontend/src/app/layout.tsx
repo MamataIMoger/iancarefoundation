@@ -10,7 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="admin font-sans">
         <ThemeProvider>
           <div className="theme-fade transition-colors duration-500 ease-in-out">
-            <main className="p-6">{children}</main>
+            <main className="p-0">{children}</main>
           </div>
         </ThemeProvider>
       </body>
