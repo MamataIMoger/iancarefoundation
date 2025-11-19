@@ -1,3 +1,4 @@
+//routes/story/index.ts
 import express from "express";
 import asyncHandler from "express-async-handler";
 import dbConnect from "../../config/mongodb";
@@ -18,15 +19,19 @@ dbConnect();
    Admin: all stories
    Public: approved only
 ---------------------------------------------------- */
-router.get(
-  "/",
-  asyncHandler(async (req: ExpressRequest, res: ExpressResponse) => {
-    const isAdmin = req.query.admin === "true";
-    const filter = isAdmin ? {} : { status: "approved" };
+// backend/routes/story/index.ts
 
-    const stories = await Story.find(filter).sort({ createdAt: -1 });
-    res.status(200).json(stories);
-  })
+router.get(
+  "/",
+  asyncHandler(async (req: ExpressRequest, res: ExpressResponse) => {
+    const isAdmin = req.query.admin === "true";
+
+    // ✅ FIX: Use 'approved: true' for public view. Admin gets all stories {}.
+    const filter = isAdmin ? {} : { approved: true }; 
+
+    const stories = await Story.find(filter).sort({ createdAt: -1 });
+    res.status(200).json(stories);
+  })
 );
 
 /* ----------------------------------------------------
@@ -62,14 +67,15 @@ router.post(
   "/story",
   asyncHandler(async (req: ExpressRequest, res: ExpressResponse) => {
     const { title, content, author, category } = req.body;
-    const newStory = await Story.create({
-      title,
-      content,
-      author,
-      category,
-      approved: false,
-    });
-    res.status(201).json(newStory);
+    const story = await Story.create({
+        title,
+        content,
+        author,
+        category,
+        approved: false,
+        rejected: false,
+      });
+    res.status(201).json(Story);
   })
 );
 

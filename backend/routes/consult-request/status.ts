@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import connectDB from "../../../config/mongodb";
-import ConsultRequest from "../../../models/ConsultRequest";
+import connectDB from "../../config/mongodb";
+import ConsultRequest from "../../models/ConsultRequest";
 
 export default async function handler(req: Request, res: Response) {
   await connectDB();

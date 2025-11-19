@@ -1,3 +1,4 @@
+//models/story
 import { Schema, model, models, Model } from "mongoose"
 
 export interface IStory {
@@ -6,6 +7,7 @@ export interface IStory {
   author: string
   category?: "General" | "Recovery"
   approved?: boolean
+  rejected?: boolean;
   createdAt?: Date
   updatedAt?: Date
 }
@@ -21,6 +23,7 @@ const StorySchema = new Schema<IStory>(
       default: "General",
     },
     approved: { type: Boolean, default: false },
+    rejected: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
