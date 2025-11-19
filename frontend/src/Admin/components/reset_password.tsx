@@ -18,7 +18,7 @@ const ResetPassword: React.FC = () => {
     setMessage(null);
 
     try {
-      const res = await fetch("/api/admin/admin-request-reset", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -47,7 +47,7 @@ const ResetPassword: React.FC = () => {
     setMessage(null);
 
     try {
-      const res = await fetch("/api/admin/admin-reset-password", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

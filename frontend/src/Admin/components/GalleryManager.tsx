@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Loader2, X, Pencil, Trash2 } from "lucide-react";
 
+/* ---------- Types ---------- */
 interface GalleryItem {
   _id?: string;
   id?: string;
@@ -10,6 +11,7 @@ interface GalleryItem {
   createdAt: Date;
 }
 
+/* ---------- Utility ---------- */
 const formatDate = (date: Date): string =>
   new Date(date).toLocaleString("en-US", {
     year: "numeric",
@@ -19,52 +21,41 @@ const formatDate = (date: Date): string =>
     minute: "2-digit",
   });
 
-// Skeleton loader for the gallery page
-interface GallerySkeletonProps {
-  count?: number;
-}
-
-const GallerySkeleton: React.FC<GallerySkeletonProps> = ({ count = 6 }) => {
-  return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto bg-[#F5F5F5] min-h-screen font-sans animate-pulse">
-      <div className="h-10 w-96 mb-2 pt-8 bg-gray-300 rounded"></div>
-      <div className="h-6 w-full mb-8 border-b-2 border-gray-200 pb-4 bg-gray-200 rounded"></div>
-      <div className="mb-12 p-6 bg-white rounded-xl shadow-2xl border-t-4 border-yellow-400">
-        <div className="h-6 w-72 mb-4 bg-gray-300 rounded"></div>
-        <div className="h-10 bg-gray-200 w-full mb-4 rounded-lg"></div>
-        <div className="h-12 bg-gray-200 w-full mb-6 rounded-lg"></div>
-        <div className="flex space-x-3">
-          <div className="flex-1 h-12 bg-gray-300 rounded-lg"></div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: count }).map((_, index) => (
-          <div
-            key={index}
-            className="bg-card text-card-foreground rounded-xl shadow-lg border border-border overflow-hidden animate-pulse"
-          >
-            <div className="w-full h-40 bg-gray-200"></div>
-            <div className="p-4">
-              <div className="h-6 bg-gray-300 w-3/4 mb-1 rounded"></div>
-              <div className="h-4 bg-gray-200 w-1/3 mb-3 rounded"></div>
-            </div>
-          </div>
-        ))}
-      </div>
+/* ---------- Skeleton Loader ---------- */
+const GallerySkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => (
+  <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen font-sans">
+    <div className="mb-8">
+      <div className="h-10 w-80 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl animate-pulse" />
+      <div className="h-4 w-full mt-4 bg-gray-100 rounded animate-pulse" />
     </div>
-  );
-};
+    <div className="mb-8 p-6 rounded-2xl bg-[var(--card)] shadow-neu">
+      <div className="h-6 w-64 bg-gray-100 rounded mb-4 animate-pulse" />
+      <div className="h-12 bg-gray-100 rounded mb-4 animate-pulse" />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-2xl overflow-hidden bg-[var(--card)] shadow-neu p-0">
+          <div className="h-44 bg-gray-100 animate-pulse" />
+          <div className="p-4">
+            <div className="h-5 w-3/4 bg-gray-100 rounded mb-3 animate-pulse" />
+            <div className="h-4 w-1/3 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
+/* ---------- Confirmation Modal ---------- */
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   blue: string;
-  yellow: string;
+  yellow?: string;
 }
-
 const ConfirmationModal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -75,54 +66,72 @@ const ConfirmationModal: React.FC<ModalProps> = ({
 }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-md">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-4 border-b pb-3">
-            <h3 className="text-xl font-bold" style={{ color: blue }}>
-              {title}
-            </h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="w-6 h-6" />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl p-6 bg-[var(--card)] shadow-neu" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold" style={{ color: blue }}>{title}</h3>
+            <p className="text-sm text-gray-600 mt-1">{message}</p>
           </div>
-          <p className="text-gray-700 mb-6">{message}</p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 font-semibold rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="px-4 py-2 font-bold rounded-lg text-white shadow-md"
-              style={{ backgroundColor: blue }}
-            >
-              Confirm Delete
-            </button>
-          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white/50 hover:bg-white/60 text-gray-700"
+          >
+            Cancel
+          </button>
+          <button onClick={onConfirm} className="px-4 py-2 rounded-lg font-semibold text-white" style={{ backgroundColor: blue }}>
+            Confirm Delete
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const GalleryManager = () => {
+/* ----------------------------------------------------------
+                    MAIN COMPONENT START
+----------------------------------------------------------- */
+
+const GalleryManager: React.FC = () => {
   const yellow = "#FFD100";
   const blue = "#005691";
 
   const [albums, setAlbums] = useState<GalleryItem[]>([]);
-  const [albumName, setAlbumName] = useState("");
+  const [albumName, setAlbumName] = useState<string>("");
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [albumToDelete, setAlbumToDelete] = useState<GalleryItem | null>(null);
 
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+
+  /* ---------- ⭐ PAGINATION STATES ADDED ---------- */
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // you can change to 9 or 12
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentItems = albums.slice(indexOfFirst, indexOfLast);
+
+  const totalPages = Math.ceil(albums.length / itemsPerPage);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
+
+  /* ----------------------------------------------------------
+                          FETCH
+  ----------------------------------------------------------- */
   useEffect(() => {
     const fetchAlbums = async () => {
       setIsLoading(true);
@@ -130,18 +139,16 @@ const GalleryManager = () => {
         const res = await fetch("/api/gallery");
         if (!res.ok) throw new Error("Failed to fetch albums.");
         const data = await res.json();
-        const parsed = data.map((item: any) => ({
+        const parsed: GalleryItem[] = data.map((item: any) => ({
           ...item,
           createdAt: new Date(item.createdAt),
         }));
         setAlbums(
-          parsed.sort(
-            (a: GalleryItem, b: GalleryItem) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          parsed.sort((a: GalleryItem, b: GalleryItem) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
         );
       } catch (err) {
-        console.error("Error loading gallery data:", err);
         setError("Could not load gallery data from the server.");
         setAlbums([]);
       } finally {
@@ -151,6 +158,9 @@ const GalleryManager = () => {
     fetchAlbums();
   }, []);
 
+  /* ----------------------------------------------------------
+                      FILE HANDLING
+  ----------------------------------------------------------- */
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -173,7 +183,10 @@ const GalleryManager = () => {
     }
   }, []);
 
-  const handleAddAlbum = async (e: React.FormEvent) => {
+  /* ----------------------------------------------------------
+                        ADD ALBUM
+  ----------------------------------------------------------- */
+  const handleAddAlbum = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!albumName.trim() || !selectedImageBase64) {
       setError("Album Name and Featured Image are required.");
@@ -183,10 +196,10 @@ const GalleryManager = () => {
     setError(null);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: albumName.trim(), imageUrl: selectedImageBase64 }),
-});
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: albumName.trim(), imageUrl: selectedImageBase64 }),
+      });
 
       const newAlbum = await res.json();
       if (!res.ok) throw new Error(newAlbum.message || "Failed to publish album.");
@@ -194,12 +207,13 @@ const GalleryManager = () => {
         ...newAlbum,
         createdAt: new Date(newAlbum.createdAt),
       };
-      setAlbums((prev) =>
+
+      setAlbums(prev =>
         [albumWithDate, ...prev].sort(
-          (a: GalleryItem, b: GalleryItem) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
       );
+
       setAlbumName("");
       setSelectedImageBase64(null);
       const fileInput = document.getElementById("imageFile") as HTMLInputElement;
@@ -211,6 +225,9 @@ const GalleryManager = () => {
     }
   };
 
+  /* ----------------------------------------------------------
+                        EDIT ALBUM
+  ----------------------------------------------------------- */
   const handleEditImage = async (id: string | null) => {
     if (!id || !selectedImageBase64 || !albumName.trim()) {
       setError("Please select a new image and a valid album name to update.");
@@ -224,15 +241,22 @@ const GalleryManager = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrl: selectedImageBase64, name: albumName.trim() }),
       });
+
       const updatedAlbum = await res.json();
-            if (!res.ok) throw new Error(updatedAlbum.message || "Failed to update album.");
-      setAlbums((prev) =>
-        prev.map((item) =>
+      if (!res.ok) throw new Error(updatedAlbum.message || "Failed to update album.");
+
+      setAlbums(prev =>
+        prev.map(item =>
           item._id === id || item.id === id
-            ? { ...item, imageUrl: updatedAlbum.imageUrl, name: updatedAlbum.name }
+            ? {
+                ...item,
+                imageUrl: updatedAlbum.imageUrl,
+                name: updatedAlbum.name,
+              }
             : item
         )
       );
+
       handleCancelEdit();
     } catch (e) {
       setError((e as Error).message || "Failed to update album.");
@@ -241,18 +265,23 @@ const GalleryManager = () => {
     }
   };
 
+  /* ----------------------------------------------------------
+                      DELETE ALBUM
+  ----------------------------------------------------------- */
   const confirmDeleteAlbum = async () => {
     const id = albumToDelete?._id ?? albumToDelete?.id;
     if (!id) return;
     setShowDeleteConfirm(false);
     setAlbumToDelete(null);
+
     try {
       const res = await fetch(`/api/gallery/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const errorBody = await res.json();
         throw new Error(errorBody.message || "Failed to delete album.");
       }
-      setAlbums((prev) => prev.filter((item) => item._id !== id && item.id !== id));
+
+      setAlbums(prev => prev.filter(item => item._id !== id && item.id !== id));
     } catch (e) {
       console.error("Failed to delete album:", e);
     }
@@ -267,245 +296,247 @@ const GalleryManager = () => {
     setEditingAlbumId(null);
     setSelectedImageBase64(null);
     setError(null);
+    setAlbumName("");
     const fileInput = document.getElementById("imageFile") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
 
-  // --- Render ---
+  /* ----------------------------------------------------------
+                        RENDER
+  ----------------------------------------------------------- */
+
   return (
-    <div
-      className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen font-sans transition-colors duration-500"
-      style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
-    >
-      {isLoading ? (
-        <GallerySkeleton count={2} />
-      ) : (
-        <>
-          <h1
-            className="text-4xl md:text-5xl font-extrabold mb-2 pt-8 text-center"
-            style={{ color: blue }}
-          >
-            Gallery Publisher
-          </h1>
-          <p
-            className="text-lg mb-8 border-b-2 pb-4"
-            style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}
-          >
-            Instantly publish new image albums to the public gallery.
-          </p>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen font-sans">
 
-          {/* Admin Post Form */}
-          <div
-            className="mb-12 p-6 rounded-xl shadow-2xl border-t-4"
-            style={{
-              backgroundColor: "var(--card)",
-              color: "var(--card-foreground)",
-              borderColor: yellow,
-            }}
-          >
-            <h2 className="text-2xl font-bold mb-4" style={{ color: blue }}>
-              {editingAlbumId ? "Edit Album Featured Image" : "Publish New Album"}
-            </h2>
-            <form
-              onSubmit={
-                editingAlbumId
-                  ? (e) => {
-                      e.preventDefault();
-                      handleEditImage(editingAlbumId);
-                    }
-                  : handleAddAlbum
-              }
-            >
-              {editingAlbumId && (
-  <div className="mb-4">
-    <label
-      htmlFor="editAlbumName"
-      className="block text-sm font-medium mb-1"
-      style={{ color: "var(--muted-foreground)" }}
-    >
-      Edit Album Title
-    </label>
-    <input
-      id="editAlbumName"
-      type="text"
-      value={albumName}
-      onChange={(e) => setAlbumName(e.target.value)}
-      placeholder="Update album title"
-      required
-      className="w-full p-3 border rounded-lg bg-muted text-foreground border-border focus:ring-[var(--accent)] focus:border-[var(--accent)] transition duration-150 shadow-sm"
-      disabled={isSubmitting}
-    />
-  </div>
-)}
+      {/* HEADER */}
+      <header className="mb-8">
+        <h1 className="text-4xl font-extrabold mb-2" style={{ color: blue }}>
+          Gallery Publisher
+        </h1>
+        <p className="text-gray-600">Publish beautiful albums and manage your content.</p>
+      </header>
 
-              {!editingAlbumId && (
-                <div className="mb-4">
-                  <label
-                    htmlFor="albumName"
-                    className="block text-sm font-medium mb-1"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    Album/Image Title
-                  </label>
-                  <input
-                    id="albumName"
-                    type="text"
-                    value={albumName}
-                    onChange={(e) => setAlbumName(e.target.value)}
-                    placeholder="Enter a descriptive title for the album"
-                    required
-                    className="w-full p-3 border rounded-lg bg-muted text-foreground border-border focus:ring-[var(--accent)] focus:border-[var(--accent)] transition duration-150 shadow-sm"
-                    disabled={isSubmitting}
-                  />
+      {/* ------------------------------------------------------
+                        Publish / Edit Section
+      ------------------------------------------------------- */}
+      <section className="mb-10 p-6 rounded-2xl bg-[var(--card)] shadow-neu border border-gray-100">
+        
+        <form
+          onSubmit={
+            editingAlbumId
+              ? (e: React.FormEvent<HTMLFormElement>) => {
+                  e.preventDefault();
+                  handleEditImage(editingAlbumId);
+                }
+              : handleAddAlbum
+          }
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center"
+        >
+          <div className="md:col-span-2 space-y-4">
+            <input
+              id="albumName"
+              type="text"
+              value={albumName}
+              onChange={(e) => setAlbumName(e.target.value)}
+              placeholder="Album / image title"
+              required
+              className="w-full p-3 rounded-lg border bg-[var(--muted)]"
+            />
+
+            <input
+              id="imageFile"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              required={!editingAlbumId}
+              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:bg-white"
+            />
+
+            {selectedImageBase64 && (
+              <div className="mt-2 p-3 bg-white rounded-lg border shadow-sm flex items-center gap-4">
+                <div className="w-20 h-20 rounded-lg overflow-hidden">
+                  <img src={selectedImageBase64} className="w-full h-full object-cover" />
                 </div>
-              )}
-
-              {/* File Input */}
-              <div className="mb-6">
-                <label
-                  htmlFor="imageFile"
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {editingAlbumId ? "Upload New Image" : "Featured Image Upload (Max 5MB)"}
-                </label>
-                <input
-                  id="imageFile"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  required={!editingAlbumId || !selectedImageBase64}
-                  className="w-full p-3 border border-border rounded-lg focus:ring-[var(--accent)] focus:border-[var(--accent)] transition duration-150 shadow-sm bg-muted"
-                  disabled={isSubmitting}
-                />
+                <div>
+                  <div className="text-sm font-semibold">Preview selected image</div>
+                  <div className="text-xs text-gray-500 mt-1">Looks great — ready to publish.</div>
+                </div>
               </div>
+            )}
 
-              {selectedImageBase64 && (
-                <div className="mb-6 p-4 bg-gray-100 rounded-lg flex items-center space-x-4">
-                  <h4 className="text-sm font-semibold text-gray-700">Preview:</h4>
-                  <img
-                    src={selectedImageBase64}
-                    alt="Selected Preview"
-                    className="w-20 h-20 object-cover rounded-lg shadow-md border-2 border-white"
-                  />
-                </div>
-              )}
+            {error && (
+              <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-red-700">
+                {error}
+              </div>
+            )}
+          </div>
 
-              {error && (
-                <p className="text-red-500 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  {error}
-                </p>
-              )}
+          <div className="flex flex-col gap-4">
+            {editingAlbumId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="w-full py-3 rounded-lg border border-gray-200"
+              >
+                Cancel Edit
+              </button>
+            )}
 
-              <div className="flex space-x-3">
-                {editingAlbumId && (
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    disabled={isSubmitting}
-                    className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-bold rounded-lg shadow-sm transition duration-200 disabled:opacity-50 hover:bg-gray-100"
-                  >
-                    Cancel Edit
-                  </button>
-                )}
+            <button
+              type="submit"
+              disabled={isSubmitting || !selectedImageBase64}
+              className="w-full py-3 rounded-lg font-bold text-white"
+              style={{ background: `linear-gradient(90deg, ${yellow}, ${blue})` }}
+            >
+              {isSubmitting && <Loader2 className="w-5 h-5 animate-spin inline-block mr-2" />}
+              {isSubmitting ? (editingAlbumId ? "Updating..." : "Publishing...") : editingAlbumId ? "Update Image" : "Publish Album"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* ------------------------------------------------------
+                        Published Items
+      ------------------------------------------------------- */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl md:text-3xl font-semibold" style={{ color: blue }}>
+          Published Gallery Albums ({albums.length})
+        </h2>
+      </div>
+
+      {/* No Data */}
+      {!error && albums.length === 0 && (
+        <div className="mb-6 p-4 rounded-lg bg-gray-50 border">
+          loading...
+        </div>
+      )}
+
+      {/* Album List with pagination items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentItems.map((item) => (
+          <article
+            key={item._id ?? item.id}
+            className="rounded-2xl overflow-hidden bg-[var(--card)] border shadow-neu"
+          >
+            <div className="relative h-56 bg-gray-100">
+              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+
+              <div className="absolute top-3 right-3 flex gap-2">
                 <button
-                  type="submit"
-                  disabled={isSubmitting || !selectedImageBase64}
-                  className="flex-1 py-3 px-4 font-bold rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  style={{ backgroundColor: yellow, color: blue }}
+                  onClick={() => {
+                    handleCancelEdit();
+                    setEditingAlbumId(item._id ?? item.id ?? null);
+                    setAlbumName(item.name);
+                  }}
+                  className="p-2 rounded-md bg-white/80 hover:bg-white text-blue-600"
                 >
-                  {isSubmitting ? (
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  ) : null}
-                  {isSubmitting
-                    ? editingAlbumId
-                      ? "Updating Image..."
-                      : "Publishing Album..."
-                    : editingAlbumId
-                    ? "Update Image"
-                    : "Publish Album to Gallery"}
+                  <Pencil className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => handleDeleteInitiate(item)}
+                  className="p-2 rounded-md bg-white/80 hover:bg-white text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            </form>
-          </div>
-
-          {/* Gallery List */}
-          <h2 className="text-3xl font-bold mb-6" style={{ color: blue }}>
-            Published Gallery Albums ({albums.length})
-          </h2>
-
-          {error && albums.length === 0 && !isLoading && (
-            <div className="text-center p-6 bg-red-100 text-red-700 rounded-lg border border-red-300">
-              <p className="font-semibold">Error Loading Data:</p>
-              <p>{error}</p>
             </div>
-          )}
 
-          {!error && albums.length === 0 && !isLoading && (
-            <div className="text-center p-6 bg-gray-100 text-gray-700 rounded-lg border border-gray-300">
-              <p className="font-semibold">No Albums Published Yet</p>
-              <p>Use the form above to add your first gallery item.</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {albums.map((item) => (
-              <div
-                key={item._id || item.id}
-                className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transform hover:scale-[1.02] transition duration-300 ease-in-out"
-              >
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-40 object-cover bg-gray-200"
-                />
-                <div className="p-4 flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold mb-1" style={{ color: blue }}>
-                      {item.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      Published: {formatDate(item.createdAt)}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-  <button
-    onClick={() => {
-      handleCancelEdit();
-      setEditingAlbumId(item._id ?? item.id ?? null);
-      setAlbumName(item.name); // Pre-fill name
-    }}
-    className="text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-50"
-    title="Edit Featured Image"
-  >
-    <Pencil className="w-5 h-5" />
-  </button>
-  <button
-    onClick={() => handleDeleteInitiate(item)}
-    className="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-50"
-    title="Delete Album"
-  >
-    <Trash2 className="w-5 h-5" />
-  </button>
-</div>
-
-                </div>
+            <div className="p-4 flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: blue }}>{item.name}</h3>
+                <p className="text-xs text-gray-500 mt-1">Published: {formatDate(item.createdAt)}</p>
               </div>
-            ))}
-          </div>
 
-          <ConfirmationModal
-            isOpen={showDeleteConfirm}
-            onClose={() => setShowDeleteConfirm(false)}
-            onConfirm={confirmDeleteAlbum}
-            title={`Delete Album: ${albumToDelete?.name ?? ""}`}
-            message={`Are you sure you want to permanently delete "${albumToDelete?.name}"?`}
-            blue={blue}
-            yellow={yellow}
-          />
-        </>
+              <button
+                onClick={() => {
+                  setModalImageUrl(item.imageUrl);
+                  setModalOpen(true);
+                }}
+                className="px-3 py-1 rounded-full soft-pill text-sm"
+                style={{ color: blue }}
+              >
+                View
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* ------------------------------------------------------
+                        PAGINATION UI
+      ------------------------------------------------------- */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-10 gap-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => {
+              setCurrentPage((p) => p - 1);
+              scrollToTop();
+            }}
+            className="px-4 py-2 rounded-full border bg-white disabled:opacity-40"
+          >
+            Prev
+          </button>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setCurrentPage(i + 1);
+                scrollToTop();
+              }}
+              className={`px-4 py-2 rounded-full border ${
+                currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => {
+              setCurrentPage((p) => p + 1);
+              scrollToTop();
+            }}
+            className="px-4 py-2 rounded-full border bg-white disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
       )}
+
+      {/* Image Modal */}
+      {modalOpen && modalImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="relative max-w-xl w-full rounded-lg bg-white p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-xl font-bold"
+              onClick={() => setModalOpen(false)}
+            >
+              ×
+            </button>
+
+            <img src={modalImageUrl} className="w-full object-contain rounded" style={{ maxHeight: "70vh" }} />
+          </div>
+        </div>
+      )}
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteAlbum}
+        title={`Delete Album: ${albumToDelete?.name ?? ""}`}
+        message={`Are you sure you want to permanently delete "${albumToDelete?.name}"?`}
+        blue={blue}
+      />
     </div>
   );
 };

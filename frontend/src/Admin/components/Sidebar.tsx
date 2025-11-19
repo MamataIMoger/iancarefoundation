@@ -13,6 +13,7 @@ import {
   HeartPulse,
   X,
   Loader2,
+  LockIcon,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -20,6 +21,7 @@ type SidebarProps = {
   setActiveView: (view: string) => void;
   isOpen: boolean;
   onClose: () => void;
+  onOpen: () => void; // <-- ADDED
 };
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -31,6 +33,7 @@ const iconMap: Record<string, React.ReactNode> = {
   volunteers: <Users size={18} />,
   contact: <MessageSquare size={18} />,
   "Consult-request": <HeartPulse size={18} />,
+  "change-password":<LockIcon size={18} />,
 };
 
 const navItems = [
@@ -42,6 +45,8 @@ const navItems = [
   { key: "volunteers", label: "Volunteer Submissions" },
   { key: "contact", label: "Contact Messages" },
   { key: "Consult-request", label: "Consult Requests" },
+  { key: "change-password", label: "Change Password" },
+
 ];
 
 export default function Sidebar({
@@ -49,6 +54,7 @@ export default function Sidebar({
   setActiveView,
   isOpen,
   onClose,
+  onOpen, // <-- ADDED
 }: SidebarProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -142,6 +148,16 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
+
+      {/* Mobile Sidebar Toggle Button */}
+      {!isOpen && (
+        <button
+          onClick={onOpen}
+          className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-blue-600 text-white shadow-lg sm:hidden"
+        >
+          ☰
+        </button>
+      )}
 
       {/* Confirm Logout Modal */}
       {confirmOpen && (

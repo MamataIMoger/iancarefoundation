@@ -13,6 +13,9 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Theme state that changes on button click
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -25,12 +28,15 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
     }
 
     try {
-      const res = await fetch("/api/admin/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/change-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ currentPassword, newPassword }),
+        }
+      );
 
       const data = await res.json().catch(() => null);
 
@@ -40,6 +46,8 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
         setMessage("✅ Password updated successfully.");
         setCurrentPassword("");
         setNewPassword("");
+        // Toggle theme on successful update
+        setTheme((prev) => (prev === "light" ? "dark" : "light"));
       }
     } catch (err) {
       console.error(err);
@@ -51,57 +59,99 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
 
   return (
     <div
-      className="relative flex justify-center items-center min-h-[90vh] bg-white"
+      className={`min-h-[90vh] flex justify-center items-center p-8 transition-colors duration-500 ${
+        theme === "light" ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+      }`}
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
-      {/* ---------- Ring Loader Overlay ---------- */}
       {loading && (
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex flex-col items-center justify-center z-20 transition-all animate-fadeIn">
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex flex-col items-center justify-center z-20 animate-fadeIn">
           <div className="relative w-20 h-20 flex items-center justify-center">
-            <div className="absolute inset-0 border-[6px] border-amber-400/40 border-t-amber-500 rounded-full animate-spinRing shadow-[0_0_15px_#f59e0baa]" />
+            <div className="absolute inset-0 border-[6px] border-amber-400/40 border-t-amber-500 rounded-full animate-spinRing" />
             <div className="absolute w-10 h-10 bg-amber-400/20 rounded-full blur-md animate-pulseGlow" />
           </div>
-          <p className="text-amber-600 font-semibold text-base tracking-wide mt-5 animate-pulse">
+          <p className="text-amber-600 font-semibold mt-5 animate-pulse">
             Updating password...
           </p>
         </div>
       )}
 
-      {/* ---------- Password Change Card ---------- */}
-      <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 z-10 animate-fadeUp">
+      <div
+        className={`relative p-8 rounded-2xl shadow-2xl w-full max-w-md border z-10 animate-fadeUp ${
+          theme === "light"
+            ? "bg-white border-gray-100"
+            : "bg-gray-800 border-gray-700"
+        }`}
+      >
         <div className="flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-[#004D99] mr-2" />
-          <h2 className="text-2xl font-bold text-[#004D99]">
+          <Lock
+            className={`w-8 h-8 mr-2 ${
+              theme === "light" ? "text-[#004D99]" : "text-[#88b0f4]"
+            }`}
+          />
+          <h2
+            className={`text-2xl font-bold ${
+              theme === "light" ? "text-[#004D99]" : "text-[#88b0f4]"
+            }`}
+          >
             Change Password
           </h2>
         </div>
-        <p className="text-sm text-gray-600 mb-6 text-center">
-          Logged in as <strong className="text-[#004D99]">{email}</strong>
+
+        <p
+          className={`text-sm mb-6 text-center ${
+            theme === "light" ? "text-gray-600" : "text-gray-300"
+          }`}
+        >
+          Logged in as{" "}
+          <strong
+            className={`${
+              theme === "light" ? "text-[#004D99]" : "text-[#a8c0ff]"
+            }`}
+          >
+            {email}
+          </strong>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${
+                theme === "light" ? "text-gray-700" : "text-gray-300"
+              }`}
+            >
               Current Password
             </label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:border-[#004D99] focus:ring-2 focus:ring-[#004D99]/30 outline-none transition-all"
+              className={`w-full p-3 rounded-lg focus:ring-2 ${
+                theme === "light"
+                  ? "border border-gray-300 focus:border-[#004D99] focus:ring-[#004D99]/30"
+                  : "border border-gray-600 bg-gray-700 focus:border-[#88b0f4] focus:ring-[#88b0f4]/40 text-white"
+              }`}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${
+                theme === "light" ? "text-gray-700" : "text-gray-300"
+              }`}
+            >
               New Password
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:border-[#004D99] focus:ring-2 focus:ring-[#004D99]/30 outline-none transition-all"
+              className={`w-full p-3 rounded-lg focus:ring-2 ${
+                theme === "light"
+                  ? "border border-gray-300 focus:border-[#004D99] focus:ring-[#004D99]/30"
+                  : "border border-gray-600 bg-gray-700 focus:border-[#88b0f4] focus:ring-[#88b0f4]/40 text-white"
+              }`}
               required
             />
           </div>
@@ -109,7 +159,7 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg shadow-lg hover:bg-amber-600 active:scale-95 transition-all duration-150 disabled:opacity-60 flex items-center justify-center"
+            className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg shadow-lg hover:bg-amber-600 transition disabled:opacity-60 flex items-center justify-center"
           >
             {loading ? (
               <>
@@ -137,26 +187,7 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
         )}
       </div>
 
-      {/* ---------- Animations ---------- */}
       <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
         @keyframes spinRing {
           from {
             transform: rotate(0deg);
@@ -179,26 +210,32 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
             transform: scale(0.9);
           }
         }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-in-out;
-        }
-        .animate-fadeUp {
-          animation: fadeUp 0.6s ease-out;
-        }
         .animate-spinRing {
           animation: spinRing 1.2s linear infinite;
         }
         .animate-pulseGlow {
-          animation: pulseGlow 1.6s ease-in-out infinite;
+          animation: pulseGlow 1.8s ease-in-out infinite;
         }
         .loaderRingSmall {
           width: 18px;
           height: 18px;
-          border: 3px solid #ffffff50;
+          border: 3px solid #ffffff40;
           border-top-color: #fff;
           border-radius: 50%;
-          animation: spinRing 0.9s linear infinite;
+          animation: spinRing 0.8s linear infinite;
+        }
+        .animate-fadeUp {
+          animation: fadeUp 0.6s ease-out;
+        }
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
     </div>
