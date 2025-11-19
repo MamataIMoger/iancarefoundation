@@ -201,14 +201,81 @@
     color: var(--foreground);
     font-weight: bold;
     font-family: 'El Messiri', sans-serif !important;
+    line-height: clamp(1.2, 3vw, 1.4);
   }
 
   .admin p {
   color: var(--muted-foreground, color-mix(in srgb, var(--foreground) 95%, white));
-  font-size: 1.125rem;
+  font-size: clamp(0.95rem, 2.5vw, 1.125rem); /* scales between mobile and desktop */  
   font-weight: 500;
-  line-height: 1.75rem;
-  text-align: center;
+  line-height: 1.6;
+  text-align: center;  
+}
+
+.admin h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+  .admin h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+  }
+  .admin h3 {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+  }
+  .admin body {
+    margin: 0;
+    padding: clamp(0.5rem, 2vw, 1.5rem);
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .admin .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  .admin .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .admin .sidebar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      width: 100%;
+      height: auto;
+      z-index: 50;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+    .admin .sidebar.open {
+      transform: translateY(0);
+    }
+    .admin .grid {
+    grid-template-columns: 1fr; /* stack items */
+  }
+  .admin .flex {
+    flex-direction: column; /* stack items */
+  }
+  }
+  .admin .chart,
+  .admin table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  .admin button,
+  .admin input,
+  .admin select {
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    padding: clamp(0.5rem, 2vw, 0.75rem);
+  }
+  @layer base {
+  .admin img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 }

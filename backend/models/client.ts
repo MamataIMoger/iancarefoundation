@@ -7,7 +7,7 @@ export interface IClient {
   name: string
   contact: string
   joinDate: string
-  program: "Program A" | "Program B" | "Program C"
+  program: "Drug Addict" | "Alcohol Addict" | "General"
   notes: string
 }
 
@@ -19,8 +19,15 @@ const ClientSchema = new Schema<IClient>(
     name: { type: String, required: true },
     contact: { type: String, required: true },
     joinDate: { type: String, required: true },
-    program: { type: String, enum: ["Program A", "Program B", "Program C"], required: true },
-    notes: { type: String, required: true },
+
+    // 🔥 Updated ONLY the enum values here
+    program: {
+      type: String,
+      enum: ["Drug Addict", "Alcohol Addict", "General"],
+      required: true,
+    },
+
+    notes: { type: String, required: false, default: "" },
   },
   { timestamps: true }
 )

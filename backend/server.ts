@@ -16,6 +16,7 @@ import blogCrudRouter from "./routes/blog/crud";
 import volunteerRouter from "./routes/volunteer";
 import galleryRouter from "./routes/gallery/index";
 import storyRouter from "./routes/story/index";
+import dashboardRoute from "./routes/dashboard/index";
 
 // Admin handlers
 import loginHandler from "./routes/admin/admin-login";
@@ -57,6 +58,8 @@ app.use("/api/blog/crud", blogCrudRouter);
 app.use("/api/volunteer", volunteerRouter);
 app.use("/api/gallery", galleryRouter);
 app.use("/api/stories", storyRouter);
+app.use("/api/dashboard", dashboardRoute);
+
 
 // Admin routes
 app.post("/api/admin/admin-login", loginHandler);

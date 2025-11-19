@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRecoveryProgress } from "@/hooks/useRecoveryProgress";
 import {
   Plus,
   Users,
@@ -37,6 +38,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -67,6 +80,8 @@ import {
   Bar,
   Legend,
 } from "recharts";
+
+
 
  interface BarDataItem {
              program: string;
@@ -132,7 +147,7 @@ function FilterBar({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 w-full">
                 <div className="lg:col-span-2">
                   <Label htmlFor="search" className="sr-only">
                     Search
@@ -182,14 +197,14 @@ function FilterBar({
                       <SelectItem value="all" className="hover:bg-muted">
                         All
                       </SelectItem>
-                      <SelectItem value="Program A" className="hover:bg-muted">
-                        Program A
+                      <SelectItem value="Drug Addict" className="hover:bg-muted">
+                        Drug Addict
                       </SelectItem>
-                      <SelectItem value="Program B" className="hover:bg-muted">
-                        Program B
+                      <SelectItem value="Alcohol Addict" className="hover:bg-muted">
+                        Alcohol Addict
                       </SelectItem>
-                      <SelectItem value="Program C" className="hover:bg-muted">
-                        Program C
+                      <SelectItem value="General" className="hover:bg-muted">
+                        General
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -309,7 +324,7 @@ interface Client {
   contact: string;
   joinDate: string; // ISO date
   status: "Recovered" | "Under Recovery" | "New";
-  program: "Program A" | "Program B" | "Program C";
+  program: "Drug Addict" | "Alcohol Addict" | "General";
   notes?: string;
   address?: string;
 }
@@ -439,6 +454,7 @@ function EditClientForm({
 }
 
 
+
 export default function ClientsDashboard() {
   const [clients, setClients] = useState<Client[]>([]);
   const { toast } = useToast?.() || { toast: (x: any) => console.log(x) };
@@ -449,7 +465,7 @@ export default function ClientsDashboard() {
 
   // Fetch clients and unwrap 'data' from backend response
   useEffect(() => {
-    fetch("/api/clients")
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/clients`)
       .then((res) => res.json())
       .then((response) => {
         if (response && Array.isArray(response.data)) {
@@ -464,6 +480,9 @@ export default function ClientsDashboard() {
         console.error("Failed to load clients", err);
       });
   }, []);
+
+ 
+
 
   // Filters and State
   const [query, setQuery] = useState("");
@@ -573,8 +592,12 @@ export default function ClientsDashboard() {
     ];
   }, [filtered]);
 
+  // ----- Dynamic Stacked Bar Chart: Recovery Progress -----
+const recoveryProgressData = useRecoveryProgress(filtered);
+
+
   // barData calculation: recovery rate per program
-const programs = ["Program A", "Program B", "Program C"] as const;
+const programs = ["Drug Addict", "Alcohol Addict", "General"] as const;
 
   const barData = useMemo(() => {
   return programs.map((p) => {
@@ -599,7 +622,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
     contact: "",
     joinDate: new Date().toISOString().slice(0, 10),
     status: "New" as Client["status"],
-    program: "Program A" as Client["program"],
+    program: "Drug Addict" as Client["program"],
     notes: "",
     address: "",
   });
@@ -626,14 +649,18 @@ const programs = ["Program A", "Program B", "Program C"] as const;
       notes: form.notes?.trim() || "",
     };
 
+    let res: Response | null = null;
     try {
-      const res = await fetch("/api/clients", {
+        res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/clients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newClient),
       });
-      if (!res.ok) throw new Error("Failed to save client");
-
+if (!res.ok) {
+      const backendError = await res.text();
+      console.error("🔥 Backend Error:", backendError);
+      throw new Error(backendError || "Failed to save client");
+    }
       const saved = await res.json();
       setClients((prev) => [saved.data || newClient, ...prev]);
       setOpen(false);
@@ -642,7 +669,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
         contact: "",
         joinDate: new Date().toISOString().slice(0, 10),
         status: "New",
-        program: "Program A",
+        program: "Drug Addict",
         notes: "",
         address: "",
       });
@@ -651,9 +678,33 @@ const programs = ["Program A", "Program B", "Program C"] as const;
         description: `${saved.data?.name || newClient.name} (${saved.data?.id || newClient.id}) has been saved.`,
       });
     } catch (err) {
-      reportFormError("Could not save client to server");
-    }
+    console.error("❌ Add Client Failed:", err);
+    reportFormError("Could not save client");
   }
+  }
+
+  async function handleDelete(client: Client) {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/clients/${client.id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) throw new Error("Delete failed");
+
+    setClients((prev) => prev.filter((c) => c.id !== client.id));
+
+    toast?.({
+      title: "Client Deleted",
+      description: `${client.name} has been removed.`,
+    });
+  } catch (err) {
+    console.error("❌ Delete failed", err);
+    toast?.({
+      title: "Error",
+      description: "Could not delete client",
+    });
+  }
+}
 
   function reportFormError(message: string) {
     toast?.({
@@ -709,7 +760,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
                   <span className="text-white dark:text-[#0A0A0A] font-semibold">Add Client</span>
                 </Button>
               </DialogTrigger>
-              <AddClientForm form={form} setForm={setForm} onSubmit={handleAddClient} />
+              <AddClientForm form={form} setForm={setForm} onSubmit={handleAddClient} onClose={() => setOpen(false)}/>
             </Dialog>
           </div>
 
@@ -731,7 +782,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
           />
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             <KpiCard
               title="Total Clients Joined"
               value={nf.format(kpis.total)}
@@ -759,7 +810,33 @@ const programs = ["Program A", "Program B", "Program C"] as const;
           </div>
 
           {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+          {/* 🔥 Recovery Progress Stacked Bar Chart — PLACE HERE */}
+<Card className="col-span-1 lg:col-span-3 mt-6 bg-white dark:bg-[#111827] border border-gray-300 dark:border-gray-700 shadow-sm">
+  <CardHeader>
+    <CardTitle className="text-base font-semibold flex items-center gap-2">
+      <Users className="w-4 h-4 text-[#005691]" />
+      Client Recovery Progress
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="h-80">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={recoveryProgressData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis allowDecimals={false} />
+        <ReTooltip />
+        <Legend />
+
+        <Bar dataKey="newClients" stackId="stack" fill="#FF6A00" name="New Clients" />
+        <Bar dataKey="ongoing" stackId="stack" fill="#0CA678" name="Ongoing" />
+        <Bar dataKey="recovered" stackId="stack" fill="#0B7285" name="Recovered" />
+      </BarChart>
+    </ResponsiveContainer>
+  </CardContent>
+</Card>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {/* Pie Chart */}
             <Card className="bg-[#FFFFFF] dark:bg-[#111827] border border-gray-200 dark:border-gray-700 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
@@ -822,7 +899,8 @@ const programs = ["Program A", "Program B", "Program C"] as const;
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4
+ mt-4">
             {/* Bar Chart */}           
             
             <Card className="col-span-1 lg:col-span-2">
@@ -884,6 +962,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
                 setViewOpen={setViewOpen}
                 setEditingClient={setEditingClient}
                 setEditOpen={setEditOpen}
+                handleDelete={handleDelete}
               />
             </CardContent>
           </Card>
@@ -899,7 +978,7 @@ const programs = ["Program A", "Program B", "Program C"] as const;
               <Plus className="w-5 h-5" />
             </Button>
           </DialogTrigger>
-          <AddClientForm form={form} setForm={setForm} onSubmit={handleAddClient} />
+          <AddClientForm form={form} setForm={setForm} onSubmit={handleAddClient} onClose={() => setOpen(false)}/>
         </Dialog>
 
         {/* View Client Modal */}
@@ -994,135 +1073,144 @@ function AddClientForm({
   form,
   setForm,
   onSubmit,
+  onClose,
 }: {
   form: any;
   setForm: any;
   onSubmit: any;
+  onClose: () => void;
 }) {
   return (
     <DialogContent className="max-w-lg bg-card text-card-foreground border border-border dark:bg-[#1F2937] dark:text-[#F3F4F6] overflow-y-auto max-h-[90vh]">
-      <DialogHeader>
-        <DialogTitle>Add Client</DialogTitle>
-      </DialogHeader>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 gap-3">
-          <div>
-            <Label htmlFor="name" className="block mb-2">
-              Name
-            </Label>
-            <Input
-              className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-              id="name"
-              value={form.name}
-              onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))}
-              placeholder="Enter full name"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="contact" className="block mb-2">
-              Contact
-            </Label>
-            <Input
-              className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-              id="contact"
-              value={form.contact}
-              onChange={(e) => setForm((s: any) => ({ ...s, contact: e.target.value }))}
-              placeholder="+91-XXXXXXXXXX"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="address" className="block mb-2">
-              Address
-            </Label>
-            <Input
-              id="address"
-              value={form.address || ""}
-              onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))}
-              placeholder="Enter full address"
-              className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div>  {/* ← WRAPPER ADDED */}
+
+        <DialogHeader>
+          <DialogTitle>Add Client</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-3">
+
             <div>
-              <Label htmlFor="joinDate" className="block mb-2">
-                Join Date
+              <Label htmlFor="name" className="block mb-2">
+                Name
               </Label>
               <Input
+                id="name"
                 className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-                id="joinDate"
-                type="date"
-                value={form.joinDate}
-                onChange={(e) => setForm((s: any) => ({ ...s, joinDate: e.target.value }))}
+                value={form.name}
+                onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))}
+                placeholder="Enter full name"
                 required
               />
             </div>
+
             <div>
-              <Label className="block mb-2">Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm((s: any) => ({ ...s, status: v }))}>
-                <SelectTrigger className="bg-muted text-foreground border border-border mb-2" aria-label="Select status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white text-black dark:bg-[#1F2937] dark:text-[#F3F4F6] border border-border">
-                  <SelectItem value="New" className="hover:bg-muted">
-                    New
-                  </SelectItem>
-                  <SelectItem value="Under Recovery" className="hover:bg-muted">
-                    Under Recovery
-                  </SelectItem>
-                  <SelectItem value="Recovered" className="hover:bg-muted">
-                    Recovered
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="contact" className="block mb-2">
+                Contact
+              </Label>
+              <Input
+                id="contact"
+                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+                value={form.contact}
+                onChange={(e) => setForm((s: any) => ({ ...s, contact: e.target.value }))}
+                placeholder="+91-XXXXXXXXXX"
+                required
+              />
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+            <div>
+              <Label htmlFor="address" className="block mb-2">
+                Address
+              </Label>
+              <Input
+                id="address"
+                value={form.address || ""}
+                onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))}
+                placeholder="Enter full address"
+                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="joinDate" className="block mb-2">
+                  Join Date
+                </Label>
+                <Input
+                  id="joinDate"
+                  type="date"
+                  value={form.joinDate}
+                  onChange={(e) => setForm((s: any) => ({ ...s, joinDate: e.target.value }))}
+                  className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="block mb-2">Status</Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v) => setForm((s: any) => ({ ...s, status: v }))}
+                >
+                  <SelectTrigger className="bg-muted text-foreground border border-border mb-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="New">New</SelectItem>
+                    <SelectItem value="Under Recovery">Under Recovery</SelectItem>
+                    <SelectItem value="Recovered">Recovered</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div>
               <Label className="block mb-2">Program</Label>
-              <Select value={form.program} onValueChange={(v) => setForm((s: any) => ({ ...s, program: v }))}>
-                <SelectTrigger className="bg-muted text-foreground border border-border mb-2" aria-label="Select program">
+              <Select
+                value={form.program}
+                onValueChange={(v) => setForm((s: any) => ({ ...s, program: v }))}
+              >
+                <SelectTrigger className="bg-muted text-foreground border border-border mb-2">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white text-black dark:bg-[#1F2937] dark:text-[#F3F4F6] border border-border">
-                  <SelectItem value="Drug Addict" className="hover:bg-muted">
-                    Drug Addict
-                  </SelectItem>
-                  <SelectItem value="Alcohol Addict" className="hover:bg-muted">
-                    Alcohol Addict
-                  </SelectItem>
-                  <SelectItem value="General" className="hover:bg-muted">
-                    General
-                  </SelectItem>
+                <SelectContent>
+                  <SelectItem value="Drug Addict">Drug Addict</SelectItem>
+                  <SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
+                  <SelectItem value="General">General</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label htmlFor="notes" className="block mb-2">
+                Client's Condition / Problem
+              </Label>
+              <Input
+                id="notes"
+                value={form.notes || ""}
+                onChange={(e) => setForm((s: any) => ({ ...s, notes: e.target.value }))}
+                placeholder="Describe condition or issue"
+                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+              />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="notes" className="block mb-2">
-              Client's Condition / Problem
-            </Label>
-            <Input
-              id="notes"
-              value={form.notes || ""}
-              onChange={(e) => setForm((s: any) => ({ ...s, notes: e.target.value }))}
-              placeholder="Describe condition or issue"
-              className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-            />
-          </div>
-        </div>
-        <DialogFooter className="gap-2">
-          <Button type="button" variant="ghost" onClick={() => (document.querySelector("[data-state=open]") as any)?.click?.()}>
-            Cancel
-          </Button>
-          <Button type="submit">Save</Button>
-        </DialogFooter>
-      </form>
+
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+
+            <Button type="submit">Save</Button>
+          </DialogFooter>
+        </form>
+
+      </div>
     </DialogContent>
   );
 }
+
 
 function PaginatedTable({
   data,
@@ -1130,17 +1218,20 @@ function PaginatedTable({
   setViewOpen,
   setEditingClient,
   setEditOpen,
+  handleDelete,
 }: {
   data: Client[];
   setSelectedClient: (client: Client) => void;
   setViewOpen: (open: boolean) => void;
-  setEditingClient: (client: Client) => void;   // Add this
-  setEditOpen: (open: boolean) => void;         // Add this
+  setEditingClient: (client: Client) => void;
+  setEditOpen: (open: boolean) => void;
+  handleDelete: (client: Client) => void;
 }) {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+
   useEffect(() => {
     if (page > totalPages) setPage(1);
   }, [pageSize, data.length, page, totalPages]);
@@ -1152,26 +1243,31 @@ function PaginatedTable({
 
   return (
     <div className="w-full">
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <Table>
+
+      {/* ============================
+          DESKTOP TABLE (md and up)
+      ============================ */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-border w-full">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Join Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Program</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[12%]">ID</TableHead>
+              <TableHead className="w-[12%]">Name</TableHead>
+              <TableHead className="w-[12%]">Contact</TableHead>
+              <TableHead className="w-[12%]">Join Date</TableHead>
+              <TableHead className="w-[12%]">Status</TableHead>
+              <TableHead className="w-[12%]">Program</TableHead>
+              <TableHead className="w-[12%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {pageData.map((client) => (
               <TableRow key={client.id}>
-                <TableCell className="font-medium">{client.id}</TableCell>
+                <TableCell>{client.id}</TableCell>
                 <TableCell>{client.name}</TableCell>
                 <TableCell>
-                  <a href={`tel:${client.contact}`} className="underline underline-offset-2">
+                  <a href={`tel:${client.contact}`} className="underline">
                     {client.contact}
                   </a>
                 </TableCell>
@@ -1180,40 +1276,149 @@ function PaginatedTable({
                   <StatusBadge status={client.status} />
                 </TableCell>
                 <TableCell>{client.program}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedClient(client);
-                      setViewOpen(true);
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button size="sm" variant="secondary"
-                  onClick={() => {
-                  setEditingClient(client); // pass the row’s client object
-                  setEditOpen(true);
-                }}
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setViewOpen(true);
+                      }}
+                    >
+                      View
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditingClient(client);
+                        setEditOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+
+                    <AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button size="sm" variant="destructive">
+      Delete
+    </Button>
+  </AlertDialogTrigger>
+
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete Client?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete <strong>{client.name}</strong>?  
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction
+        className="bg-red-600 hover:bg-red-700"
+        onClick={() => handleDelete(client)}
       >
-                    Edit
-                  </Button>
+        Yes, Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
-            {pageData.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  No clients match your filters.
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination Controls */}
+      {/* ============================
+          MOBILE CARDS (only < md)
+      ============================ */}
+      <div className="md:hidden space-y-4">
+        {pageData.map((client) => (
+          <div
+            key={client.id}
+            className="p-4 bg-card border border-border rounded-xl shadow"
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-lg">{client.name}</h3>
+              <StatusBadge status={client.status} />
+            </div>
+
+            <div className="mt-3 space-y-1 text-sm">
+              <p><strong>ID:</strong> {client.id}</p>
+              <p>
+                <strong>Contact:</strong>{" "}
+                <a href={`tel:${client.contact}`} className="underline">
+                  {client.contact}
+                </a>
+              </p>
+              <p><strong>Joined:</strong> {new Date(client.joinDate).toLocaleDateString()}</p>
+              <p><strong>Program:</strong> {client.program}</p>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedClient(client);
+                  setViewOpen(true);
+                }}
+              >
+                View
+              </Button>
+
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setEditingClient(client);
+                  setEditOpen(true);
+                }}
+              >
+                Edit
+              </Button>
+
+              <AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button size="sm" variant="destructive">
+      Delete
+    </Button>
+  </AlertDialogTrigger>
+
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete Client?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete <strong>{client.name}</strong>?  
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction
+        className="bg-red-600 hover:bg-red-700"
+        onClick={() => handleDelete(client)}
+      >
+        Yes, Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ============================
+          Pagination Controls
+      ============================ */}
       <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm">Rows:</span>
@@ -1221,27 +1426,32 @@ function PaginatedTable({
             <SelectTrigger className="h-8 w-[88px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white text-black dark:bg-[#1F2937] dark:text-[#F3F4F6] border border-border">
-              <SelectItem value="10" className="hover:bg-muted">
-                10
-              </SelectItem>
-              <SelectItem value="25" className="hover:bg-muted">
-                25
-              </SelectItem>
-              <SelectItem value="50" className="hover:bg-muted">
-                50
-              </SelectItem>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
         <div className="flex items-center gap-2 text-sm">
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
             Prev
           </Button>
           <span>
             Page {page} of {totalPages}
           </span>
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
             Next
           </Button>
         </div>
@@ -1249,6 +1459,7 @@ function PaginatedTable({
     </div>
   );
 }
+
 
 function StatusBadge({ status }: { status: Client["status"] }) {
   const intent =
