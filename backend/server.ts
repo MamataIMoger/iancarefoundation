@@ -6,12 +6,13 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
+import serverless from "serverless-http";
+
+// 🔥 REQUIRED FOR SERVERLESS MONGO FIX
+import dbConnect from "./config/mongodb";
 
 // Middleware
 import { proxy } from "./middleware/proxy";
-
-// Serverless
-import serverless from "serverless-http";
 
 // Modular Routers
 import clientRouter from "./routes/client/clients";
@@ -51,6 +52,18 @@ app.use(
   })
 );
 
+// ===============================
+// ✅ CONNECT TO MONGO ON EVERY REQUEST
+// ===============================
+app.use(async (_req, _res, next) => {
+  try {
+    await dbConnect(); // <-- THIS IS THE FIX YOU MISSED
+    next();
+  } catch (err) {
+    console.error("❌ Database connection error:", err);
+    return _res.status(500).json({ error: "Failed to connect to database" });
+  }
+});
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
@@ -58,7 +71,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 app.use(proxy);
 
-// Serve uploaded images
+// Serve uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
 // Root
@@ -67,7 +80,7 @@ app.get("/", (_req, res) => {
 });
 
 // Routers
-app.use("/api/blog/crud", blogCrudRouter); // specific route first
+app.use("/api/blog/crud", blogCrudRouter);
 app.use("/api/blog", blogRouter);
 
 app.use("/api/clients", clientRouter);
@@ -87,7 +100,7 @@ app.post("/api/admin/change-password", changePasswordHandler);
 app.post("/api/admin/admin-request-reset", requestResetHandler);
 app.post("/api/admin/admin-reset-password", resetPasswordHandler);
 
-// Consult Request Routes
+// Consult Requests
 app.post("/api/book/book-consult", bookConsultHandler);
 app.get("/api/book/book-consult", bookConsultHandler);
 app.patch("/api/book/book-consult", bookConsultHandler);
@@ -97,12 +110,12 @@ app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
 // ===============================
-// ✅ EXPORT DEFAULT HANDLER FOR VERCEL
+// ✅ EXPORT FOR VERCEL
 // ===============================
 export default serverless(app);
 
 // ===============================
-// ✅ LOCAL DEVELOPMENT SERVER
+// LOCAL DEVELOPMENT SERVER
 // ===============================
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
@@ -110,4 +123,3 @@ if (process.env.NODE_ENV !== "production") {
     console.log(`Local server running on port ${PORT}`);
   });
 }
-
