@@ -227,7 +227,7 @@ export default function WhyUs() {
               {/* CTA */}
               <div className="pt-10 flex justify-center">
                 <Link
-                  href="/contact"
+                  href="/services"
                   className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#004C91] to-[#00AEEF] text-white px-12 py-4 rounded-full shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(0,174,239,0.6)]"
                 >
                   Book a Confidential Consultation

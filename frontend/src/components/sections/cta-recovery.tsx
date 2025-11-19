@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function CTARecovery() {
   return (
@@ -13,18 +14,14 @@ export default function CTARecovery() {
           Don’t wait for tomorrow. The journey to recovery starts today.
         </p>
 
-        <div>
-          <button
-            className="inline-flex items-center gap-3 bg-white text-blue-500 font-bold px-6 md:px-8 py-3 rounded-full border border-white/10 backdrop-blur-sm hover:bg-white/20 transition"
-            style={{
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.03), 0 6px 18px rgba(0,0,0,0.25)',
-            }}
-          >
-            Book a Confidential Consultation
-            <ArrowRight size={20} />
-          </button>
-        </div>
+        <div className="pt-10 flex justify-center">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#004C91] to-[#00AEEF] text-white px-12 py-4 rounded-full shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(0,174,239,0.6)]"
+                >
+                  Book a Confidential Consultation
+                </Link>
+              </div>
       </div>
     </section>
   );
