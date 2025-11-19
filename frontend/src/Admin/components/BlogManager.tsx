@@ -1,6 +1,8 @@
+// frontend/src/components/BlogManager.tsx
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { HexColorPicker } from "react-colorful";
 
 /* ---------- Types ---------- */
 export type BlogPost = {
@@ -24,6 +26,7 @@ type PostCardProps = {
 
 /* ---------- Constants ---------- */
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, ""); // no trailing slash
 
 /* ---------- Helpers ---------- */
 const formatDateShort = (ts?: string | number) => {
@@ -115,35 +118,80 @@ const Badge: React.FC<{ children: React.ReactNode; variant?: "green" | "yellow" 
   return <span className={`${base} ${map[variant] ?? map.blue}`}>{children}</span>;
 };
 
-/* ---------- RTE Toolbar ---------- */
-const RTEToolbar: React.FC<{ targetId: string }> = ({ targetId }) => {
+/* ---------- RTE Toolbar (with color button) ---------- */
+const RTEToolbar: React.FC<{ targetId: string; onOpenColor: () => void }> = ({ targetId, onOpenColor }) => {
   const exec = (cmd: string, value?: string) => {
     const el = document.getElementById(targetId) as HTMLElement | null;
     if (el) el.focus();
     try {
-      // @ts-ignore
+      // @ts-ignore - execCommand still available in browsers
       document.execCommand(cmd, false, value);
     } catch {}
   };
 
   return (
-    <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-white/70 border">
-      <button type="button" onClick={() => exec("bold")} className="px-2 py-1 border rounded text-xs font-bold">
-        B
-      </button>
-      <button type="button" onClick={() => exec("italic")} className="px-2 py-1 border rounded text-xs italic">
-        I
-      </button>
-      <button type="button" onClick={() => exec("underline")} className="px-2 py-1 border rounded text-xs underline">
-        U
-      </button>
+    <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-white/70 border flex-wrap">
+      <div className="flex gap-2">
+        <button type="button" onClick={() => exec("bold")} className="px-2 py-1 border rounded text-xs font-bold">
+          B
+        </button>
+        <button type="button" onClick={() => exec("italic")} className="px-2 py-1 border rounded text-xs italic">
+          I
+        </button>
+        <button type="button" onClick={() => exec("underline")} className="px-2 py-1 border rounded text-xs underline">
+          U
+        </button>
+        <button type="button" onClick={() => exec("strikeThrough")} className="px-2 py-1 border rounded text-xs line-through">
+          S
+        </button>
+      </div>
+
       <div className="ml-auto flex items-center gap-2">
-        <button className="px-2 py-1 border rounded text-xs" onClick={() => exec("undo")}>
+        <button type="button" className="px-2 py-1 border rounded text-xs" onClick={() => exec("undo")}>
           Undo
         </button>
-        <button className="px-2 py-1 border rounded text-xs" onClick={() => exec("redo")}>
+        <button type="button" className="px-2 py-1 border rounded text-xs" onClick={() => exec("redo")}>
           Redo
         </button>
+
+        {/* Color button */}
+        <button
+          type="button"
+          onClick={onOpenColor}
+          aria-label="Text color"
+          className="ml-2 flex items-center gap-2 px-2 py-1 rounded border text-xs"
+        >
+          <span className="text-xs">A</span>
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 2 L3 20 L6 20 L8 15 L16 15 L18 20 L21 20 L12 2 Z" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ---------- Color Picker Popover ---------- */
+const ColorPickerPopover: React.FC<{
+  color: string;
+  onChange: (c: string) => void;
+  onClose: () => void;
+  anchorId: string; // id of editor to focus/apply to
+}> = ({ color, onChange, onClose }) => {
+  // small popover styled for mobile too
+  return (
+    <div className="p-3 bg-white dark:bg-slate-800 border rounded-lg shadow-lg w-full max-w-xs">
+      <HexColorPicker color={color} onChange={onChange} />
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded" style={{ backgroundColor: color, border: "1px solid rgba(0,0,0,0.12)" }} />
+          <div className="text-xs text-slate-600">{color.toUpperCase()}</div>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={onClose} className="px-3 py-1 rounded border text-sm">
+            Done
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -199,20 +247,23 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
         />
 
         <div className="flex items-center justify-between mt-3 gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
+              type="button"
               onClick={() => onReadMore(post)}
               className="text-sky-700 text-sm px-2 py-1 rounded hover:bg-sky-50"
             >
               Read
             </button>
             <button
+              type="button"
               onClick={() => onEdit(post)}
               className="text-slate-700 text-sm px-2 py-1 rounded hover:bg-slate-50"
             >
               Edit
             </button>
             <button
+              type="button"
               onClick={() => onDelete(post)}
               className="text-red-600 text-sm px-2 py-1 rounded hover:bg-red-50"
             >
@@ -223,6 +274,7 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
           <div>
             {isPublished ? (
               <button
+                type="button"
                 onClick={() => onMakePrivate(post)}
                 className="px-2 py-1 bg-amber-300 text-amber-900 text-sm rounded"
               >
@@ -230,6 +282,7 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => onPublish(post)}
                 className="px-2 py-1 bg-green-600 text-white text-sm rounded"
               >
@@ -243,7 +296,8 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
   );
 };
 
-/* ---------- Post Card User View ---------- */
+
+/* ---------- Post Card User View (with Read More button) ---------- */
 const PostCardUserView: React.FC<{
   post: BlogPost;
   onReadMore: (post: BlogPost) => void;
@@ -262,13 +316,17 @@ const PostCardUserView: React.FC<{
   return (
     <article
       ref={ref}
-      onClick={() => onReadMore(post)}
-      className={`${classes} cursor-pointer rounded-xl overflow-hidden border bg-white dark:bg-slate-800 shadow-sm hover:shadow-md`}
+      className={`${classes} rounded-xl overflow-hidden border bg-white dark:bg-slate-800 shadow-sm hover:shadow-md flex flex-col`}
     >
+      {/* Image */}
       <div className="w-full h-44 bg-slate-100">
         {hasImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.imageUrl as string} alt={post.title} className="w-full h-full object-cover" />
+          <img
+            src={post.imageUrl as string}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-500">
             No Image
@@ -276,9 +334,24 @@ const PostCardUserView: React.FC<{
         )}
       </div>
 
-      <div className="p-3">
-        <h3 className="text-sm font-semibold text-sky-800 line-clamp-2">{post.title}</h3>
-        <p className="text-slate-600 mt-1 text-sm">{createSnippet(post.content)}</p>
+      {/* Content */}
+      <div className="p-3 flex flex-col flex-grow">
+        <h3 className="text-sm font-semibold text-sky-800 line-clamp-2 mb-1">
+          {post.title}
+        </h3>
+
+        <p className="text-slate-600 mt-1 text-sm flex-grow">
+          {createSnippet(post.content)}
+        </p>
+
+        {/* Read More button */}
+        <button
+          type="button"
+          onClick={() => onReadMore(post)}
+          className="mt-3 text-sm font-medium px-3 py-1.5 rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition self-start"
+        >
+          Read More →
+        </button>
       </div>
     </article>
   );
@@ -294,8 +367,9 @@ const Pagination: React.FC<{
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-4">
+    <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
       <button
+        type="button"
         disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
         className="px-3 py-1 rounded border disabled:opacity-50 text-sm"
@@ -306,6 +380,7 @@ const Pagination: React.FC<{
       {pages.map((p) => (
         <button
           key={p}
+          type="button"
           onClick={() => onPageChange(p)}
           className={`px-3 py-1 rounded text-sm ${
             currentPage === p ? "bg-sky-700 text-white" : "border hover:bg-slate-100"
@@ -316,6 +391,7 @@ const Pagination: React.FC<{
       ))}
 
       <button
+        type="button"
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}
         className="px-3 py-1 rounded border disabled:opacity-50 text-sm"
@@ -338,12 +414,13 @@ const Modal: React.FC<{
     onClick={onClose}
   >
     <div
-      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
       onClick={(e) => e.stopPropagation()}
     >
       {title && <h2 className="text-lg font-bold text-sky-800 mb-3">{title}</h2>}
       {showCloseX && (
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close"
           className="absolute top-3 right-3 text-xl"
@@ -356,7 +433,7 @@ const Modal: React.FC<{
 
       {!showCloseX && (
         <div className="flex justify-end mt-3">
-          <button className="px-4 py-1.5 rounded bg-sky-700 text-white" onClick={onClose}>
+          <button type="button" className="px-4 py-1.5 rounded bg-sky-700 text-white" onClick={onClose}>
             Close
           </button>
         </div>
@@ -383,10 +460,10 @@ const ConfirmModal: React.FC<{
       <p className="text-sm text-slate-600 mb-4">{message}</p>
 
       <div className="flex justify-end gap-2">
-        <button className="px-3 py-1 rounded border" onClick={onCancel}>
+        <button type="button" className="px-3 py-1 rounded border" onClick={onCancel}>
           Cancel
         </button>
-        <button className="px-3 py-1 rounded bg-green-600 text-white" onClick={onConfirm}>
+        <button type="button" className="px-3 py-1 rounded bg-green-600 text-white" onClick={onConfirm}>
           Confirm
         </button>
       </div>
@@ -408,7 +485,7 @@ const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
     >
       <p className="text-green-700 text-center font-semibold">{message}</p>
       <div className="flex justify-center mt-3">
-        <button className="px-4 py-1.5 bg-sky-700 text-white rounded" onClick={onClose}>
+        <button type="button" className="px-4 py-1.5 bg-sky-700 text-white rounded" onClick={onClose}>
           OK
         </button>
       </div>
@@ -417,8 +494,10 @@ const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
 );
 
 /* ---------- Main BlogSection ---------- */
+console.log("API BASE URL =", process.env.NEXT_PUBLIC_API_BASE_URL);
 const BlogSection: React.FC = () => {
-  const [isAdmin, setIsAdmin] = useState(true);
+  // Reader view by default
+  const [isAdmin, setIsAdmin] = useState(false);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -464,33 +543,54 @@ const BlogSection: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = isAdmin ? 5 : 9;
 
+  // color states for new/edit editors
+  const [newTextColor, setNewTextColor] = useState<string>("#111827"); // default near-slate-900
+  const [editTextColor, setEditTextColor] = useState<string>("#111827");
+  const [showNewColorPicker, setShowNewColorPicker] = useState(false);
+  const [showEditColorPicker, setShowEditColorPicker] = useState(false);
+
+  // Compute proper admin/public base paths for actions
+  const getPublicPath = (suffix = "") => `${API_BASE || ""}/blog${suffix}`;
+  const getAdminPath = (suffix = "") => `${API_BASE || ""}/blog/crud${suffix}`;
+
   /* -------------------------------------------------------------
-     FETCH POSTS — UPDATED WITH CORRECT API HANDLING (Option A)
+     FETCH POSTS — ALWAYS use public GET /blog for listing.
   ------------------------------------------------------------- */
   const fetchPosts = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-      const url = base ? `${base}/blog` : `/api/blog`;
-
+      const url = getPublicPath("");
       const res = await fetch(url);
       const contentType = res.headers.get("content-type") ?? "";
 
       if (!res.ok) {
-        console.error("Fetch failed:", await res.text());
+        let text = "";
+        try {
+          text = await res.text();
+        } catch {}
+        console.error("Fetch failed:", text || `status ${res.status}`);
         setPosts([]);
         return;
       }
 
       if (!contentType.includes("application/json")) {
-        console.error("Unexpected content type:", await res.text());
+        let text = "";
+        try {
+          text = await res.text();
+        } catch {}
+        console.error("Unexpected content type:", text || contentType);
         setPosts([]);
         return;
       }
 
       const data = await res.json();
-      const raw = Array.isArray(data) ? data : data.data ?? [];
+      const raw = Array.isArray(data) ? data : data?.data ?? [];
+      if (!Array.isArray(raw)) {
+        console.error("Unexpected payload shape from /api/blog:", data);
+        setPosts([]);
+        return;
+      }
 
       setPosts(raw);
     } catch (err) {
@@ -501,10 +601,9 @@ const BlogSection: React.FC = () => {
     }
   }, []);
 
-  /* Auto fetch posts on mount */
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]);
+  }, [fetchPosts, isAdmin]);
 
   /* ---------- Derived lists ---------- */
   const filteredPosts = Array.isArray(posts)
@@ -529,14 +628,13 @@ const BlogSection: React.FC = () => {
   };
 
   /* -------------------------------------------------------------
-     UPDATE POST — UPDATED WITH CORRECT API HANDLING (Option A)
+     UPDATE POST — for admin use /blog/crud/:id
   ------------------------------------------------------------- */
   const updatePost = async (
     id: string,
     updatedFields: Partial<BlogPost> | FormData
   ) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    const url = base ? `${base}/blog/${id}` : `/api/blog/${id}`;
+    const url = getAdminPath(`/${id}`);
 
     let options: RequestInit;
 
@@ -555,27 +653,31 @@ const BlogSection: React.FC = () => {
 
     const res = await fetch(url, options);
 
-    if (!res.ok) throw new Error("Failed to update");
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error("Failed to update: " + text);
+    }
 
     return await res.json();
   };
 
   /* -------------------------------------------------------------
-     DELETE POST — UPDATED WITH CORRECT API HANDLING (Option A)
+     DELETE POST — admin endpoint
   ------------------------------------------------------------- */
   const deletePost = async (id: string) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    const url = base ? `${base}/blog/${id}` : `/api/blog/${id}`;
-
+    const url = getAdminPath(`/${id}`);
     const res = await fetch(url, { method: "DELETE" });
 
-    if (!res.ok) throw new Error("Failed to delete");
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error("Failed to delete: " + text);
+    }
 
     return await res.json();
   };
 
   /* -------------------------------------------------------------
-     SAVE NEW POST — UPDATED WITH CORRECT API HANDLING (Option A)
+     SAVE NEW POST — admin create (/blog/crud)
   ------------------------------------------------------------- */
   const handleSaveRequest = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -610,8 +712,7 @@ const BlogSection: React.FC = () => {
     setError(null);
 
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-      const url = base ? `${base}/blog` : `/api/blog`;
+      const url = getAdminPath("");
 
       const res =
         activeModal.formData instanceof FormData
@@ -622,9 +723,12 @@ const BlogSection: React.FC = () => {
               body: JSON.stringify(activeModal.formData),
             });
 
-      if (!res.ok) throw new Error("Failed to create post");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error("Failed to create post: " + text);
+      }
 
-      await fetchPosts();
+      await fetchPosts(); // re-fetch public list
 
       // reset form
       setTitle("");
@@ -646,6 +750,10 @@ const BlogSection: React.FC = () => {
   const openEdit = (post: BlogPost) => {
     setEditTitle(post.title);
     setEditContentInitial(post.content);
+    // also set current content into editor element
+    setTimeout(() => {
+      if (editEditorRef.current) editEditorRef.current.innerHTML = post.content || "";
+    }, 0);
     setEditImageFile(null);
     setActiveModal({ type: "edit", post });
   };
@@ -712,6 +820,20 @@ const BlogSection: React.FC = () => {
     }
   };
 
+  /* ---------- Color apply helpers ---------- */
+  const applyColorToEditor = (editorId: string, color: string) => {
+    const el = document.getElementById(editorId) as HTMLElement | null;
+    if (!el) return;
+    el.focus();
+    try {
+      // Use execCommand to apply color to current selection
+      // @ts-ignore
+      document.execCommand("foreColor", false, color);
+    } catch (err) {
+      console.error("Failed to apply color:", err);
+    }
+  };
+
   /* ---------- Loading ---------- */
   if (isLoading) {
     return <BlogSectionSkeleton postsPerPage={postsPerPage} />;
@@ -733,6 +855,7 @@ const BlogSection: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setIsAdmin(false);
                     setCurrentPage(1);
@@ -745,6 +868,7 @@ const BlogSection: React.FC = () => {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setIsAdmin(true);
                     setCurrentPage(1);
@@ -769,44 +893,35 @@ const BlogSection: React.FC = () => {
               <div className="flex items-center gap-3 text-sm">
                 <div className="text-slate-400">Showing</div>
                 <div className="font-semibold">
-                  {isAdmin
-                    ? viewMode === "published"
-                      ? "Published"
-                      : "Drafts"
-                    : "Published"}
+                  {isAdmin ? (viewMode === "published" ? "Published" : "Drafts") : "Published"}
                 </div>
-                <div className="text-slate-400">
-                  • {filteredPosts.length} items
-                </div>
+                <div className="text-slate-400">• {filteredPosts.length} items</div>
               </div>
 
               <div className="flex items-center gap-2">
                 {isAdmin && (
                   <div className="flex gap-1">
                     <button
+                      type="button"
                       onClick={() => {
                         setViewMode("published");
                         setCurrentPage(1);
                       }}
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        viewMode === "published"
-                          ? "bg-amber-300 text-amber-900"
-                          : "bg-white/60"
+                        viewMode === "published" ? "bg-amber-300 text-amber-900" : "bg-white/60"
                       }`}
                     >
-                      Published (
-                      {posts.filter((p) => p.status === "published").length})
+                      Published ({posts.filter((p) => p.status === "published").length})
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => {
                         setViewMode("draft");
                         setCurrentPage(1);
                       }}
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        viewMode === "draft"
-                          ? "bg-amber-300 text-amber-900"
-                          : "bg-white/60"
+                        viewMode === "draft" ? "bg-amber-300 text-amber-900" : "bg-white/60"
                       }`}
                     >
                       Drafts ({posts.filter((p) => p.status === "draft").length})
@@ -821,12 +936,8 @@ const BlogSection: React.FC = () => {
               <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-sky-800">
-                      Publish New Article
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Write and publish a short article for the site.
-                    </p>
+                    <h2 className="text-lg font-semibold text-sky-800">Publish New Article</h2>
+                    <p className="text-sm text-slate-500 mt-1">Write and publish a short article for the site.</p>
 
                     <form onSubmit={handleSaveRequest} className="mt-3 space-y-2">
                       <input
@@ -839,15 +950,11 @@ const BlogSection: React.FC = () => {
                       />
 
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">
-                          Upload Image
-                        </span>
+                        <span className="font-medium text-slate-700">Upload Image</span>
 
                         <select
                           value={status}
-                          onChange={(e) =>
-                            setStatus(e.target.value as "draft" | "published")
-                          }
+                          onChange={(e) => setStatus(e.target.value as "draft" | "published")}
                           className="p-1 border rounded text-sm"
                         >
                           <option value="draft">Draft</option>
@@ -862,13 +969,49 @@ const BlogSection: React.FC = () => {
                           const file = e.target.files?.[0] ?? null;
                           setImageFile(file);
                           setError(null);
-                          if (file && file.size > MAX_IMAGE_SIZE)
-                            setError("Image file exceeds 2 MB");
+                          if (file && file.size > MAX_IMAGE_SIZE) setError("Image file exceeds 2 MB");
                         }}
                         className="w-full text-sm"
                       />
 
-                      <RTEToolbar targetId="newPostEditor" />
+                      {/* Color picker + toolbar for new post */}
+                      <div className="mt-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <RTEToolbar
+                              targetId="newPostEditor"
+                              onOpenColor={() => {
+                                setShowNewColorPicker((s) => !s);
+                              }}
+                            />
+                          </div>
+
+                          {/* Small color swatch for new editor */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setShowNewColorPicker((s) => !s)}
+                              className="w-8 h-8 rounded-full border"
+                              aria-label="Open text color picker"
+                              style={{ backgroundColor: newTextColor }}
+                            />
+                            {showNewColorPicker && (
+                              <div className="absolute right-0 mt-2 z-50">
+                                <ColorPickerPopover
+                                  color={newTextColor}
+                                  onChange={(c) => {
+                                    setNewTextColor(c);
+                                    applyColorToEditor("newPostEditor", c);
+                                  }}
+                                  onClose={() => setShowNewColorPicker(false)}
+                                  anchorId="newPostEditor"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
                         id="newPostEditor"
                         ref={newEditorRef}
@@ -878,9 +1021,7 @@ const BlogSection: React.FC = () => {
                         className="w-full p-2 border rounded-lg min-h-[120px] bg-white dark:bg-slate-900 text-sm"
                       />
 
-                      {error && (
-                        <p className="text-red-500 text-sm">{error}</p>
-                      )}
+                      {error && <p className="text-red-500 text-sm">{error}</p>}
 
                       <div className="flex justify-end">
                         <button
@@ -901,9 +1042,7 @@ const BlogSection: React.FC = () => {
             <div className="space-y-3">
               {currentPosts.length === 0 ? (
                 <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <p className="text-slate-500 text-center">
-                    No {isAdmin ? viewMode : "published"} articles found.
-                  </p>
+                  <p className="text-slate-500 text-center">No {isAdmin ? viewMode : "published"} articles found.</p>
                 </div>
               ) : isAdmin ? (
                 <div className="space-y-3">
@@ -914,28 +1053,16 @@ const BlogSection: React.FC = () => {
                       isAdmin={isAdmin}
                       onReadMore={(p) => setActiveModal({ type: "read", post: p })}
                       onEdit={(p) => openEdit(p)}
-                      onDelete={(p) =>
-                        setActiveModal({ type: "delete", post: p })
-                      }
-                      onPublish={(p) =>
-                        setActiveModal({ type: "publishConfirm", post: p })
-                      }
-                      onMakePrivate={(p) =>
-                        setActiveModal({ type: "private", post: p })
-                      }
+                      onDelete={(p) => setActiveModal({ type: "delete", post: p })}
+                      onPublish={(p) => setActiveModal({ type: "publishConfirm", post: p })}
+                      onMakePrivate={(p) => setActiveModal({ type: "private", post: p })}
                     />
                   ))}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {currentPosts.map((post) => (
-                    <PostCardUserView
-                      key={post._id}
-                      post={post}
-                      onReadMore={(p) =>
-                        setActiveModal({ type: "read", post: p })
-                      }
-                    />
+                    <PostCardUserView key={post._id} post={post} onReadMore={(p) => setActiveModal({ type: "read", post: p })} />
                   ))}
                 </div>
               )}
@@ -943,11 +1070,7 @@ const BlogSection: React.FC = () => {
 
             {/* Pagination */}
             <div className="mt-4">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(p) => setCurrentPage(p)}
-              />
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(p) => setCurrentPage(p)} />
             </div>
           </section>
 
@@ -968,15 +1091,11 @@ const BlogSection: React.FC = () => {
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <div className="text-slate-600">Published</div>
-                  <div className="font-semibold">
-                    {posts.filter((p) => p.status === "published").length}
-                  </div>
+                  <div className="font-semibold">{posts.filter((p) => p.status === "published").length}</div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-slate-600">Drafts</div>
-                  <div className="font-semibold">
-                    {posts.filter((p) => p.status === "draft").length}
-                  </div>
+                  <div className="font-semibold">{posts.filter((p) => p.status === "draft").length}</div>
                 </div>
               </div>
             </div>
@@ -993,25 +1112,15 @@ const BlogSection: React.FC = () => {
                       <div className="w-12 h-8 rounded-md overflow-hidden bg-sky-50 border flex-shrink-0">
                         {hasImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.imageUrl as string}
-                            alt={p.title}
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={p.imageUrl as string} alt={p.title} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
-                            No
-                          </div>
+                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">No</div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold line-clamp-1">
-                          {p.title}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          {formatDateShort(p.createdAt ?? Date.now())}
-                        </div>
+                        <div className="text-sm font-semibold line-clamp-1">{p.title}</div>
+                        <div className="text-xs text-slate-400">{formatDateShort(p.createdAt ?? Date.now())}</div>
                       </div>
                     </li>
                   );
@@ -1027,15 +1136,10 @@ const BlogSection: React.FC = () => {
       {/* Read Modal */}
       {activeModal?.type === "read" && (
         <Modal onClose={() => setActiveModal(null)} title={activeModal.post.title}>
-          {activeModal.post.imageUrl &&
-            activeModal.post.imageUrl.trim().length > 0 && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeModal.post.imageUrl}
-                alt={activeModal.post.title}
-                className="w-full max-h-80 object-cover rounded mb-4"
-              />
-            )}
+          {activeModal.post.imageUrl && activeModal.post.imageUrl.trim().length > 0 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={activeModal.post.imageUrl} alt={activeModal.post.title} className="w-full max-h-80 object-cover rounded mb-4" />
+          )}
 
           <div dangerouslySetInnerHTML={{ __html: activeModal.post.content }} />
         </Modal>
@@ -1048,16 +1152,12 @@ const BlogSection: React.FC = () => {
             setActiveModal(null);
             setEditImageFile(null);
             setError(null);
+            setShowEditColorPicker(false);
           }}
           title={`Edit: ${activeModal.post.title}`}
           showCloseX
         >
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            className="w-full p-2 border rounded-lg mb-3 text-lg"
-          />
+          <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full p-2 border rounded-lg mb-3 text-lg" />
 
           <label className="block mb-2 font-semibold">Edit Image (optional)</label>
           <input
@@ -1068,21 +1168,47 @@ const BlogSection: React.FC = () => {
               setEditImageFile(file);
               setError(null);
 
-              if (file && file.size > MAX_IMAGE_SIZE)
-                setError("Image file size exceeds 2 MB");
+              if (file && file.size > MAX_IMAGE_SIZE) setError("Image file size exceeds 2 MB");
             }}
             className="w-full mb-3 text-sm"
           />
 
-          {editImageFile && (
-            <img
-              src={URL.createObjectURL(editImageFile)}
-              alt="Preview"
-              className="mb-3 max-w-xs rounded"
-            />
-          )}
+          {editImageFile && <img src={URL.createObjectURL(editImageFile)} alt="Preview" className="mb-3 max-w-xs rounded" />}
 
-          <RTEToolbar targetId="editPostEditor" />
+          {/* Color picker + toolbar for edit modal */}
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex-1">
+              <RTEToolbar
+                targetId="editPostEditor"
+                onOpenColor={() => {
+                  setShowEditColorPicker((s) => !s);
+                }}
+              />
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEditColorPicker((s) => !s)}
+                className="w-8 h-8 rounded-full border"
+                aria-label="Open text color picker"
+                style={{ backgroundColor: editTextColor }}
+              />
+              {showEditColorPicker && (
+                <div className="absolute right-0 mt-2 z-50">
+                  <ColorPickerPopover
+                    color={editTextColor}
+                    onChange={(c) => {
+                      setEditTextColor(c);
+                      applyColorToEditor("editPostEditor", c);
+                    }}
+                    onClose={() => setShowEditColorPicker(false)}
+                    anchorId="editPostEditor"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           <div
             id="editPostEditor"
@@ -1092,10 +1218,7 @@ const BlogSection: React.FC = () => {
             aria-multiline
             className="w-full p-2 mb-3 border rounded-lg min-h-[140px] bg-white text-sm"
             onFocus={() => {
-              if (
-                editEditorRef.current &&
-                editEditorRef.current.innerHTML.trim() === ""
-              ) {
+              if (editEditorRef.current && editEditorRef.current.innerHTML.trim() === "") {
                 editEditorRef.current.innerHTML = editContentInitial || "";
               }
             }}
@@ -1105,17 +1228,20 @@ const BlogSection: React.FC = () => {
 
           <div className="flex justify-end space-x-3">
             <button
+              type="button"
               className="px-4 py-1.5 bg-gray-100 rounded"
               onClick={() => {
                 setActiveModal(null);
                 setEditImageFile(null);
                 setError(null);
+                setShowEditColorPicker(false);
               }}
             >
               Cancel
             </button>
 
             <button
+              type="button"
               className="px-4 py-1.5 bg-sky-700 text-white rounded"
               onClick={() => {
                 if (activeModal?.type === "edit") {
@@ -1167,22 +1293,12 @@ const BlogSection: React.FC = () => {
 
       {/* Save New Post Confirm */}
       {activeModal?.type === "saveConfirm" && (
-        <ConfirmModal
-          title="Confirm Save"
-          message="Are you sure you want to save this post?"
-          onCancel={() => setActiveModal(null)}
-          onConfirm={confirmSave}
-        />
+        <ConfirmModal title="Confirm Save" message="Are you sure you want to save this post?" onCancel={() => setActiveModal(null)} onConfirm={confirmSave} />
       )}
 
       {/* Save Edit Confirm */}
       {activeModal?.type === "saveEditConfirm" && (
-        <ConfirmModal
-          title="Confirm Edit Save"
-          message="Are you sure you want to save these edits?"
-          onCancel={() => setActiveModal(null)}
-          onConfirm={confirmEditSave}
-        />
+        <ConfirmModal title="Confirm Edit Save" message="Are you sure you want to save these edits?" onCancel={() => setActiveModal(null)} onConfirm={confirmEditSave} />
       )}
 
       {/* Make Private */}
@@ -1209,17 +1325,12 @@ const BlogSection: React.FC = () => {
       )}
 
       {/* Success */}
-      {activeModal?.type === "success" && (
-        <SuccessModal
-          message={activeModal.message}
-          onClose={() => setActiveModal(null)}
-        />
-      )}
+      {activeModal?.type === "success" && <SuccessModal message={activeModal.message} onClose={() => setActiveModal(null)} />}
     </div>
   );
 };
 
-/* ---------- App Wrapper ---------- */
+/* ---------- App Wrapper (if needed) ---------- */
 const App: React.FC = () => (
   <div className="min-h-screen">
     <BlogSection />

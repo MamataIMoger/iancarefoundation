@@ -73,11 +73,14 @@ app.get("/", (req, res) => {
 });
 
 // Routers
+
+app.use("/api/blog/crud", blogCrudRouter); // specific route first
+app.use("/api/blog", blogRouter);  
+
 app.use("/api/clients", clientRouter);
 app.use("/api/contact-messages", contactMessagesRouter);
 app.use("/api/contact", contactSubmitRouter);
-app.use("/api/blog", blogRouter);
-app.use("/api/blog/crud", blogCrudRouter);
+
 app.use("/api/volunteer", volunteerRouter);
 app.use("/api/gallery", galleryRouter);
 app.use("/api/stories", storyRouter);

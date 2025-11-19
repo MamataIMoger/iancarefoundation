@@ -3,15 +3,19 @@ import express, { Request, Response } from "express";
 import formidable, { Fields, Files } from "formidable";
 import dbConnect from "../../config/mongodb";
 import Blog from "../../models/blog";
-
-// Cloudinary
 import { v2 as cloudinary } from "cloudinary";
 
 const router = express.Router();
 
 /* ---------------------------------------------------------
-   CLOUDINARY CONFIG (fixed TypeScript errors)
+   CLOUDINARY CONFIG + LOG
 --------------------------------------------------------- */
+console.log("---- CLOUDINARY ENV CHECK ----");
+console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY);
+console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "Loaded" : "Missing");
+console.log("--------------------------------");
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
   api_key: process.env.CLOUDINARY_API_KEY as string,
@@ -22,14 +26,11 @@ cloudinary.config({
    HELPERS
 --------------------------------------------------------- */
 function getFieldValue(field: string | string[] | undefined): string | undefined {
-  return Array.isArray(field) ? field[0] : field ?? undefined;
+  return Array.isArray(field) ? field[0] : field;
 }
 
 function parseForm(req: Request): Promise<{ fields: Fields; files: Files }> {
-  const form = formidable({
-    multiples: false,
-    keepExtensions: true,
-  });
+  const form = formidable({ multiples: false, keepExtensions: true });
 
   return new Promise((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
@@ -40,15 +41,16 @@ function parseForm(req: Request): Promise<{ fields: Fields; files: Files }> {
 }
 
 /* ---------------------------------------------------------
-   GET ALL POSTS
+   GET ALL POSTS (ADMIN LIST)
 --------------------------------------------------------- */
 router.get("/", async (_req: Request, res: Response) => {
   await dbConnect();
   try {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: blogs });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch posts" });
+    const posts = await Blog.find().sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: posts });
+  } catch (err) {
+    console.error("Admin fetch error:", err);
+    return res.status(500).json({ success: false, message: "Failed to fetch posts" });
   }
 });
 
@@ -62,7 +64,7 @@ router.post("/", async (req: Request, res: Response) => {
     const contentType = req.headers["content-type"] || "";
     let payload: any = {};
 
-    // ---------- MULTIPART (form-data) ----------
+    // Multipart (with image)
     if (contentType.includes("multipart/form-data")) {
       const { fields, files } = await parseForm(req);
 
@@ -80,38 +82,30 @@ router.post("/", async (req: Request, res: Response) => {
         status: status === "published" ? "published" : "draft",
       };
 
-      // Image upload
-      const fileData = files.image;
-      const file = Array.isArray(fileData) ? fileData?.[0] : fileData;
+      const file = Array.isArray(files.image) ? files.image[0] : files.image;
 
       if (file?.filepath) {
-        const uploaded = await cloudinary.uploader.upload(file.filepath, {
+        const upload = await cloudinary.uploader.upload(file.filepath, {
           folder: "blog_uploads",
         });
-        payload.imageUrl = uploaded.secure_url;
+        payload.imageUrl = upload.secure_url;
       }
-    }
-
-    // ---------- JSON BODY ----------
-    else {
+    } else {
+      // JSON body
       const { title, content, status, imageUrl } = req.body;
+
       if (!title || !content) {
         return res.status(400).json({ success: false, message: "Missing fields" });
       }
 
-      payload = {
-        title,
-        content,
-        status: status ?? "draft",
-        imageUrl,
-      };
+      payload = { title, content, status: status ?? "draft", imageUrl };
     }
 
     const created = await Blog.create(payload);
-    res.status(201).json({ success: true, data: created });
+    return res.status(201).json({ success: true, data: created });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to create post" });
+    console.error("Create Post Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to create post" });
   }
 });
 
@@ -121,14 +115,12 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   await dbConnect();
 
-  const blogId = req.params.id;
-  if (!blogId) return res.status(400).json({ success: false, message: "ID missing" });
-
   try {
+    const blogId = req.params.id;
     const contentType = req.headers["content-type"] || "";
-    const updateData: Record<string, any> = {};
+    const updateData: any = {};
 
-    // ---------- MULTIPART ----------
+    // Multipart form
     if (contentType.includes("multipart/form-data")) {
       const { fields, files } = await parseForm(req);
 
@@ -140,19 +132,16 @@ router.put("/:id", async (req: Request, res: Response) => {
       if (content) updateData.content = content;
       if (status) updateData.status = status;
 
-      const fileData = files.image;
-      const file = Array.isArray(fileData) ? fileData?.[0] : fileData;
+      const file = Array.isArray(files.image) ? files.image[0] : files.image;
 
       if (file?.filepath) {
-        const uploaded = await cloudinary.uploader.upload(file.filepath, {
+        const upload = await cloudinary.uploader.upload(file.filepath, {
           folder: "blog_uploads",
         });
-        updateData.imageUrl = uploaded.secure_url;
+        updateData.imageUrl = upload.secure_url;
       }
-    }
-
-    // ---------- JSON ----------
-    else {
+    } else {
+      // JSON body
       const { title, content, status, imageUrl } = req.body;
 
       if (title) updateData.title = title;
@@ -167,13 +156,13 @@ router.put("/:id", async (req: Request, res: Response) => {
     });
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Not found" });
+      return res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    res.status(200).json({ success: true, data: updated });
+    return res.status(200).json({ success: true, data: updated });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to update" });
+    console.error("Update Post Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update" });
   }
 });
 
@@ -190,9 +179,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    res.status(200).json({ success: true, message: "Deleted" });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to delete" });
+    return res.status(200).json({ success: true, message: "Deleted" });
+  } catch (err) {
+    console.error("Delete Post Error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete" });
   }
 });
 
