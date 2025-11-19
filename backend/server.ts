@@ -10,7 +10,7 @@ import path from "path";
 // Middleware
 import { proxy } from "./middleware/proxy";
 
-//serverless
+// Serverless
 import serverless from "serverless-http";
 
 // Modular Routers
@@ -37,48 +37,37 @@ import consultRequestsHandler from "./routes/request/consult-requests";
 import updateConsultStatusHandler from "./routes/consult-request/status";
 
 const app = express();
-const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// Middleware
-const allowedOrigins = (process.env.FRONTEND_URL || "").split(",");
-
+// ===============================
+// ✅ FIXED CORS FOR SERVERLESS
+// ===============================
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS: " + origin), false);
-      }
-    },
+    origin: [
+      "https://iancarefoundation-frontend.vercel.app",
+      "http://localhost:3000",
+    ],
     credentials: true,
   })
 );
 
-
+// Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 app.use(proxy);
 
 // Serve uploaded images
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "public/uploads"))
-);
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
 // Root
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("API is running");
 });
 
 // Routers
-
 app.use("/api/blog/crud", blogCrudRouter); // specific route first
-app.use("/api/blog", blogRouter);  
+app.use("/api/blog", blogRouter);
 
 app.use("/api/clients", clientRouter);
 app.use("/api/contact-messages", contactMessagesRouter);
@@ -88,7 +77,6 @@ app.use("/api/volunteer", volunteerRouter);
 app.use("/api/gallery", galleryRouter);
 app.use("/api/stories", storyRouter);
 app.use("/api/dashboard", dashboardRoute);
-
 
 // Admin Authentication
 app.post("/api/admin/admin-login", loginHandler);
@@ -107,10 +95,14 @@ app.post("/api/form/consult-form", consultFormHandler);
 app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
-// For Vercel
+// ===============================
+// ✅ EXPORT HANDLER FOR VERCEL
+// ===============================
 export const handler = serverless(app);
 
-// For local development (only runs when not in Vercel)
+// ===============================
+// ✅ LOCAL DEVELOPMENT SERVER
+// ===============================
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
