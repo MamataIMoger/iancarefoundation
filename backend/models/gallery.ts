@@ -1,3 +1,4 @@
+//models/gallery.ts
 import { Schema, model, models, Model } from "mongoose"
 
 export interface IGallery {

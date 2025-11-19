@@ -136,7 +136,8 @@ const GalleryManager: React.FC = () => {
     const fetchAlbums = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/gallery");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery`);
+
         if (!res.ok) throw new Error("Failed to fetch albums.");
         const data = await res.json();
         const parsed: GalleryItem[] = data.map((item: any) => ({
@@ -235,32 +236,29 @@ const GalleryManager: React.FC = () => {
     }
     setIsSubmitting(true);
     setError(null);
-    try {
-      const res = await fetch(`/api/gallery/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: selectedImageBase64, name: albumName.trim() }),
-      });
+  try {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery/${id}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageUrl: selectedImageBase64,
+        name: albumName.trim(),
+      }),
+    }
+  );
 
-      const updatedAlbum = await res.json();
-      if (!res.ok) throw new Error(updatedAlbum.message || "Failed to update album.");
+  const updatedAlbum = await res.json();
+  if (!res.ok) {
+    throw new Error(updatedAlbum.message || "Failed to update album.");
+  }
 
-      setAlbums(prev =>
-        prev.map(item =>
-          item._id === id || item.id === id
-            ? {
-                ...item,
-                imageUrl: updatedAlbum.imageUrl,
-                name: updatedAlbum.name,
-              }
-            : item
-        )
-      );
-
-      handleCancelEdit();
-    } catch (e) {
-      setError((e as Error).message || "Failed to update album.");
-    } finally {
+  // success logic…
+} catch (e) {
+  setError((e as Error).message || "Failed to update album.");
+}
+    finally {
       setIsSubmitting(false);
     }
   };
@@ -274,17 +272,21 @@ const GalleryManager: React.FC = () => {
     setShowDeleteConfirm(false);
     setAlbumToDelete(null);
 
-    try {
-      const res = await fetch(`/api/gallery/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const errorBody = await res.json();
-        throw new Error(errorBody.message || "Failed to delete album.");
-      }
+   try {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/gallery/${id}`,
+    { method: "DELETE" }
+  );
 
-      setAlbums(prev => prev.filter(item => item._id !== id && item.id !== id));
-    } catch (e) {
-      console.error("Failed to delete album:", e);
-    }
+  if (!res.ok) {
+    const errorBody = await res.json();
+    throw new Error(errorBody.message || "Failed to delete album.");
+  }
+
+  // success
+} catch (error) {
+  console.error("Failed to delete album:", error);
+}
   };
 
   const handleDeleteInitiate = (item: GalleryItem) => {
