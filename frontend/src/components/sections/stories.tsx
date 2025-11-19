@@ -4,27 +4,27 @@ import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { easeOut } from "framer-motion";
 
-// Types
+/* -------------------- Types -------------------- */
 interface Story {
   _id?: string;
   title: string;
   content: string;
   author: string;
   category?: string;
-  approved: boolean;
+  approved?: boolean;   // ✅ optional now
   createdAt?: string;
 }
 
 /* -------------------- Variants -------------------- */
 const heroContainer = {
-  hidden: { opacity: 0, y: 30 },   // start faded out and shifted down
+  hidden: { opacity: 0, y: 30 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.8,
-      ease: easeOut,   // ✅ fixed: use imported easeOut
-      staggerChildren: 0.2, // animate children one after another
+      ease: easeOut,
+      staggerChildren: 0.2,
     },
   },
 };
@@ -36,7 +36,7 @@ const heroItem = {
     y: 0,
     transition: {
       duration: 0.6,
-      ease: easeOut,   // ✅ fixed: no string, use easeOut
+      ease: easeOut,
     },
   },
 };
@@ -73,7 +73,10 @@ function HeroStories() {
             initial={shouldReduceMotion ? "show" : "hidden"}
             animate="show"
           >
-            <motion.h1 variants={heroItem} className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight">
+            <motion.h1
+              variants={heroItem}
+              className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg tracking-tight"
+            >
               Personal Growth Stories
             </motion.h1>
 
@@ -190,6 +193,9 @@ export default function StoriesPage() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [pendingStory, setPendingStory] = useState<Story | null>(null);
 
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const postsPerPage = 6;
 
   /* ---------- Fetch Stories ---------- */
@@ -212,7 +218,6 @@ export default function StoriesPage() {
 
   /* ---------- Pagination ---------- */
   const totalPages = Math.ceil(stories.length / postsPerPage);
-
   const currentStories = stories.slice(
     (currentPage - 1) * postsPerPage,
     currentPage * postsPerPage
@@ -223,6 +228,30 @@ export default function StoriesPage() {
     setCurrentPage(p);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  /* ---------- Failure Popup ---------- */
+  const FailurePopup: React.FC<{ message: string }> = ({ message }) => (
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+      onClick={() => setShowError(false)}
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full text-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-2xl font-bold mb-4 text-red-600">Submission Failed</h2>
+        <p className="mb-4 text-gray-700">{message}</p>
+        <div className="flex justify-center">
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            onClick={() => setShowError(false)}
+          >
+            Close
+          </button>
+        </div>
+            </div>
+    </div>
+  );
 
   /* ---------- Form Handling ---------- */
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -235,7 +264,6 @@ export default function StoriesPage() {
       content: data.get("content") as string,
       author: data.get("author") as string,
       category: data.get("category") as string,
-      approved: false,
     };
 
     setPendingStory(newStory);
@@ -247,16 +275,25 @@ export default function StoriesPage() {
     if (!pendingStory) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingStory),
       });
 
+      if (!res.ok) {
+        const errText = await res.text();
+        setErrorMessage(errText || "Something went wrong while submitting your story.");
+        setShowError(true);
+        return;
+      }
+
       setSubmittedStory(pendingStory);
       setShowConfirmation(true);
     } catch (err) {
       console.error("Error submitting story:", err);
+      setErrorMessage("Something went wrong while submitting your story.");
+      setShowError(true);
     }
 
     setShowSubmitConfirm(false);
@@ -373,12 +410,13 @@ export default function StoriesPage() {
               />
 
               <select
-                name="category"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              >
-                <option value="general">General</option>
-                <option value="healed">Healed</option>
-              </select>
+                  name="category"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="General">General</option>
+                  <option value="Recovery">Recovery</option> {/* ✅ match schema */}
+                </select>
+
 
               <div className="flex justify-end space-x-3">
                 <button
@@ -486,6 +524,8 @@ export default function StoriesPage() {
         </div>
       )}
 
+            {/* ------------ Failure Popup ------------ */}
+      {showError && <FailurePopup message={errorMessage} />}
     </div>
   );
 }

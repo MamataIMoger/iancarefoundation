@@ -1,127 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-// --- Skeleton Component for Blog Post Card ---
-const PostCardSkeleton = () => (
-  <article className="bg-card text-card-foreground rounded-xl border border-border shadow-xl transition-colors duration-500">
-    {/* Image Placeholder */}
-    <div className="w-full h-48 bg-muted"></div>
-    <div className="p-6 flex flex-col justify-between flex-grow">
-      <div>
-        {/* Admin Tag & Date Placeholder */}
-        <div className="flex justify-between items-start mb-3">
-          <div className="h-5 bg-gray-200 rounded-full w-20"></div>
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-        </div>
-        {/* Title Placeholder */}
-        <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div>
-        {/* Content Placeholder */}
-        <div className="space-y-2 mb-4">
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-11/12"></div>
-          <div className="h-4 bg-gray-200 rounded w-10/12"></div>
-          <div className="h-4 bg-gray-200 rounded w-9/12"></div>
-        </div>
-      </div>
-      {/* Buttons Placeholder */}
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 flex-wrap gap-3">
-        <div className="h-8 bg-gray-300 rounded w-24"></div>
-        <div className="flex flex-wrap gap-3">
-          <div className="h-8 bg-gray-200 rounded w-20"></div>
-          <div className="h-8 bg-gray-200 rounded w-20"></div>
-          <div className="h-8 bg-gray-200 rounded w-20"></div>
-        </div>
-      </div>
-    </div>
-  </article>
-);
-
-// --- New Skeleton Component for the whole section ---
-const BlogSectionSkeleton = ({ postsPerPage }: { postsPerPage: number }) => (
-  <div className="p-4 md:p-8 max-w-7xl mx-auto bg-white min-h-screen font-sans animate-pulse">
-    {/* Header Skeleton */}
-    <div className="h-10 bg-gray-300 w-96 mb-2 pt-8 rounded"></div>
-    <div className="h-6 bg-gray-200 w-full mb-8 pb-4 rounded"></div>
-
-    {/* Admin/Reader Switch Skeleton */}
-    <div className="flex justify-between items-center mb-6 bg-gray-50 p-3 rounded-xl shadow-inner border border-gray-100">
-      <div className="h-5 bg-gray-200 w-48 rounded"></div>
-      <div className="h-10 bg-[#005691] w-32 rounded-lg"></div>
-    </div>
-
-    {/* Admin/Publish Panel Skeleton (Only if isAdmin is likely) */}
-    <div className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 border-t-4 border-[var(--accent)]">
-      <div className="h-6 bg-gray-300 w-64 mb-4 rounded"></div>
-      <div className="h-10 bg-gray-200 w-full mb-3 rounded-lg"></div>
-      <div className="h-16 bg-gray-200 w-full mb-3 rounded-lg"></div>
-      <div className="h-10 bg-gray-300 w-full rounded-lg"></div>
-    </div>
-
-    {/* View Mode Buttons Skeleton */}
-    <div className="mb-8 flex space-x-4 justify-center">
-      <div className="h-10 bg-gray-200 w-40 rounded-full"></div>
-      <div className="h-10 bg-gray-200 w-40 rounded-full"></div>
-    </div>
-
-    {/* Pagination Skeleton */}
-    <div className="flex justify-center space-x-2 mb-5">
-      <div className="h-8 bg-gray-200 w-16 rounded"></div>
-      <div className="h-8 bg-[#005691] w-8 rounded"></div>
-      <div className="h-8 bg-gray-200 w-8 rounded"></div>
-      <div className="h-8 bg-gray-200 w-16 rounded"></div>
-    </div>
-
-    {/* Post Card Skeletons */}
-    <div className="space-y-10 mt-12">
-      {Array.from({ length: postsPerPage }).map((_, index) => (
-        <PostCardSkeleton key={index} />
-      ))}
-    </div>
-  </div>
-);
-
-const useScrollAnimation = (threshold = 0.2, animationClass = "fade-up") => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLElement | null>(null);
-
-  const getAnimationClasses = (visible: boolean, type: string) => {
-    const baseTransition = "transition-all duration-700 ease-out transform";
-    if (visible) return `${baseTransition} opacity-100 translate-x-0 translate-y-0`;
-    switch (type) {
-      case "slide-right":
-        return `${baseTransition} opacity-0 translate-x-32`;
-      case "slide-left":
-        return `${baseTransition} opacity-0 -translate-x-32`;
-      case "fade-up":
-      default:
-        return `${baseTransition} opacity-0 translate-y-12`;
-    }
-  };
-
-  const animationClasses = getAnimationClasses(isVisible, animationClass);
-
-  useEffect(() => {
-    const currentElement = ref.current;
-    if (!currentElement) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold }
-    );
-    observer.observe(currentElement);
-    return () => {
-      if (currentElement) observer.unobserve(currentElement);
-    };
-  }, [threshold, animationClass]);
-
-  return { ref, animationClasses };
-};
-
+/* ---------- Types ---------- */
 export type BlogPost = {
   _id: string;
   title: string;
@@ -141,213 +22,322 @@ type PostCardProps = {
   onMakePrivate: (post: BlogPost) => void;
 };
 
-const PostCardAdminView: React.FC<PostCardProps> = ({
-  post,
-  isAdmin,
-  onReadMore,
-  onEdit,
-  onDelete,
-  onPublish,
-  onMakePrivate,
-}) => {
-  const { ref, animationClasses } = useScrollAnimation(0.2, "fade-up");
-  const isPublished = post.status === "published";
+/* ---------- Constants ---------- */
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
-  const formatDate = (timestamp?: string) => {
-    if (!timestamp) return "Just now";
-    return new Date(timestamp).toLocaleString();
-  };
+/* ---------- Helpers ---------- */
+const formatDateShort = (ts?: string | number) => {
+  if (!ts) return "—";
+  try {
+    return new Date(ts).toLocaleDateString();
+  } catch {
+    return "—";
+  }
+};
 
-  const imageToDisplay = post.imageUrl
-    ? post.imageUrl
-    : `https://placehold.co/400x400/FFD100/005691?text=${encodeURIComponent(
-        post.title.substring(0, 15) || "Article"
-      )}`;
+/* ---------- Skeletons ---------- */
+const PostCardSkeleton = () => (
+  <article className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 shadow-sm animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="w-20 h-14 bg-gray-200 rounded-lg" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 bg-gray-200 rounded w-3/5" />
+        <div className="h-3 bg-gray-200 rounded w-2/5" />
+      </div>
+    </div>
+  </article>
+);
 
-  return (
-    <article
-      ref={ref}
-      className={`bg-card text-card-foreground rounded-xl overflow-hidden border border-border shadow-xl hover:shadow-2xl transition duration-500 ${animationClasses} flex flex-col`}
-    >
-      <img
-        src={imageToDisplay}
-        alt={`Image for ${post.title}`}
-        className="w-full h-48 object-cover bg-gray-100"
-      />
-      <div className="p-6 flex flex-col justify-between flex-grow">
-        <div>
-          <div className="flex justify-between items-start mb-3">
-            {isAdmin && (
-              <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  isPublished
-                    ? "bg-green-100 text-green-700 border border-green-300"
-                    : "bg-red-100 text-red-700 border border-red-300"
-                }`}
-              >
-                {isPublished ? "PUBLISHED" : "DRAFT"}
-              </span>
-            )}
-            <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
-          </div>
-          <h3 className="text-2xl font-bold text-[#005691] mb-3">{post.title}</h3>
-          <p
-            className="text-gray-700 mb-4 leading-relaxed line-clamp-4"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-        </div>
+const BlogSectionSkeleton = ({ postsPerPage }: { postsPerPage: number }) => (
+  <div className="p-4 max-w-6xl mx-auto min-h-screen">
+    <header className="mb-6">
+      <div className="h-8 bg-gray-200 rounded w-1/3 mb-2 animate-pulse" />
+      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+    </header>
 
-        <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 flex-wrap gap-3">
-          <button
-            onClick={() => onReadMore(post)}
-            className="text-amber-700 hover:text-amber-900 font-semibold transition"
-          >
-            Read More →
-          </button>
-
-          {isAdmin && (
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => onEdit(post)}
-                className="text-blue-600 font-semibold hover:text-blue-800 transition"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(post)}
-                className="text-red-500 font-semibold hover:text-red-700 transition"
-              >
-                Delete
-              </button>
-              {isPublished ? (
-                <button
-                  onClick={() => onMakePrivate(post)}
-                  className="text-yellow-700 font-semibold hover:text-yellow-900 transition"
-                >
-                  Make Private
-                </button>
-              ) : (
-                <button
-                  onClick={() => onPublish(post)}
-                  className="text-green-600 font-semibold hover:text-green-800 transition"
-                >
-                  Make Public
-                </button>
-              )}
-            </div>
-          )}
+    <div className="grid grid-cols-12 gap-4">
+      <div className="col-span-12 lg:col-span-8 space-y-3">
+        <div className="h-36 bg-gray-100 rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Array.from({ length: postsPerPage }).map((_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       </div>
-    </article>
-  );
+
+      <aside className="col-span-12 lg:col-span-4 space-y-3">
+        <div className="h-24 bg-gray-100 rounded-xl" />
+        <div className="h-32 bg-gray-100 rounded-xl" />
+      </aside>
+    </div>
+  </div>
+);
+
+/* ---------- Simple scroll animation hook ---------- */
+const useScrollAnimation = (threshold = 0.15) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          obs.unobserve(entry.target);
+        }
+      },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => {
+      try {
+        obs.disconnect();
+      } catch {}
+    };
+  }, [threshold]);
+
+  const base = "transition-all duration-600 ease-out transform";
+  const classes = isVisible ? `${base} opacity-100 translate-y-0` : `${base} opacity-0 translate-y-6`;
+  return { ref, classes };
 };
 
-const PostCardUserView: React.FC<{ post: BlogPost; onReadMore: (post: BlogPost) => void }> = ({
-  post,
-  onReadMore,
-}) => {
-  const { ref, animationClasses } = useScrollAnimation(0.2, "fade-up");
-
-  const imageToDisplay = post.imageUrl
-    ? post.imageUrl
-    : `https://placehold.co/400x400/FFD100/005691?text=${encodeURIComponent(
-        post.title.substring(0, 15) || "Article"
-      )}`;
-
-  // Extract short snippet (simple text-extract fallback)
-  const createSnippet = (html: string) => {
-    const div = document.createElement("div");
-    div.innerHTML = html;
-    const text = div.textContent || div.innerText || "";
-    return text.length > 100 ? text.substring(0, 97) + "..." : text;
+/* ---------- Badge ---------- */
+const Badge: React.FC<{ children: React.ReactNode; variant?: "green" | "yellow" | "red" | "blue" }> = ({ children, variant = "blue" }) => {
+  const base = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold";
+  const map: Record<string, string> = {
+    green: "bg-green-100 text-green-800",
+    yellow: "bg-amber-100 text-amber-800",
+    red: "bg-red-100 text-red-800",
+    blue: "bg-blue-100 text-blue-800",
   };
-
-  return (
-    <article
-      ref={ref}
-      className={`border border-border rounded-lg shadow-md p-4 bg-card text-card-foreground cursor-pointer hover:shadow-lg transition ${animationClasses} flex flex-col`}
-      onClick={() => onReadMore(post)}
-      aria-label={`Read more about ${post.title}`}
-    >
-      <img
-        src={imageToDisplay}
-        alt={`Image for ${post.title}`}
-        className="w-full h-32 object-cover rounded-md mb-3"
-      />
-      <h3 className="text-lg font-semibold text-[#005691] mb-2 line-clamp-2">{post.title}</h3>
-      <p className="text-gray-700 text-sm line-clamp-3">{createSnippet(post.content)}</p>
-    </article>
-  );
+  return <span className={`${base} ${map[variant] ?? map.blue}`}>{children}</span>;
 };
 
-// --- RTE Toolbar ---
-// --- Enhanced RTEToolbar with Color Picker ---
+/* ---------- RTE Toolbar ---------- */
 const RTEToolbar: React.FC<{ targetId: string }> = ({ targetId }) => {
   const exec = (cmd: string, value?: string) => {
     const el = document.getElementById(targetId) as HTMLElement | null;
     if (el) el.focus();
     try {
+      // @ts-ignore
       document.execCommand(cmd, false, value);
-    } catch (e) {
-      console.warn("Formatting command failed", cmd, e);
-    }
-  };
-
-  // Handler for color picker
-  const handleColor = (e: React.ChangeEvent<HTMLInputElement>) => {
-    exec("foreColor", e.target.value);
+    } catch {}
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-2 items-center">
-      <button type="button" onClick={() => exec("bold")} className="px-3 py-1 border rounded font-bold" title="Bold">
+    <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-white/70 border">
+      <button type="button" onClick={() => exec("bold")} className="px-2 py-1 border rounded text-xs font-bold">
         B
       </button>
-      <button type="button" onClick={() => exec("italic")} className="px-3 py-1 border rounded italic" title="Italic">
+      <button type="button" onClick={() => exec("italic")} className="px-2 py-1 border rounded text-xs italic">
         I
       </button>
-      <button type="button" onClick={() => exec("underline")} className="px-3 py-1 border rounded underline" title="Underline">
+      <button type="button" onClick={() => exec("underline")} className="px-2 py-1 border rounded text-xs underline">
         U
       </button>
+      <div className="ml-auto flex items-center gap-2">
+        <button className="px-2 py-1 border rounded text-xs" onClick={() => exec("undo")}>
+          Undo
+        </button>
+        <button className="px-2 py-1 border rounded text-xs" onClick={() => exec("redo")}>
+          Redo
+        </button>
+      </div>
+    </div>
+  );
+};
 
-      {/* Color Picker */}
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          onChange={handleColor}
-          title="Pick Color"
-          className="w-8 h-8 border rounded"
-        />
-        <span className="text-xs">Color</span>
+/* ---------- Post Card Admin View ---------- */
+const PostCardAdminView: React.FC<PostCardProps> = ({ post, isAdmin, onReadMore, onEdit, onDelete, onPublish, onMakePrivate }) => {
+  const { ref, classes } = useScrollAnimation(0.12);
+  const isPublished = post.status === "published";
+
+  // avoid empty string as src -> render image only if non-empty
+  const hasImage = !!post.imageUrl && post.imageUrl.trim().length > 0;
+
+  return (
+    <article ref={ref} className={`${classes} bg-white dark:bg-slate-800 rounded-xl border p-3 shadow-sm flex gap-3 items-start`}>
+      <div className="w-28 h-16 rounded-md overflow-hidden flex-shrink-0 border bg-slate-50">
+        {hasImage ? (
+          // only render img when URL exists (prevents empty src warning)
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.imageUrl as string} alt={post.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-sm text-slate-500">No Image</div>
+        )}
       </div>
 
-      <button type="button" onClick={() => exec("undo")} className="px-3 py-1 border rounded flex items-center gap-2" title="Undo">
-        Undo
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {isAdmin && <Badge variant={isPublished ? "green" : "yellow"}>{isPublished ? "PUBLISHED" : "DRAFT"}</Badge>}
+            <h3 className="text-sm font-semibold text-sky-800 line-clamp-1 truncate">{post.title}</h3>
+          </div>
+          <div className="text-xs text-slate-400">{formatDateShort(post.createdAt)}</div>
+        </div>
+
+        <p className="text-slate-600 text-sm mt-1 line-clamp-2" dangerouslySetInnerHTML={{ __html: post.content }} />
+
+        <div className="flex items-center justify-between mt-3 gap-2">
+          <div className="flex items-center gap-2">
+            <button onClick={() => onReadMore(post)} className="text-sky-700 text-sm px-2 py-1 rounded hover:bg-sky-50">
+              Read
+            </button>
+            <button onClick={() => onEdit(post)} className="text-slate-700 text-sm px-2 py-1 rounded hover:bg-slate-50">
+              Edit
+            </button>
+            <button onClick={() => onDelete(post)} className="text-red-600 text-sm px-2 py-1 rounded hover:bg-red-50">
+              Delete
+            </button>
+          </div>
+
+          <div>
+            {isPublished ? (
+              <button onClick={() => onMakePrivate(post)} className="px-2 py-1 bg-amber-300 text-amber-900 text-sm rounded">
+                Make Private
+              </button>
+            ) : (
+              <button onClick={() => onPublish(post)} className="px-2 py-1 bg-green-600 text-white text-sm rounded">
+                Publish
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+/* ---------- Post Card User View (grid) ---------- */
+const PostCardUserView: React.FC<{ post: BlogPost; onReadMore: (post: BlogPost) => void }> = ({ post, onReadMore }) => {
+  const { ref, classes } = useScrollAnimation(0.12);
+
+  const hasImage = !!post.imageUrl && post.imageUrl.trim().length > 0;
+
+  const createSnippet = (html: string) => {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    const text = div.textContent || div.innerText || "";
+    return text.length > 120 ? text.substring(0, 117) + "..." : text;
+  };
+
+  return (
+    <article
+      ref={ref}
+      onClick={() => onReadMore(post)}
+      className={`${classes} cursor-pointer rounded-xl overflow-hidden border bg-white dark:bg-slate-800 shadow-sm hover:shadow-md`}
+    >
+      <div className="w-full h-44 bg-slate-100">
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.imageUrl as string} alt={post.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-500">No Image</div>
+        )}
+      </div>
+
+      <div className="p-3">
+        <h3 className="text-sm font-semibold text-sky-800 line-clamp-2">{post.title}</h3>
+        <p className="text-slate-600 mt-1 text-sm">{createSnippet(post.content)}</p>
+      </div>
+    </article>
+  );
+};
+
+/* ---------- Pagination ---------- */
+const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChange: (page: number) => void }> = ({ currentPage, totalPages, onPageChange }) => {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-4">
+      <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="px-3 py-1 rounded border disabled:opacity-50 text-sm">
+        Prev
       </button>
-      <button type="button" onClick={() => exec("redo")} className="px-3 py-1 border rounded flex items-center gap-2" title="Redo">
-        Redo
+      {pages.map((p) => (
+        <button key={p} onClick={() => onPageChange(p)} className={`px-3 py-1 rounded text-sm ${currentPage === p ? "bg-sky-700 text-white" : "border hover:bg-slate-100"}`}>
+          {p}
+        </button>
+      ))}
+      <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="px-3 py-1 rounded border disabled:opacity-50 text-sm">
+        Next
       </button>
     </div>
   );
 };
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB in bytes
+/* ---------- Modal components ---------- */
+const Modal: React.FC<{ onClose: () => void; title?: string; children: React.ReactNode; showCloseX?: boolean }> = ({ onClose, title, children, showCloseX = false }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      {title && <h2 className="text-lg font-bold text-sky-800 mb-3">{title}</h2>}
+      {showCloseX && (
+        <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-xl">
+          &times;
+        </button>
+      )}
+      {children}
+      {!showCloseX && (
+        <div className="flex justify-end mt-3">
+          <button className="px-4 py-1.5 rounded bg-sky-700 text-white" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+);
 
+const ConfirmModal: React.FC<{ title: string; message: string; onCancel: () => void; onConfirm: () => void }> = ({ title, message, onCancel, onConfirm }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onCancel}>
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+      <h3 className="text-md font-bold text-sky-800 mb-2">{title}</h3>
+      <p className="text-sm text-slate-600 mb-4">{message}</p>
+      <div className="flex justify-end gap-2">
+        <button className="px-3 py-1 rounded border" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="px-3 py-1 rounded bg-green-600 text-white" onClick={onConfirm}>
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+      <p className="text-green-700 text-center font-semibold">{message}</p>
+      <div className="flex justify-center mt-3">
+        <button className="px-4 py-1.5 bg-sky-700 text-white rounded" onClick={onClose}>
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ---------- Main BlogSection (logic preserved) ---------- */
 const BlogSection: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(true);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeModal, setActiveModal] = useState<
+
+  type ActiveModal =
     | null
     | { type: "read"; post: BlogPost }
     | { type: "edit"; post: BlogPost }
     | { type: "delete"; post: BlogPost }
     | { type: "publishConfirm"; post: BlogPost }
-    | { type: "saveConfirm"; formData: FormData | { title: string; content: string; imageUrl: string; status: string } }
+    | { type: "saveConfirm"; formData: FormData | { title: string; content: string; status: string } }
     | { type: "private"; post: BlogPost }
     | { type: "success"; message: string }
-    | { type: "saveEditConfirm"; id: string; formData: FormData | { title: string; content: string; imageUrl?: string; status?: string } }
-  >(null);
+    | { type: "saveEditConfirm"; id: string; formData: FormData | { title: string; content: string } };
+
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
   const [editTitle, setEditTitle] = useState("");
   const [editContentInitial, setEditContentInitial] = useState("");
@@ -355,41 +345,44 @@ const BlogSection: React.FC = () => {
 
   const [title, setTitle] = useState("");
   const [contentInitial, setContentInitial] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageInputType, setImageInputType] = useState<"url" | "file">("url");
+
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [viewMode, setViewMode] = useState<"published" | "draft">("published");
 
-  // Refs for contentEditable editors (uncontrolled to avoid caret/undo issues)
   const newEditorRef = useRef<HTMLDivElement | null>(null);
   const editEditorRef = useRef<HTMLDivElement | null>(null);
 
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  // Show 9 posts per page in user view for grid 3x3, else 5 in admin view
   const postsPerPage = isAdmin ? 5 : 9;
 
+  /* ---------- Fetch posts ---------- */
   const fetchPosts = useCallback(async () => {
     try {
+      setIsLoading(true);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`);
-      const contentType = res.headers.get("content-type");
-
-      if (!res.ok || !contentType?.includes("application/json")) {
-        const raw = await res.text();
-        console.error("❌ Unexpected response:", raw);
-        throw new Error("Invalid response format");
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        console.error("Fetch failed:", raw);
+        setPosts([]);
+        return;
       }
-
+      if (!contentType.includes("application/json")) {
+        const raw = await res.text().catch(() => "");
+        console.error("Unexpected content type:", raw);
+        setPosts([]);
+        return;
+      }
       const data = await res.json();
-
       if (data && data.success && Array.isArray(data.data)) {
         setPosts(data.data);
+      } else if (Array.isArray(data)) {
+        setPosts(data);
       } else {
-        console.error("❌ Unexpected response structure:", data);
         setPosts([]);
       }
     } catch (err) {
@@ -404,16 +397,14 @@ const BlogSection: React.FC = () => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Filter posts based on admin or user and viewMode
-  const filteredPosts = Array.isArray(posts)
-    ? posts.filter((p) => (isAdmin ? p.status === viewMode : p.status === "published"))
-    : [];
+  /* ---------- Derived lists + pagination ---------- */
+  const filteredPosts = Array.isArray(posts) ? posts.filter((p) => (isAdmin ? p.status === viewMode : p.status === "published")) : [];
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / postsPerPage));
 
-  // Validate image file size
+  /* ---------- Helpers ---------- */
   const validateFileSize = (file: File | null) => {
     if (file && file.size > MAX_IMAGE_SIZE) {
       setError("Image file size exceeds 2 MB limit.");
@@ -423,7 +414,29 @@ const BlogSection: React.FC = () => {
     return true;
   };
 
-  // Save Post with confirmation
+  /* ---------- CRUD inside component ---------- */
+  const updatePost = async (id: string, updatedFields: Partial<BlogPost> | FormData) => {
+    let options: RequestInit;
+    if (updatedFields instanceof FormData) {
+      if (!validateFileSize(updatedFields.get("image") as File | null)) {
+        throw new Error("Image file too big");
+      }
+      options = { method: "PUT", body: updatedFields };
+    } else {
+      options = { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatedFields) };
+    }
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${id}`, options);
+    if (!res.ok) throw new Error("Failed to update");
+    return await res.json();
+  };
+
+  const deletePost = async (id: string) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete");
+    return await res.json();
+  };
+
+  /* ---------- Save New Post (file-only) ---------- */
   const handleSaveRequest = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const htmlContent = newEditorRef.current?.innerHTML?.trim() ?? "";
@@ -432,23 +445,22 @@ const BlogSection: React.FC = () => {
       return;
     }
 
-    if (imageInputType === "url") {
-      setActiveModal({ type: "saveConfirm", formData: { title, content: htmlContent, imageUrl, status } });
-    } else if (imageInputType === "file" && imageFile) {
-      if (!validateFileSize(imageFile)) return;
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("content", htmlContent);
-      formData.append("status", status);
-      formData.append("image", imageFile);
-      setActiveModal({ type: "saveConfirm", formData });
-    } else {
-      // No image file selected for file input
-      setActiveModal({ type: "saveConfirm", formData: { title, content: htmlContent, imageUrl: "", status } });
+    if (!imageFile) {
+      setError("Please upload an image.");
+      return;
     }
+
+    if (!validateFileSize(imageFile)) return;
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", htmlContent);
+    formData.append("status", status);
+    formData.append("image", imageFile);
+
+    setActiveModal({ type: "saveConfirm", formData });
   };
 
-  // Confirm Save Post with success message
   const confirmSave = async () => {
     if (!activeModal || activeModal.type !== "saveConfirm") return;
     setActiveModal(null);
@@ -457,9 +469,9 @@ const BlogSection: React.FC = () => {
     try {
       let res;
       if (activeModal.formData instanceof FormData) {
-        res = await fetch("/api/blog", { method: "POST", body: activeModal.formData });
+        res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`, { method: "POST", body: activeModal.formData });
       } else {
-        res = await fetch("/api/blog", {
+        res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(activeModal.formData),
@@ -470,7 +482,6 @@ const BlogSection: React.FC = () => {
       setTitle("");
       setContentInitial("");
       if (newEditorRef.current) newEditorRef.current.innerHTML = "";
-      setImageUrl("");
       setImageFile(null);
       setStatus("draft");
       setActiveModal({ type: "success", message: "Post saved successfully!" });
@@ -481,57 +492,12 @@ const BlogSection: React.FC = () => {
     setIsSubmitting(false);
   };
 
-  // Update post with optional image edit support
-  const updatePost = async (id: string, updatedFields: Partial<BlogPost> | FormData) => {
-    let options: RequestInit;
-    if (updatedFields instanceof FormData) {
-      if (!validateFileSize(updatedFields.get("image") as File | null)) {
-        throw new Error("Image file size exceeds 2 MB limit.");
-      }
-      options = { method: "PUT", body: updatedFields };
-    } else {
-      options = {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedFields),
-      };
-    }
-    const res = await fetch(`/api/blog/crud/${id}`, options);
-    if (!res.ok) throw new Error("Failed to update");
-    await fetchPosts();
-  };
-
-  const deletePost = async (id: string) => {
-    await fetch(`/api/blog/crud/${id}`, { method: "DELETE" });
-    fetchPosts();
-  };
-
-  const publishPost = async (post: BlogPost) => {
-    setActiveModal({ type: "publishConfirm", post });
-  };
-
-  const makePostPrivate = async (post: BlogPost) => {
-    setActiveModal({ type: "private", post });
-  };
-
-  const handlePublishRequest = (post: BlogPost) => {
-    setActiveModal({ type: "publishConfirm", post });
-  };
-
-  const confirmPublish = async () => {
-    if (activeModal?.type === "publishConfirm") {
-      await updatePost(activeModal.post._id, { status: "published" });
-      setActiveModal({ type: "success", message: "Post published successfully!" });
-    }
-  };
-
-  // --- Edit flow (combined title + content) ---
+  /* ---------- Edit flows ---------- */
   const openEdit = (post: BlogPost) => {
     setEditTitle(post.title);
     setEditContentInitial(post.content);
     setEditImageFile(null);
     setActiveModal({ type: "edit", post });
-    // populate the edit editor after modal opens — handled in modal render using ref
   };
 
   const requestEditSave = (id: string) => {
@@ -559,6 +525,7 @@ const BlogSection: React.FC = () => {
     setIsSubmitting(true);
     try {
       await updatePost(id, formData instanceof FormData ? formData : (formData as any));
+      await fetchPosts();
       setActiveModal({ type: "success", message: "Post updated successfully!" });
     } catch (e) {
       console.error(e);
@@ -567,210 +534,241 @@ const BlogSection: React.FC = () => {
     setIsSubmitting(false);
   };
 
+  const confirmDelete = async (id: string) => {
+    try {
+      await deletePost(id);
+      await fetchPosts();
+      setActiveModal({ type: "success", message: "Post deleted successfully!" });
+    } catch (e) {
+      console.error(e);
+      setError("Failed to delete post.");
+    }
+  };
+
+  /* ---------- Loading ---------- */
   if (isLoading) {
     return <BlogSectionSkeleton postsPerPage={postsPerPage} />;
   }
 
+  /* ---------- Render ---------- */
   return (
-    <div
-      className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen font-sans transition-colors duration-500"
-      style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
-    >
-      <h1 className="text-5xl md:text-5xl font-extrabold text-[#005691] mb-2 pt-8 text-center">Insights & Inspirations</h1>
-      <p
-        className="text-lg mb-8 border-b-2 pb-4"
-        style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}
-      >
-        Articles on recovery, emotional wellness, and building a purposeful life.
-      </p>
-      {/* Admin/Reader Switch (Visible only after loading) */}
-      <div
-        className="flex justify-between items-center mb-6 p-3 rounded-xl shadow-inner border"
-        style={{
-          backgroundColor: "var(--card)",
-          borderColor: "var(--border)",
-          color: "var(--card-foreground)",
-        }}
-      >
-        <span className={`font-bold ${isAdmin ? "text-[#005691]" : "text-gray-600"}`}>
-          {isAdmin ? "Administrator (Write/Edit Access)" : "Reader (Read Only Access)"}
-        </span>
-        <button
-          onClick={() => {
-            setIsAdmin(!isAdmin);
-            setCurrentPage(1); // Reset page on view switch
-          }}
-          className={`py-2 px-4 rounded-lg font-bold text-xs shadow-md transition-all duration-300 ${
-            isAdmin ? "bg-[#FFD100] text-[#005691]" : "bg-[#005691] text-white"
-          }`}
-        >
-          Switch to {isAdmin ? "Reader" : "Admin"} View
-        </button>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* New header design (compact) */}
+        <header className="bg-gradient-to-r from-sky-600 to-indigo-600 text-white py-6 rounded-2xl shadow-lg mb-6">
+          <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-7xl mx-auto">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Insights &amp; Inspirations</h1>
+            </div>
 
-      {/* Publish New Article Form (Visible only if admin) */}
-      {isAdmin && (
-        <div className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 border-t-4 border-[var(--accent)]">
-          <h2 className="text-2xl font-bold text-[#005691] mb-4">Publish New Article</h2>
-          <form onSubmit={handleSaveRequest}>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a compelling title"
-              required
-              className="w-full p-3 mb-3 border rounded-lg"
-            />
+            <div className="flex items-center gap-3">
+              <div className="text-sm hidden sm:block">
+                {/* removed Welcome back / Administrator per request */}
+              </div>
 
-            <div className="mb-4">
-              <label className="flex items-center space-x-4 mb-2">
-                <input
-                  type="radio"
-                  name="imageInputType"
-                  value="url"
-                  checked={imageInputType === "url"}
-                  onChange={() => {
-                    setImageInputType("url");
-                    setImageFile(null);
-                    setError(null);
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIsAdmin(false);
+                    setCurrentPage(1);
                   }}
-                />
-                <span>Use Image URL</span>
-                <input
-                  type="radio"
-                  name="imageInputType"
-                  value="file"
-                  checked={imageInputType === "file"}
-                  onChange={() => {
-                    setImageInputType("file");
-                    setImageUrl("");
-                    setError(null);
+                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${!isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"}`}
+                >
+                  Reader View
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsAdmin(true);
+                    setCurrentPage(1);
                   }}
-                />
-                <span>Upload Image File</span>
-              </label>
-              {imageInputType === "url" ? (
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Paste an image URL"
-                  className="w-full p-3 border rounded-lg"
-                />
+                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"}`}
+                >
+                  Admin View
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main grid */}
+        <main className="grid grid-cols-12 gap-6">
+          {/* Left main column */}
+          <section className="col-span-12 lg:col-span-8 space-y-4">
+            {/* controls */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 text-sm">
+                <div className="text-slate-400">Showing</div>
+                <div className="font-semibold">{isAdmin ? (viewMode === "published" ? "Published" : "Drafts") : "Published"}</div>
+                <div className="text-slate-400">• {filteredPosts.length} items</div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-white rounded-full px-3 py-1 shadow-sm border">
+                  <input placeholder="Search title..." className="bg-transparent outline-none text-sm w-36" onChange={() => {}} />
+                </div>
+
+                {isAdmin && (
+                  <div className="flex gap-1">
+                    <button onClick={() => { setViewMode("published"); setCurrentPage(1); }} className={`px-3 py-1 rounded-full text-sm font-semibold ${viewMode === "published" ? "bg-amber-300 text-amber-900" : "bg-white/60"}`}>
+                      Published ({posts.filter((p) => p.status === "published").length})
+                    </button>
+                    <button onClick={() => { setViewMode("draft"); setCurrentPage(1); }} className={`px-3 py-1 rounded-full text-sm font-semibold ${viewMode === "draft" ? "bg-amber-300 text-amber-900" : "bg-white/60"}`}>
+                      Drafts ({posts.filter((p) => p.status === "draft").length})
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Admin: Publish new article (file-only, compact) */}
+            {isAdmin && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-sky-800">Publish New Article</h2>
+                    <p className="text-sm text-slate-500 mt-1">Write and publish a short article for the site.</p>
+
+                    <form onSubmit={handleSaveRequest} className="mt-3 space-y-2">
+                      <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title" required className="w-full p-2 border rounded-lg text-sm" />
+
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-slate-700">Upload Image</span>
+
+                        <select value={status} onChange={(e) => setStatus(e.target.value as "draft" | "published")} className="p-1 border rounded text-sm">
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                        </select>
+                      </div>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          setImageFile(file);
+                          setError(null);
+                          if (file && file.size > MAX_IMAGE_SIZE) setError("Image file exceeds 2 MB");
+                        }}
+                        className="w-full text-sm"
+                      />
+
+                      <RTEToolbar targetId="newPostEditor" />
+                      <div id="newPostEditor" ref={newEditorRef} contentEditable role="textbox" aria-multiline className="w-full p-2 border rounded-lg min-h-[120px] bg-white dark:bg-slate-900 text-sm" />
+
+                      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                      <div className="flex justify-end">
+                        <button type="submit" disabled={isSubmitting} className="px-4 py-1.5 rounded-full bg-sky-700 text-white text-sm font-semibold">
+                          {isSubmitting ? "Publishing..." : "Save New Post"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* intentionally removed preview per request */}
+                </div>
+              </div>
+            )}
+
+            {/* Posts listing */}
+            <div className="space-y-3">
+              {currentPosts.length === 0 ? (
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <p className="text-slate-500 text-center">No {isAdmin ? viewMode : "published"} articles found.</p>
+                </div>
+              ) : isAdmin ? (
+                <div className="space-y-3">
+                  {currentPosts.map((post) => (
+                    <PostCardAdminView
+                      key={post._id}
+                      post={post}
+                      isAdmin={isAdmin}
+                      onReadMore={(p) => setActiveModal({ type: "read", post: p })}
+                      onEdit={(p) => openEdit(p)}
+                      onDelete={(p) => setActiveModal({ type: "delete", post: p })}
+                      onPublish={(p) => setActiveModal({ type: "publishConfirm", post: p })}
+                      onMakePrivate={(p) => setActiveModal({ type: "private", post: p })}
+                    />
+                  ))}
+                </div>
               ) : (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setImageFile(file);
-                    setError(null);
-                    if (file && file.size > MAX_IMAGE_SIZE) {
-                      setError("Image file size exceeds 2 MB limit.");
-                    }
-                  }}
-                  className="w-full p-3 border rounded-lg"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {currentPosts.map((post) => (
+                    <PostCardUserView key={post._id} post={post} onReadMore={(p) => setActiveModal({ type: "read", post: p })} />
+                  ))}
+                </div>
               )}
             </div>
 
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as "draft" | "published")}
-              className="w-full p-3 mb-3 border rounded-lg"
-            >
-              <option value="draft">Draft (Private)</option>
-              <option value="published">Published (Public)</option>
-            </select>
+            {/* Pagination */}
+            <div className="mt-4">
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(p) => setCurrentPage(p)} />
+            </div>
+          </section>
 
-            <RTEToolbar targetId="newPostEditor" />
-            <div
-              id="newPostEditor"
-              ref={newEditorRef}
-              contentEditable
-              role="textbox"
-              aria-multiline
-              className="w-full p-3 mb-3 border rounded-lg min-h-[150px] bg-white"
-            />
+          {/* Right column (overview + recent posts) */}
+          <aside className="col-span-12 lg:col-span-4 space-y-3">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-sky-800">Overview</h3>
+                  <p className="text-xs text-slate-500">Quick stats</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">{posts.length}</div>
+                  <div className="text-xs text-slate-400">Total posts</div>
+                </div>
+              </div>
 
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-[#005691] text-white rounded-lg transition hover:bg-[#003f5c]"
-            >
-              {isSubmitting ? "Publishing..." : "Save New Post"}
-            </button>
-          </form>
-        </div>
-      )}
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <div className="text-slate-600">Published</div>
+                  <div className="font-semibold">{posts.filter((p) => p.status === "published").length}</div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-slate-600">Drafts</div>
+                  <div className="font-semibold">{posts.filter((p) => p.status === "draft").length}</div>
+                </div>
+              </div>
+            </div>
 
-      {/* View Mode Buttons (Visible only if admin) */}
-      {isAdmin && (
-        <div className="mb-8 flex space-x-4 justify-center">
-          <button
-            onClick={() => setViewMode("published")}
-            className={`py-2 px-6 rounded-full font-semibold ${
-              viewMode === "published" ? "bg-[#FFD100] text-[#005691]" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Published Posts ({posts.filter((p) => p.status === "published").length})
-          </button>
-          <button
-            onClick={() => setViewMode("draft")}
-            className={`py-2 px-6 rounded-full font-semibold ${
-              viewMode === "draft" ? "bg-[#FFD100] text-[#005691]" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Drafts ({posts.filter((p) => p.status === "draft").length})
-          </button>
-        </div>
-      )}
-
-      {/* Pagination (Visible only after loading) */}
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-
-      {/* Posts Listing */}
-      <div
-        className={
-          !isAdmin
-            ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12" // 3x3 grid for user view
-            : "space-y-10 mt-12" // vertical list for admin
-        }
-      >
-        {currentPosts.length === 0 ? (
-          <p className="text-gray-500 text-center p-12 bg-white rounded-xl shadow-inner border">
-            No {isAdmin ? viewMode : "published"} articles found.
-          </p>
-        ) : isAdmin ? (
-          currentPosts.map((post) => (
-            <PostCardAdminView
-              key={post._id}
-              post={post}
-              isAdmin={isAdmin}
-              onReadMore={(p) => setActiveModal({ type: "read", post: p })}
-              onEdit={(p) => openEdit(p)}
-              onDelete={(p) => setActiveModal({ type: "delete", post: p })}
-              onPublish={handlePublishRequest}
-              onMakePrivate={makePostPrivate}
-            />
-          ))
-        ) : (
-          currentPosts.map((post) => (
-            <PostCardUserView key={post._id} post={post} onReadMore={(p) => setActiveModal({ type: "read", post: p })} />
-          ))
-        )}
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-3 border">
+              <h4 className="font-semibold text-sky-800 text-sm">Recent Posts</h4>
+              <ul className="mt-2 space-y-2 text-sm">
+                {posts.slice(0, 4).map((p) => {
+                  const hasImage = !!p.imageUrl && p.imageUrl.trim().length > 0;
+                  return (
+                    <li key={p._id} className="flex items-center gap-2 py-1">
+                      <div className="w-12 h-8 rounded-md overflow-hidden bg-sky-50 border flex-shrink-0">
+                        {hasImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.imageUrl as string} alt={p.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">No</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold line-clamp-1">{p.title}</div>
+                        <div className="text-xs text-slate-400">{formatDateShort(p.createdAt ?? Date.now())}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </aside>
+        </main>
       </div>
 
-      {/* Read More Modal with full content + image */}
+      {/* ---------- Modals ---------- */}
+
+      {/* Read Modal */}
       {activeModal?.type === "read" && (
         <Modal onClose={() => setActiveModal(null)} title={activeModal.post.title}>
-          {activeModal.post.imageUrl && (
-            <img
-              src={activeModal.post.imageUrl}
-              alt={`Full image for ${activeModal.post.title}`}
-              className="w-full max-h-96 object-cover mb-4 rounded"
-            />
+          {activeModal.post.imageUrl && activeModal.post.imageUrl.trim().length > 0 && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={activeModal.post.imageUrl} alt={activeModal.post.title} className="w-full max-h-80 object-cover rounded mb-4" />
           )}
           <div dangerouslySetInnerHTML={{ __html: activeModal.post.content }} />
         </Modal>
@@ -787,12 +785,7 @@ const BlogSection: React.FC = () => {
           title={`Edit: ${activeModal.post.title}`}
           showCloseX
         >
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            className="w-full p-3 border rounded-lg mb-4 text-lg"
-          />
+          <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full p-2 border rounded-lg mb-3 text-lg" />
 
           <label className="block mb-2 font-semibold">Edit Image (optional)</label>
           <input
@@ -802,13 +795,11 @@ const BlogSection: React.FC = () => {
               const file = e.target.files?.[0] ?? null;
               setEditImageFile(file);
               setError(null);
-              if (file && file.size > MAX_IMAGE_SIZE) {
-                setError("Image file size exceeds 2 MB limit.");
-              }
+              if (file && file.size > MAX_IMAGE_SIZE) setError("Image file size exceeds 2 MB limit.");
             }}
-            className="w-full mb-4"
+            className="w-full mb-3 text-sm"
           />
-          {editImageFile && <img src={URL.createObjectURL(editImageFile)} alt="Preview" className="mb-4 max-w-xs rounded" />}
+          {editImageFile && <img src={URL.createObjectURL(editImageFile)} alt="Preview" className="mb-3 max-w-xs rounded" />}
 
           <RTEToolbar targetId="editPostEditor" />
           <div
@@ -817,7 +808,7 @@ const BlogSection: React.FC = () => {
             contentEditable
             role="textbox"
             aria-multiline
-            className="w-full p-3 mb-3 border rounded-lg min-h-[180px] bg-white"
+            className="w-full p-2 mb-3 border rounded-lg min-h-[140px] bg-white text-sm"
             onFocus={() => {
               if (editEditorRef.current && editEditorRef.current.innerHTML.trim() === "") {
                 editEditorRef.current.innerHTML = editContentInitial || "";
@@ -825,11 +816,11 @@ const BlogSection: React.FC = () => {
             }}
           />
 
-          {error && <p className="text-red-500 mb-4">{error}</p>}
+          {error && <p className="text-red-500 mb-3 text-sm">{error}</p>}
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-3">
             <button
-              className="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300"
+              className="px-4 py-1.5 bg-gray-100 rounded"
               onClick={() => {
                 setActiveModal(null);
                 setEditImageFile(null);
@@ -839,9 +830,9 @@ const BlogSection: React.FC = () => {
               Cancel
             </button>
             <button
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-1.5 bg-sky-700 text-white rounded"
               onClick={() => {
-                if (activeModal.type === "edit") {
+                if (activeModal?.type === "edit") {
                   requestEditSave(activeModal.post._id);
                 }
               }}
@@ -852,7 +843,7 @@ const BlogSection: React.FC = () => {
         </Modal>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation */}
       {activeModal?.type === "delete" && (
         <ConfirmModal
           title="Confirm Delete"
@@ -860,44 +851,41 @@ const BlogSection: React.FC = () => {
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
             if (activeModal.type === "delete") {
-              await deletePost(activeModal.post._id);
+              await confirmDelete(activeModal.post._id);
               setActiveModal(null);
-              setActiveModal({ type: "success", message: "Post deleted successfully!" });
             }
           }}
         />
       )}
 
-      {/* Publish Confirmation Modal */}
+      {/* Publish Confirmation */}
       {activeModal?.type === "publishConfirm" && (
         <ConfirmModal
           title="Confirm Publish"
           message={`Do you want to make "${activeModal.post.title}" public?`}
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
-            await confirmPublish();
+            if (activeModal.type === "publishConfirm") {
+              try {
+                await updatePost(activeModal.post._id, { status: "published" });
+                await fetchPosts();
+                setActiveModal({ type: "success", message: "Post published successfully!" });
+              } catch (e) {
+                console.error(e);
+                setError("Failed to publish post");
+              }
+            }
           }}
         />
       )}
 
-      {/* Save New Post Confirmation Modal */}
-      {activeModal?.type === "saveConfirm" && (
-        <ConfirmModal title="Confirm Save" message="Are you sure you want to save this post?" onCancel={() => setActiveModal(null)} onConfirm={confirmSave} />
-      )}
+      {/* Save New Post Confirmation */}
+      {activeModal?.type === "saveConfirm" && <ConfirmModal title="Confirm Save" message="Are you sure you want to save this post?" onCancel={() => setActiveModal(null)} onConfirm={confirmSave} />}
 
-      {/* Save Edit Confirmation Modal */}
-      {activeModal?.type === "saveEditConfirm" && (
-        <ConfirmModal
-          title="Confirm Edit Save"
-          message="Are you sure you want to save these edits?"
-          onCancel={() => setActiveModal(null)}
-          onConfirm={async () => {
-            await confirmEditSave();
-          }}
-        />
-      )}
+      {/* Save Edit Confirm */}
+      {activeModal?.type === "saveEditConfirm" && <ConfirmModal title="Confirm Edit Save" message="Are you sure you want to save these edits?" onCancel={() => setActiveModal(null)} onConfirm={async () => await confirmEditSave()} />}
 
-      {/* Make Private Confirmation Modal */}
+      {/* Make Private */}
       {activeModal?.type === "private" && (
         <ConfirmModal
           title="Confirm Make Private"
@@ -905,124 +893,28 @@ const BlogSection: React.FC = () => {
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
             if (activeModal.type === "private") {
-              await updatePost(activeModal.post._id, { status: "draft" });
-              setActiveModal(null);
-              setActiveModal({ type: "success", message: "Post marked as private!" });
+              try {
+                await updatePost(activeModal.post._id, { status: "draft" });
+                await fetchPosts();
+                setActiveModal({ type: "success", message: "Post marked as private!" });
+              } catch (e) {
+                console.error(e);
+                setError("Failed to mark private");
+              }
             }
           }}
         />
       )}
 
-      {/* Success Modal */}
+      {/* Success */}
       {activeModal?.type === "success" && <SuccessModal message={activeModal.message} onClose={() => setActiveModal(null)} />}
     </div>
   );
 };
 
-const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChange: (page: number) => void }> = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-}) => {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  // Don't render pagination if there's only one page
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="flex justify-center space-x-2 mb-5">
-      <button
-        disabled={currentPage === 1}
-        onClick={() => onPageChange(currentPage - 1)}
-        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
-      >
-        Prev
-      </button>
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 border rounded ${
-            currentPage === page ? "bg-[#005691] text-white" : "border-gray-300 hover:bg-gray-200"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
-      <button
-        disabled={currentPage === totalPages}
-        onClick={() => onPageChange(currentPage + 1)}
-        className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50"
-      >
-        Next
-      </button>
-    </div>
-  );
-};
-
-const Modal: React.FC<{ onClose: () => void; title: string; children: React.ReactNode; showCloseX?: boolean }> = ({
-  onClose,
-  title,
-  children,
-  showCloseX = false,
-}) => (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-6 overflow-auto" onClick={onClose}>
-    <div className="bg-card text-card-foreground rounded-xl shadow-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
-      <h2 className="text-3xl font-bold text-[#005691] mb-6">{title}</h2>
-      {showCloseX && (
-        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 text-2xl font-bold text-gray-500 hover:text-gray-800">
-          &times;
-        </button>
-      )}
-      {children}
-      {!showCloseX && (
-        <div className="flex justify-end mt-6">
-          <button className="px-6 py-3 bg-[#005691] text-white rounded-lg hover:bg-[#003f5c] transition" onClick={onClose}>
-            Close
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const ConfirmModal: React.FC<{
-  title: string;
-  message: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-}> = ({ title, message, onCancel, onConfirm }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-6" onClick={onCancel}>
-    <div className="bg-card text-card-foreground rounded-xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-      <h3 className="text-lg font-bold text-[#005691] mb-4">{title}</h3>
-      <p className="text-gray-700 mb-6">{message}</p>
-      <div className="flex justify-end space-x-3">
-        <button className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition" onClick={onCancel}>
-          Cancel
-        </button>
-        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition" onClick={onConfirm}>
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-6" onClick={onClose}>
-    <div className="bg-card text-card-foreground rounded-xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-      <p className="text-green-700 text-center text-lg">{message}</p>
-      <div className="flex justify-center mt-4">
-        <button className="px-6 py-3 bg-[#005691] text-white rounded-lg hover:bg-[#003f5c] transition" onClick={onClose}>
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
+/* ---------- App wrapper export ---------- */
 const App: React.FC = () => (
-  <div className="min-h-screen bg-[#F5F5F5]">
+  <div className="min-h-screen">
     <BlogSection />
   </div>
 );

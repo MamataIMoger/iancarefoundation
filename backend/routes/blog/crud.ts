@@ -62,7 +62,7 @@ router.post("/", async (req: Request, res: Response) => {
           const filename = file.originalFilename || file.newFilename || `upload-${Date.now()}`;
           const newFilePath = path.join(uploadsDir, filename);
           await fs.rename(file.filepath, newFilePath);
-          payload.imageUrl = `/uploads/${filename}`;
+payload.imageUrl = `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${filename}`;
         }
       }
     } else {
@@ -113,7 +113,7 @@ router.put("/:id", async (req: Request, res: Response) => {
           const filename = file.originalFilename || file.newFilename || `upload-${Date.now()}`;
           const newFilePath = path.join(uploadsDir, filename);
           await fs.rename(file.filepath, newFilePath);
-          updateData.imageUrl = `/uploads/${filename}`;
+updateData.imageUrl = `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${filename}`;
         }
       }
     } else {

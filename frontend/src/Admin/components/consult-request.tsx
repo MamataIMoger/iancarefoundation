@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Mail,
   Phone,
   Clock,
   CheckCircle,
   AlertTriangle,
-  Loader2,
+  Search,
+  ClipboardList,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { motion } from "framer-motion";
 
+/* --------------------------------------------------------
+   TYPES
+--------------------------------------------------------- */
 type StatusType = "Pending" | "Accepted" | "Contacted" | "Rejected";
 
 interface IContactHistory {
@@ -32,214 +37,213 @@ export interface IConsultRequest {
   contactedHistory: IContactHistory[];
 }
 
+/* --------------------------------------------------------
+   COLORS (same as volunteer)
+--------------------------------------------------------- */
 const COLOR_PRIMARY = "#0050A4";
 const COLOR_SECONDARY = "#FFC72C";
 const COLOR_SUCCESS = "#22C55E";
 const COLOR_DANGER = "#EF4444";
-const blue = "#005691";
 
+/* --------------------------------------------------------
+   STATUS BADGE
+--------------------------------------------------------- */
 const StatusBadge = ({ status }: { status: StatusType }) => {
-  const map = {
-    Pending: {
-      bg: COLOR_SECONDARY,
-      icon: <Clock className="w-4 h-4 mr-1" />,
-      label: "Pending",
-    },
-    Accepted: {
-      bg: COLOR_PRIMARY,
-      icon: <CheckCircle className="w-4 h-4 mr-1" />,
-      label: "Accepted",
-    },
-    Contacted: {
-      bg: COLOR_SUCCESS,
-      icon: <CheckCircle className="w-4 h-4 mr-1" />,
-      label: "Contacted",
-    },
-    Rejected: {
-      bg: COLOR_DANGER,
-      icon: <AlertTriangle className="w-4 h-4 mr-1" />,
-      label: "Rejected",
-    },
+  const map: any = {
+    Pending: { bg: COLOR_SECONDARY, icon: <Clock size={14} /> },
+    Accepted: { bg: COLOR_PRIMARY, icon: <CheckCircle size={14} /> },
+    Contacted: { bg: COLOR_SUCCESS, icon: <CheckCircle size={14} /> },
+    Rejected: { bg: COLOR_DANGER, icon: <AlertTriangle size={14} /> },
   };
-  const s = map[status];
+
   return (
     <span
-      className="flex items-center px-3 py-1 rounded-full font-semibold text-xs shadow-sm"
-      style={{ backgroundColor: s.bg, color: "#fff" }}
+      className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
+      style={{ background: map[status].bg, color: "white" }}
     >
-      {s.icon} {s.label}
+      {map[status].icon} {status}
     </span>
   );
 };
 
-const RequestCard = ({
-  request,
-  onUpdateStatus,
-  actionLoading,
-  onContact,
-  adminName,
-}: {
-  request: IConsultRequest;
-  onUpdateStatus: (
-    id: string,
-    status: "Accepted" | "Contacted" | "Rejected",
-    adminName: string
-  ) => void;
-  actionLoading: boolean;
-  onContact: (
-    name: string,
-    phone: string,
-    id: string,
-    adminName: string
-  ) => void;
-  adminName: string;
-}) => {
-  const [expanded, setExpanded] = useState(false);
-  const initials = request.name?.charAt(0).toUpperCase() || "?";
-  const history: IContactHistory[] = request.contactedHistory || [];
+/* --------------------------------------------------------
+   DETAILS PANEL
+--------------------------------------------------------- */
+const ConsultDetailsPanel = ({ data, onUpdateStatus, onContact, loading }: any) => {
+  if (!data)
+    return (
+      <aside
+        className="rounded-xl p-5 flex items-center justify-center text-muted-foreground"
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          minHeight: 450,
+        }}
+      >
+        Select a request to view details
+      </aside>
+    );
+
+  const initials = data.name
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase();
 
   return (
-    <div className="p-5 rounded-xl border border-gray-200 bg-white shadow-md hover:shadow-lg hover:border-blue-400 hover:scale-[1.01] transition-all duration-300 ease-in-out flex flex-col w-full max-w-sm mx-auto dark:bg-gray-800 dark:border-gray-700">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-lg font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-            {initials}
-          </div>
-          <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100">
-            {request.name}
-          </h3>
+    <aside
+      className="rounded-xl p-6"
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        minHeight: 450,
+        color: "var(--foreground)",
+      }}
+    >
+      {/* Profile Icon */}
+      <div className="flex flex-col items-center">
+        <div
+          className="w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold"
+          style={{ background: "var(--accent)", color: COLOR_SECONDARY }}
+        >
+          {initials}
         </div>
-        <StatusBadge status={request.status} />
+
+        <h2 className="text-xl font-semibold mt-3" style={{ color: COLOR_PRIMARY }}>
+          {data.name}
+        </h2>
+
+        <div className="mt-2">
+          <StatusBadge status={data.status} />
+        </div>
       </div>
 
       {/* Details */}
-      <div className="space-y-1 text-sm text-gray-700 mb-3 dark:text-gray-300">
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          <span>{request.email}</span>
+      <div className="mt-6 space-y-3">
+        <DetailRow label="Email" value={data.email} icon={<Mail />} />
+        <DetailRow label="Phone" value={data.phone} icon={<Phone />} />
+
+        <DetailRow
+          label="Service"
+          value={data.service_other || data.service || "N/A"}
+          icon={<ClipboardList />}
+        />
+
+        <DetailRow
+          label="Preferred Date"
+          value={data.date ? new Date(data.date).toLocaleDateString() : "N/A"}
+          icon={<Clock />}
+        />
+
+        <DetailRow label="Mode" value={data.mode || "N/A"} icon={<ClipboardList />} />
+
+        <div className="p-3 rounded-lg" style={{ background: "var(--muted)" }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: COLOR_PRIMARY }}>
+            Message
+          </div>
+          <p className="text-sm opacity-75">{data.message || "No message"}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Phone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          <span>{request.phone}</span>
-        </div>
-        <div className="flex gap-2">
-          <span className="font-semibold text-gray-800 dark:text-gray-300">
-            Service:
-          </span>
-          <span>{request.service_other || request.service}</span>
-        </div>
-        {request.date && (
-          <div className="flex gap-2">
-            <span className="font-semibold text-gray-800 dark:text-gray-300">
-              Date:
-            </span>
-            <span>{new Date(request.date).toLocaleDateString()}</span>
+
+        {/* Contact History */}
+        {data.contactedHistory?.length > 0 && (
+          <div className="p-3 rounded-lg" style={{ background: "var(--muted)" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: COLOR_PRIMARY }}>
+              Contact History
+            </div>
+            <ul className="text-xs opacity-75 space-y-1">
+              {data.contactedHistory.map((h: any, i: number) => (
+                <li key={i}>
+                  • Contacted by <b>{h.contactedBy}</b> on{" "}
+                  {new Date(h.contactedAt).toLocaleDateString()}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
-        <div className="flex gap-2">
-          <span className="font-semibold text-gray-800 dark:text-gray-300">
-            Mode:
-          </span>
-          <span>{request.mode}</span>
-        </div>
       </div>
 
-      {/* Message */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3 dark:bg-gray-700 dark:border-gray-600">
-        <p
-          className={`text-sm text-gray-700 dark:text-gray-300 ${
-            expanded ? "" : "line-clamp-2"
-          }`}
-        >
-          {request.message || "No message provided"}
-        </p>
-      </div>
-      {request.message && (
+      {/* Buttons */}
+      <div className="mt-6 space-y-3">
         <button
-          className="text-blue-600 dark:text-blue-400 text-xs font-medium mb-2"
-          onClick={() => setExpanded(!expanded)}
+          className="w-full py-2 rounded-full flex items-center justify-center font-semibold"
+          style={{ background: COLOR_SECONDARY, color: COLOR_PRIMARY }}
+          onClick={() => onContact(data)}
         >
-          {expanded ? "Show Less" : "Read More"}
+          <FaWhatsapp className="mr-2" /> Contact via WhatsApp
         </button>
-      )}
 
-      {/* History */}
-      {history.length > 0 && (
-        <details className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-          <summary className="cursor-pointer font-semibold">
-            Contact History ({history.length})
-          </summary>
-          <ul className="mt-1 space-y-1">
-            {history.map((c, i) => (
-              <li key={i}>
-                • Contacted by{" "}
-                <span className="font-medium">{c.contactedBy}</span> on{" "}
-                {new Date(c.contactedAt).toLocaleDateString()}
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-
-      {/* Actions */}
-      <div className="flex justify-between gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-        {request.status !== "Accepted" && request.status !== "Contacted" && (
+        {data.status !== "Accepted" && (
           <button
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs shadow hover:bg-blue-700 transition-all"
-            onClick={() => onUpdateStatus(request._id, "Accepted", adminName)}
-            disabled={actionLoading}
+            className="w-full py-2 rounded-full text-white font-semibold"
+            style={{ background: COLOR_PRIMARY }}
+            disabled={loading}
+            onClick={() => onUpdateStatus(data._id, "Accepted")}
           >
-            {actionLoading ? (
-              <Loader2 className="w-4 h-4 mx-auto animate-spin" />
-            ) : (
-              "Accept"
-            )}
+            {loading ? "Updating..." : "Accept"}
           </button>
         )}
-        {request.status !== "Rejected" && (
+
+        {data.status !== "Rejected" && (
           <button
-            className="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs shadow hover:bg-red-600 transition-all"
-            onClick={() => onUpdateStatus(request._id, "Rejected", adminName)}
-            disabled={actionLoading}
+            className="w-full py-2 rounded-full text-white font-semibold"
+            style={{ background: COLOR_DANGER }}
+            disabled={loading}
+            onClick={() => onUpdateStatus(data._id, "Rejected")}
           >
-            {actionLoading ? (
-              <Loader2 className="w-4 h-4 mx-auto animate-spin" />
-            ) : (
-              "Reject"
-            )}
+            {loading ? "Updating..." : "Reject"}
           </button>
         )}
-        <button
-          className="w-9 h-9 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-all"
-          onClick={() =>
-            onContact(request.name, request.phone, request._id, adminName)
-          }
-        >
-          <FaWhatsapp size={14} />
-        </button>
       </div>
-    </div>
+    </aside>
   );
 };
 
+/* --------------------------------------------------------
+   DETAIL ROW
+--------------------------------------------------------- */
+const DetailRow = ({ label, value, icon }: any) => (
+  <div
+    className="p-3 rounded-lg flex items-center justify-between text-sm"
+    style={{ background: "var(--muted)" }}
+  >
+    <div className="flex items-center gap-2 opacity-75">
+      {icon}
+      {label}
+    </div>
+    <span className="font-semibold">{value}</span>
+  </div>
+);
+
+/* --------------------------------------------------------
+   MAIN COMPONENT
+--------------------------------------------------------- */
 export default function AdminConsultRequests() {
   const [requests, setRequests] = useState<IConsultRequest[]>([]);
+  const [filteredList, setFiltered] = useState<IConsultRequest[]>([]);
+  const [selected, setSelected] = useState<IConsultRequest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<StatusType>("Pending");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const adminEmail = "Admin";
+  const [searchTerm, setSearch] = useState("");
 
+  /* ⭐ PAGINATION STATES */
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  /* -----------------------------------------
+     Load Data
+  ----------------------------------------- */
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/admin/consult-requests");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/request/consult-requests`);
         const data = await res.json();
-        if (data.success) setRequests(data.data);
+        if (data.success) {
+          setRequests(data.data);
+          setFiltered(data.data);
+          setSelected(data.data[0]);
+        }
       } finally {
         setLoading(false);
       }
@@ -247,169 +251,244 @@ export default function AdminConsultRequests() {
     load();
   }, []);
 
-    const handleUpdateStatus = async (
-    id: string,
-    status: "Accepted" | "Contacted" | "Rejected",
-    adminName: string
-  ) => {
-    setActionLoadingMap((prev) => ({ ...prev, [id]: true }));
-
-    try {
-      const res = await fetch("/api/admin/consult-request/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status, adminName }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setRequests((prev) =>
-          prev.map((r) => {
-            if (r._id !== id) return r;
-            r.status = status;
-            if (status === "Contacted") {
-              r.contactedHistory = r.contactedHistory || [];
-              r.contactedHistory.push({
-                contactedBy: adminName,
-                contactedAt: new Date(),
-              });
-            }
-            return r;
-          })
-        );
-      }
-    } finally {
-      setActionLoadingMap((prev) => ({ ...prev, [id]: false }));
+  /* -----------------------------------------
+     Search Filter
+  ----------------------------------------- */
+  useEffect(() => {
+    let arr = requests;
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      arr = arr.filter((x) => x.name.toLowerCase().includes(q));
     }
+
+    setFiltered(arr);
+    setCurrentPage(1); // reset pagination on search
+  }, [searchTerm, requests]);
+
+  /* -----------------------------------------
+     Pagination Logic
+  ----------------------------------------- */
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentRequests = filteredList.slice(indexOfFirst, indexOfLast);
+
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 250, behavior: "smooth" });
   };
-  const handleContact = (
-    name: string,
-    phone: string,
-    id: string,
-    adminName: string
-  ) => {
-    const encodedMsg = encodeURIComponent(
-      `Hello ${name}, we are contacting you regarding your consultation request.`
+
+  /* -----------------------------------------
+     Status Update
+  ----------------------------------------- */
+  const handleUpdateStatus = async (id: string, status: StatusType) => {
+    setActionLoading(true);
+
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/consult-request/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status, adminName: "Admin" }),
+    });
+
+    setRequests((prev) =>
+      prev.map((x) => (x._id === id ? { ...x, status } : x))
     );
 
-    // Remove all non-digits
-    let cleaned = phone.replace(/\D/g, "");
-
-    // Remove leading 0 (if exists)
-    if (cleaned.startsWith("0")) {
-      cleaned = cleaned.substring(1);
-    }
-
-    // Add country code +91
-    const finalNumber = `91${cleaned}`;
-
-    window.open(`https://wa.me/${finalNumber}?text=${encodedMsg}`, "_blank");
-
-    handleUpdateStatus(id, "Contacted", adminName);
+    setActionLoading(false);
   };
 
-  // Compute counts per status for display
-  const counts = requests.reduce<Record<StatusType, number>>(
-    (acc, r) => {
-      acc[r.status] = (acc[r.status] || 0) + 1;
-      return acc;
-    },
-    { Pending: 0, Accepted: 0, Contacted: 0, Rejected: 0 }
-  );
+  /* -----------------------------------------
+     Contact via WhatsApp
+  ----------------------------------------- */
+  const handleContact = (req: IConsultRequest) => {
+    const cleaned = req.phone.replace(/\D/g, "");
+    const final = cleaned.length === 10 ? `91${cleaned}` : cleaned;
 
-  const filteredRequests = requests.filter((r) => {
-    const matchSearch = r.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchTab = r.status === activeTab;
-    const matchDate = filterDate
-      ? new Date(r.date!).toLocaleDateString() ===
-        new Date(filterDate).toLocaleDateString()
-      : true;
+    const msg = `Hello ${req.name}, we are contacting you regarding your consultation request.`;
 
-    return matchSearch && matchTab && matchDate;
-  });
+    window.open(
+      `https://api.whatsapp.com/send?phone=${final}&text=${encodeURIComponent(msg)}`,
+      "_blank"
+    );
 
+    handleUpdateStatus(req._id, "Contacted");
+  };
+
+  /* -----------------------------------------
+     Summary Counts
+  ----------------------------------------- */
+  const counts = {
+    Pending: requests.filter((x) => x.status === "Pending").length,
+    Accepted: requests.filter((x) => x.status === "Accepted").length,
+    Contacted: requests.filter((x) => x.status === "Contacted").length,
+    Rejected: requests.filter((x) => x.status === "Rejected").length,
+  };
+
+  /* -----------------------------------------
+     Loading screen
+  ----------------------------------------- */
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen text-muted-foreground">
+        Loading...
+      </div>
+    );
+
+  /* -----------------------------------------
+     RENDER
+  ----------------------------------------- */
   return (
-    <div className="min-h-screen px-4 py-6 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      {/* Page Title */}
-      <h1
-        className="text-4xl md:text-5xl font-extrabold mb-2 pt-8 text-center"
-        style={{ color: blue }}
-      >
-        Consult Requests
-      </h1>
-      <p
-        className="text-lg mb-8 border-b-2 pb-4 text-center"
-        style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}
-      >
-        Review and moderate user-submitted consultation requests.
-      </p>
+    <div className="min-h-screen p-6" style={{ background: "var(--muted)" }}>
+      {/* HEADER */}
+      <div className="p-6 border-b" style={{ borderColor: "var(--border)" }}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <h2 className="text-2xl font-bold" style={{ color: COLOR_PRIMARY }}>
+            Consultation Requests
+          </h2>
 
-      {/* Total Counter */}
-      <div className="text-center mb-6">
-        <span className="px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-semibold shadow">
-          Total Consults: {requests.length}
-        </span>
-      </div>
-
-      {/* Filters (moved above tabs) */}
-      <div className="flex flex-wrap gap-3 items-center mb-5 justify-center">
-        <input
-          type="text"
-          placeholder="Search name..."
-          className="px-3 py-2 border rounded-lg text-sm shadow-sm dark:bg-gray-700 dark:text-gray-200"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-
-        <input
-          type="date"
-          className="px-3 py-2 border rounded-lg text-sm shadow-sm dark:bg-gray-700 dark:text-gray-200"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-        />
-      </div>
-
-      {/* Status Tabs */}
-      <div className="flex gap-4 mb-5 justify-center text-sm">
-        {(["Pending", "Accepted", "Contacted", "Rejected"] as StatusType[]).map(
-          (status) => (
-            <div
-              key={status}
-              className={`px-6 py-2 font-semibold rounded-full cursor-pointer shadow transition ${
-                activeTab === status
-                  ? "bg-amber-400 text-blue-900"
-                  : "bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
-              }`}
-              onClick={() => setActiveTab(status)}
-            >
-              {status} ({counts[status] || 0})
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Requests Grid */}
-      {loading ? (
-        <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
-      ) : filteredRequests.length === 0 ? (
-        <p className="text-center text-gray-500 dark:text-gray-400">
-          No requests found.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredRequests.map((req) => (
-            <RequestCard
-              key={req._id}
-              request={req}
-              onUpdateStatus={handleUpdateStatus}
-              actionLoading={!!actionLoadingMap[req._id]}
-              onContact={handleContact}
-              adminName={adminEmail}
+          <div
+            className="mt-4 md:mt-0 flex items-center px-4 py-2 rounded-full shadow-sm"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <Search className="w-4 h-4 opacity-70 mr-2" />
+            <input
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearch(e.target.value)}
+              className="outline-none bg-transparent text-sm"
             />
-          ))}
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6">
+        <SummaryCard title="Pending" count={counts.Pending} bg={COLOR_SECONDARY} color={COLOR_PRIMARY} icon={<Clock size={30} />} />
+        <SummaryCard title="Accepted" count={counts.Accepted} bg={COLOR_PRIMARY} color="white" icon={<CheckCircle size={30} />} />
+        <SummaryCard title="Contacted" count={counts.Contacted} bg={COLOR_SUCCESS} color="white" icon={<CheckCircle size={30} />} />
+        <SummaryCard title="Rejected" count={counts.Rejected} bg={COLOR_DANGER} color="white" icon={<AlertTriangle size={30} />} />
+      </div>
+
+      {/* MAIN GRID */}
+      <div className="p-6" style={{ background: "var(--muted)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 max-w-[1200px] mx-auto">
+          {/* LEFT: REQUEST LIST */}
+          <div className="rounded-xl p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: COLOR_PRIMARY }}>
+              Requests
+            </h3>
+
+            <div className="space-y-4">
+              {currentRequests.map((req, i) => {
+                const initials = req.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase();
+
+                return (
+                  <motion.div
+                    key={req._id}
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ scale: 1.01 }}
+                    onClick={() => setSelected(req)}
+                    className="p-4 rounded-xl border cursor-pointer"
+                    style={{ background: "var(--card)", borderColor: "var(--border)" }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                          style={{ background: "#f39c12", color: COLOR_PRIMARY }}
+                        >
+                          {initials}
+                        </div>
+
+                        <div>
+                          <p className="font-semibold text-[15px]" style={{ color: COLOR_PRIMARY }}>
+                            {req.name}
+                          </p>
+                          <p className="text-xs opacity-70">{req.email}</p>
+                        </div>
+                      </div>
+
+                      <StatusBadge status={req.status} />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* ⭐ PAGINATION UI */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6 gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => {
+                    setCurrentPage((p) => p - 1);
+                    scrollToTop();
+                  }}
+                  className="px-4 py-2 rounded-full border bg-white disabled:opacity-40"
+                >
+                  Prev
+                </button>
+
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setCurrentPage(i + 1);
+                      scrollToTop();
+                    }}
+                    className={`px-4 py-2 rounded-full border ${
+                      currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => {
+                    setCurrentPage((p) => p + 1);
+                    scrollToTop();
+                  }}
+                  className="px-4 py-2 rounded-full border bg-white disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT PANEL */}
+          <ConsultDetailsPanel
+            data={selected}
+            onUpdateStatus={handleUpdateStatus}
+            onContact={handleContact}
+            loading={actionLoading}
+          />
+        </div>
+      </div>
     </div>
   );
 }
+
+/* --------------------------------------------------------
+   SUMMARY CARD
+--------------------------------------------------------- */
+const SummaryCard = ({ title, count, bg, color, icon }: any) => (
+  <div className="rounded-xl p-5 flex items-center gap-4" style={{ background: bg, color }}>
+    {icon}
+    <div>
+      <p className="text-sm">{title}</p>
+      <p className="text-3xl font-bold">{count}</p>
+    </div>
+  </div>
+);
