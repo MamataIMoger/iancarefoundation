@@ -1,19 +1,36 @@
 // backend/routes/blog/crud.ts
 import express, { Request, Response } from "express";
 import formidable, { Fields, Files } from "formidable";
-import fs from "fs/promises";
-import path from "path";
 import dbConnect from "../../config/mongodb";
 import Blog from "../../models/blog";
 
+// Cloudinary
+import { v2 as cloudinary } from "cloudinary";
+
 const router = express.Router();
 
+/* ---------------------------------------------------------
+   CLOUDINARY CONFIG (fixed TypeScript errors)
+--------------------------------------------------------- */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+  api_key: process.env.CLOUDINARY_API_KEY as string,
+  api_secret: process.env.CLOUDINARY_API_SECRET as string,
+});
+
+/* ---------------------------------------------------------
+   HELPERS
+--------------------------------------------------------- */
 function getFieldValue(field: string | string[] | undefined): string | undefined {
   return Array.isArray(field) ? field[0] : field ?? undefined;
 }
 
 function parseForm(req: Request): Promise<{ fields: Fields; files: Files }> {
-  const form = formidable({ multiples: false, keepExtensions: true });
+  const form = formidable({
+    multiples: false,
+    keepExtensions: true,
+  });
+
   return new Promise((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) reject(err);
@@ -22,80 +39,99 @@ function parseForm(req: Request): Promise<{ fields: Fields; files: Files }> {
   });
 }
 
-// GET /blog - list all posts
+/* ---------------------------------------------------------
+   GET ALL POSTS
+--------------------------------------------------------- */
 router.get("/", async (_req: Request, res: Response) => {
   await dbConnect();
   try {
     const blogs = await Blog.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: blogs });
-  } catch (error: any) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch posts" });
   }
 });
 
-// POST /blog - create new post
+/* ---------------------------------------------------------
+   CREATE POST
+--------------------------------------------------------- */
 router.post("/", async (req: Request, res: Response) => {
   await dbConnect();
+
   try {
-    const contentType = req.headers["content-type"] ?? "";
+    const contentType = req.headers["content-type"] || "";
     let payload: any = {};
 
+    // ---------- MULTIPART (form-data) ----------
     if (contentType.includes("multipart/form-data")) {
       const { fields, files } = await parseForm(req);
+
       const title = getFieldValue(fields.title);
       const content = getFieldValue(fields.content);
       const status = getFieldValue(fields.status);
 
       if (!title || !content) {
-        res.status(400).json({ success: false, message: "Title and content required" });
-        return;
+        return res.status(400).json({ success: false, message: "Missing fields" });
       }
 
-      payload = { title, content, status: status === "published" ? "published" : "draft" };
+      payload = {
+        title,
+        content,
+        status: status === "published" ? "published" : "draft",
+      };
 
+      // Image upload
       const fileData = files.image;
-      if (fileData) {
-        const file = Array.isArray(fileData) ? fileData[0] : fileData;
-        if (file?.filepath) {
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          await fs.mkdir(uploadsDir, { recursive: true });
-          const filename = file.originalFilename || file.newFilename || `upload-${Date.now()}`;
-          const newFilePath = path.join(uploadsDir, filename);
-          await fs.rename(file.filepath, newFilePath);
-payload.imageUrl = `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${filename}`;
-        }
+      const file = Array.isArray(fileData) ? fileData?.[0] : fileData;
+
+      if (file?.filepath) {
+        const uploaded = await cloudinary.uploader.upload(file.filepath, {
+          folder: "blog_uploads",
+        });
+        payload.imageUrl = uploaded.secure_url;
       }
-    } else {
+    }
+
+    // ---------- JSON BODY ----------
+    else {
       const { title, content, status, imageUrl } = req.body;
       if (!title || !content) {
-        res.status(400).json({ success: false, message: "Title and content required" });
-        return;
+        return res.status(400).json({ success: false, message: "Missing fields" });
       }
-      payload = { title, content, status: status ?? "draft", imageUrl };
+
+      payload = {
+        title,
+        content,
+        status: status ?? "draft",
+        imageUrl,
+      };
     }
 
     const created = await Blog.create(payload);
     res.status(201).json({ success: true, data: created });
-  } catch (error: any) {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: "Failed to create post" });
   }
 });
 
-// PUT /blog/:id - update post
+/* ---------------------------------------------------------
+   UPDATE POST
+--------------------------------------------------------- */
 router.put("/:id", async (req: Request, res: Response) => {
   await dbConnect();
+
   const blogId = req.params.id;
-  if (!blogId) {
-    res.status(400).json({ success: false, message: "Blog ID required" });
-    return;
-  }
+  if (!blogId) return res.status(400).json({ success: false, message: "ID missing" });
 
   try {
-    const contentType = req.headers["content-type"] ?? "";
+    const contentType = req.headers["content-type"] || "";
     const updateData: Record<string, any> = {};
 
+    // ---------- MULTIPART ----------
     if (contentType.includes("multipart/form-data")) {
       const { fields, files } = await parseForm(req);
+
       const title = getFieldValue(fields.title);
       const content = getFieldValue(fields.content);
       const status = getFieldValue(fields.status);
@@ -105,54 +141,58 @@ router.put("/:id", async (req: Request, res: Response) => {
       if (status) updateData.status = status;
 
       const fileData = files.image;
-      if (fileData) {
-        const file = Array.isArray(fileData) ? fileData[0] : fileData;
-        if (file?.filepath) {
-          const uploadsDir = path.join(process.cwd(), "public", "uploads");
-          await fs.mkdir(uploadsDir, { recursive: true });
-          const filename = file.originalFilename || file.newFilename || `upload-${Date.now()}`;
-          const newFilePath = path.join(uploadsDir, filename);
-          await fs.rename(file.filepath, newFilePath);
-updateData.imageUrl = `${process.env.BASE_URL || "http://localhost:5000"}/uploads/${filename}`;
-        }
+      const file = Array.isArray(fileData) ? fileData?.[0] : fileData;
+
+      if (file?.filepath) {
+        const uploaded = await cloudinary.uploader.upload(file.filepath, {
+          folder: "blog_uploads",
+        });
+        updateData.imageUrl = uploaded.secure_url;
       }
-    } else {
+    }
+
+    // ---------- JSON ----------
+    else {
       const { title, content, status, imageUrl } = req.body;
+
       if (title) updateData.title = title;
       if (content) updateData.content = content;
       if (status) updateData.status = status;
       if (imageUrl) updateData.imageUrl = imageUrl;
     }
 
-    const updated = await Blog.findByIdAndUpdate(blogId, updateData, { new: true, runValidators: true });
+    const updated = await Blog.findByIdAndUpdate(blogId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
     if (!updated) {
-      res.status(404).json({ success: false, message: "Post not found" });
-      return;
+      return res.status(404).json({ success: false, message: "Not found" });
     }
+
     res.status(200).json({ success: true, data: updated });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: "Failed to update post" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to update" });
   }
 });
 
-// DELETE /blog/:id - delete post
+/* ---------------------------------------------------------
+   DELETE POST
+--------------------------------------------------------- */
 router.delete("/:id", async (req: Request, res: Response) => {
   await dbConnect();
-  const blogId = req.params.id;
-  if (!blogId) {
-    res.status(400).json({ success: false, message: "Blog ID required" });
-    return;
-  }
 
   try {
-    const deleted = await Blog.findByIdAndDelete(blogId);
+    const deleted = await Blog.findByIdAndDelete(req.params.id);
+
     if (!deleted) {
-      res.status(404).json({ success: false, message: "Post not found" });
-      return;
+      return res.status(404).json({ success: false, message: "Post not found" });
     }
-    res.status(200).json({ success: true, message: "Post deleted" });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: "Failed to delete post" });
+
+    res.status(200).json({ success: true, message: "Deleted" });
+  } catch {
+    res.status(500).json({ success: false, message: "Failed to delete" });
   }
 });
 

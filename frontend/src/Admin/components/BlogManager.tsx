@@ -150,18 +150,27 @@ const RTEToolbar: React.FC<{ targetId: string }> = ({ targetId }) => {
 };
 
 /* ---------- Post Card Admin View ---------- */
-const PostCardAdminView: React.FC<PostCardProps> = ({ post, isAdmin, onReadMore, onEdit, onDelete, onPublish, onMakePrivate }) => {
+const PostCardAdminView: React.FC<PostCardProps> = ({
+  post,
+  isAdmin,
+  onReadMore,
+  onEdit,
+  onDelete,
+  onPublish,
+  onMakePrivate,
+}) => {
   const { ref, classes } = useScrollAnimation(0.12);
   const isPublished = post.status === "published";
 
-  // avoid empty string as src -> render image only if non-empty
   const hasImage = !!post.imageUrl && post.imageUrl.trim().length > 0;
 
   return (
-    <article ref={ref} className={`${classes} bg-white dark:bg-slate-800 rounded-xl border p-3 shadow-sm flex gap-3 items-start`}>
+    <article
+      ref={ref}
+      className={`${classes} bg-white dark:bg-slate-800 rounded-xl border p-3 shadow-sm flex gap-3 items-start`}
+    >
       <div className="w-28 h-16 rounded-md overflow-hidden flex-shrink-0 border bg-slate-50">
         {hasImage ? (
-          // only render img when URL exists (prevents empty src warning)
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.imageUrl as string} alt={post.title} className="w-full h-full object-cover" />
         ) : (
@@ -172,34 +181,58 @@ const PostCardAdminView: React.FC<PostCardProps> = ({ post, isAdmin, onReadMore,
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            {isAdmin && <Badge variant={isPublished ? "green" : "yellow"}>{isPublished ? "PUBLISHED" : "DRAFT"}</Badge>}
-            <h3 className="text-sm font-semibold text-sky-800 line-clamp-1 truncate">{post.title}</h3>
+            {isAdmin && (
+              <Badge variant={isPublished ? "green" : "yellow"}>
+                {isPublished ? "PUBLISHED" : "DRAFT"}
+              </Badge>
+            )}
+            <h3 className="text-sm font-semibold text-sky-800 line-clamp-1 truncate">
+              {post.title}
+            </h3>
           </div>
           <div className="text-xs text-slate-400">{formatDateShort(post.createdAt)}</div>
         </div>
 
-        <p className="text-slate-600 text-sm mt-1 line-clamp-2" dangerouslySetInnerHTML={{ __html: post.content }} />
+        <p
+          className="text-slate-600 text-sm mt-1 line-clamp-2"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
 
         <div className="flex items-center justify-between mt-3 gap-2">
           <div className="flex items-center gap-2">
-            <button onClick={() => onReadMore(post)} className="text-sky-700 text-sm px-2 py-1 rounded hover:bg-sky-50">
+            <button
+              onClick={() => onReadMore(post)}
+              className="text-sky-700 text-sm px-2 py-1 rounded hover:bg-sky-50"
+            >
               Read
             </button>
-            <button onClick={() => onEdit(post)} className="text-slate-700 text-sm px-2 py-1 rounded hover:bg-slate-50">
+            <button
+              onClick={() => onEdit(post)}
+              className="text-slate-700 text-sm px-2 py-1 rounded hover:bg-slate-50"
+            >
               Edit
             </button>
-            <button onClick={() => onDelete(post)} className="text-red-600 text-sm px-2 py-1 rounded hover:bg-red-50">
+            <button
+              onClick={() => onDelete(post)}
+              className="text-red-600 text-sm px-2 py-1 rounded hover:bg-red-50"
+            >
               Delete
             </button>
           </div>
 
           <div>
             {isPublished ? (
-              <button onClick={() => onMakePrivate(post)} className="px-2 py-1 bg-amber-300 text-amber-900 text-sm rounded">
+              <button
+                onClick={() => onMakePrivate(post)}
+                className="px-2 py-1 bg-amber-300 text-amber-900 text-sm rounded"
+              >
                 Make Private
               </button>
             ) : (
-              <button onClick={() => onPublish(post)} className="px-2 py-1 bg-green-600 text-white text-sm rounded">
+              <button
+                onClick={() => onPublish(post)}
+                className="px-2 py-1 bg-green-600 text-white text-sm rounded"
+              >
                 Publish
               </button>
             )}
@@ -210,8 +243,11 @@ const PostCardAdminView: React.FC<PostCardProps> = ({ post, isAdmin, onReadMore,
   );
 };
 
-/* ---------- Post Card User View (grid) ---------- */
-const PostCardUserView: React.FC<{ post: BlogPost; onReadMore: (post: BlogPost) => void }> = ({ post, onReadMore }) => {
+/* ---------- Post Card User View ---------- */
+const PostCardUserView: React.FC<{
+  post: BlogPost;
+  onReadMore: (post: BlogPost) => void;
+}> = ({ post, onReadMore }) => {
   const { ref, classes } = useScrollAnimation(0.12);
 
   const hasImage = !!post.imageUrl && post.imageUrl.trim().length > 0;
@@ -234,7 +270,9 @@ const PostCardUserView: React.FC<{ post: BlogPost; onReadMore: (post: BlogPost) 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.imageUrl as string} alt={post.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-500">No Image</div>
+          <div className="w-full h-full flex items-center justify-center text-slate-500">
+            No Image
+          </div>
         )}
       </div>
 
@@ -247,38 +285,75 @@ const PostCardUserView: React.FC<{ post: BlogPost; onReadMore: (post: BlogPost) 
 };
 
 /* ---------- Pagination ---------- */
-const Pagination: React.FC<{ currentPage: number; totalPages: number; onPageChange: (page: number) => void }> = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination: React.FC<{
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}> = ({ currentPage, totalPages, onPageChange }) => {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
-      <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="px-3 py-1 rounded border disabled:opacity-50 text-sm">
+      <button
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(currentPage - 1)}
+        className="px-3 py-1 rounded border disabled:opacity-50 text-sm"
+      >
         Prev
       </button>
+
       {pages.map((p) => (
-        <button key={p} onClick={() => onPageChange(p)} className={`px-3 py-1 rounded text-sm ${currentPage === p ? "bg-sky-700 text-white" : "border hover:bg-slate-100"}`}>
+        <button
+          key={p}
+          onClick={() => onPageChange(p)}
+          className={`px-3 py-1 rounded text-sm ${
+            currentPage === p ? "bg-sky-700 text-white" : "border hover:bg-slate-100"
+          }`}
+        >
           {p}
         </button>
       ))}
-      <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="px-3 py-1 rounded border disabled:opacity-50 text-sm">
+
+      <button
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+        className="px-3 py-1 rounded border disabled:opacity-50 text-sm"
+      >
         Next
       </button>
     </div>
   );
 };
 
-/* ---------- Modal components ---------- */
-const Modal: React.FC<{ onClose: () => void; title?: string; children: React.ReactNode; showCloseX?: boolean }> = ({ onClose, title, children, showCloseX = false }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-    <div className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+/* ---------- Modal Components ---------- */
+const Modal: React.FC<{
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  showCloseX?: boolean;
+}> = ({ onClose, title, children, showCloseX = false }) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    onClick={onClose}
+  >
+    <div
+      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
       {title && <h2 className="text-lg font-bold text-sky-800 mb-3">{title}</h2>}
       {showCloseX && (
-        <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 text-xl">
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 text-xl"
+        >
           &times;
         </button>
       )}
+
       {children}
+
       {!showCloseX && (
         <div className="flex justify-end mt-3">
           <button className="px-4 py-1.5 rounded bg-sky-700 text-white" onClick={onClose}>
@@ -290,11 +365,23 @@ const Modal: React.FC<{ onClose: () => void; title?: string; children: React.Rea
   </div>
 );
 
-const ConfirmModal: React.FC<{ title: string; message: string; onCancel: () => void; onConfirm: () => void }> = ({ title, message, onCancel, onConfirm }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onCancel}>
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+const ConfirmModal: React.FC<{
+  title: string;
+  message: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}> = ({ title, message, onCancel, onConfirm }) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    onClick={onCancel}
+  >
+    <div
+      className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-md w-full"
+      onClick={(e) => e.stopPropagation()}
+    >
       <h3 className="text-md font-bold text-sky-800 mb-2">{title}</h3>
       <p className="text-sm text-slate-600 mb-4">{message}</p>
+
       <div className="flex justify-end gap-2">
         <button className="px-3 py-1 rounded border" onClick={onCancel}>
           Cancel
@@ -307,9 +394,18 @@ const ConfirmModal: React.FC<{ title: string; message: string; onCancel: () => v
   </div>
 );
 
-const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({
+  message,
+  onClose,
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    onClick={onClose}
+  >
+    <div
+      className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-sm w-full"
+      onClick={(e) => e.stopPropagation()}
+    >
       <p className="text-green-700 text-center font-semibold">{message}</p>
       <div className="flex justify-center mt-3">
         <button className="px-4 py-1.5 bg-sky-700 text-white rounded" onClick={onClose}>
@@ -320,7 +416,7 @@ const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({ mess
   </div>
 );
 
-/* ---------- Main BlogSection (logic preserved) ---------- */
+/* ---------- Main BlogSection ---------- */
 const BlogSection: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(true);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -332,10 +428,19 @@ const BlogSection: React.FC = () => {
     | { type: "edit"; post: BlogPost }
     | { type: "delete"; post: BlogPost }
     | { type: "publishConfirm"; post: BlogPost }
-    | { type: "saveConfirm"; formData: FormData | { title: string; content: string; status: string } }
+    | {
+        type: "saveConfirm";
+        formData:
+          | FormData
+          | { title: string; content: string; status: string };
+      }
     | { type: "private"; post: BlogPost }
     | { type: "success"; message: string }
-    | { type: "saveEditConfirm"; id: string; formData: FormData | { title: string; content: string } };
+    | {
+        type: "saveEditConfirm";
+        id: string;
+        formData: FormData | { title: string; content: string };
+      };
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
 
@@ -359,32 +464,35 @@ const BlogSection: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = isAdmin ? 5 : 9;
 
-  /* ---------- Fetch posts ---------- */
+  /* -------------------------------------------------------------
+     FETCH POSTS — UPDATED WITH CORRECT API HANDLING (Option A)
+  ------------------------------------------------------------- */
   const fetchPosts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`);
+
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+      const url = base ? `${base}/blog` : `/api/blog`;
+
+      const res = await fetch(url);
       const contentType = res.headers.get("content-type") ?? "";
+
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        console.error("Fetch failed:", raw);
+        console.error("Fetch failed:", await res.text());
         setPosts([]);
         return;
       }
+
       if (!contentType.includes("application/json")) {
-        const raw = await res.text().catch(() => "");
-        console.error("Unexpected content type:", raw);
+        console.error("Unexpected content type:", await res.text());
         setPosts([]);
         return;
       }
+
       const data = await res.json();
-      if (data && data.success && Array.isArray(data.data)) {
-        setPosts(data.data);
-      } else if (Array.isArray(data)) {
-        setPosts(data);
-      } else {
-        setPosts([]);
-      }
+      const raw = Array.isArray(data) ? data : data.data ?? [];
+
+      setPosts(raw);
     } catch (err) {
       console.error("Error fetching posts:", err);
       setPosts([]);
@@ -393,12 +501,18 @@ const BlogSection: React.FC = () => {
     }
   }, []);
 
+  /* Auto fetch posts on mount */
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  /* ---------- Derived lists + pagination ---------- */
-  const filteredPosts = Array.isArray(posts) ? posts.filter((p) => (isAdmin ? p.status === viewMode : p.status === "published")) : [];
+  /* ---------- Derived lists ---------- */
+  const filteredPosts = Array.isArray(posts)
+    ? posts.filter((p) =>
+        isAdmin ? p.status === viewMode : p.status === "published"
+      )
+    : [];
+
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
@@ -414,32 +528,59 @@ const BlogSection: React.FC = () => {
     return true;
   };
 
-  /* ---------- CRUD inside component ---------- */
-  const updatePost = async (id: string, updatedFields: Partial<BlogPost> | FormData) => {
+  /* -------------------------------------------------------------
+     UPDATE POST — UPDATED WITH CORRECT API HANDLING (Option A)
+  ------------------------------------------------------------- */
+  const updatePost = async (
+    id: string,
+    updatedFields: Partial<BlogPost> | FormData
+  ) => {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    const url = base ? `${base}/blog/${id}` : `/api/blog/${id}`;
+
     let options: RequestInit;
+
     if (updatedFields instanceof FormData) {
       if (!validateFileSize(updatedFields.get("image") as File | null)) {
         throw new Error("Image file too big");
       }
       options = { method: "PUT", body: updatedFields };
     } else {
-      options = { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatedFields) };
+      options = {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields),
+      };
     }
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${id}`, options);
+
+    const res = await fetch(url, options);
+
     if (!res.ok) throw new Error("Failed to update");
+
     return await res.json();
   };
 
+  /* -------------------------------------------------------------
+     DELETE POST — UPDATED WITH CORRECT API HANDLING (Option A)
+  ------------------------------------------------------------- */
   const deletePost = async (id: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog/${id}`, { method: "DELETE" });
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    const url = base ? `${base}/blog/${id}` : `/api/blog/${id}`;
+
+    const res = await fetch(url, { method: "DELETE" });
+
     if (!res.ok) throw new Error("Failed to delete");
+
     return await res.json();
   };
 
-  /* ---------- Save New Post (file-only) ---------- */
+  /* -------------------------------------------------------------
+     SAVE NEW POST — UPDATED WITH CORRECT API HANDLING (Option A)
+  ------------------------------------------------------------- */
   const handleSaveRequest = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const htmlContent = newEditorRef.current?.innerHTML?.trim() ?? "";
+
     if (!title.trim() || !htmlContent) {
       setError("Title and content cannot be empty.");
       return;
@@ -463,36 +604,45 @@ const BlogSection: React.FC = () => {
 
   const confirmSave = async () => {
     if (!activeModal || activeModal.type !== "saveConfirm") return;
+
     setActiveModal(null);
     setIsSubmitting(true);
     setError(null);
+
     try {
-      let res;
-      if (activeModal.formData instanceof FormData) {
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`, { method: "POST", body: activeModal.formData });
-      } else {
-        res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/blog`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(activeModal.formData),
-        });
-      }
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+      const url = base ? `${base}/blog` : `/api/blog`;
+
+      const res =
+        activeModal.formData instanceof FormData
+          ? await fetch(url, { method: "POST", body: activeModal.formData })
+          : await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(activeModal.formData),
+            });
+
       if (!res.ok) throw new Error("Failed to create post");
+
       await fetchPosts();
+
+      // reset form
       setTitle("");
       setContentInitial("");
       if (newEditorRef.current) newEditorRef.current.innerHTML = "";
       setImageFile(null);
       setStatus("draft");
+
       setActiveModal({ type: "success", message: "Post saved successfully!" });
     } catch (e) {
-      setError("Failed to publish post.");
       console.error(e);
+      setError("Failed to publish post.");
     }
+
     setIsSubmitting(false);
   };
 
-  /* ---------- Edit flows ---------- */
+  /* ---------- Edit Post Flow ---------- */
   const openEdit = (post: BlogPost) => {
     setEditTitle(post.title);
     setEditContentInitial(post.content);
@@ -502,35 +652,51 @@ const BlogSection: React.FC = () => {
 
   const requestEditSave = (id: string) => {
     const htmlContent = editEditorRef.current?.innerHTML?.trim() ?? "";
+
     if (!editTitle.trim() || !htmlContent) {
       setError("Title and content cannot be empty.");
       return;
     }
+
     if (editImageFile) {
       if (!validateFileSize(editImageFile)) return;
+
       const formData = new FormData();
       formData.append("title", editTitle);
       formData.append("content", htmlContent);
       formData.append("image", editImageFile);
+
       setActiveModal({ type: "saveEditConfirm", id, formData });
     } else {
-      setActiveModal({ type: "saveEditConfirm", id, formData: { title: editTitle, content: htmlContent } });
+      setActiveModal({
+        type: "saveEditConfirm",
+        id,
+        formData: { title: editTitle, content: htmlContent },
+      });
     }
   };
 
   const confirmEditSave = async () => {
     if (!activeModal || activeModal.type !== "saveEditConfirm") return;
+
     const { id, formData } = activeModal;
+
     setActiveModal(null);
     setIsSubmitting(true);
+
     try {
-      await updatePost(id, formData instanceof FormData ? formData : (formData as any));
+      await updatePost(id, formData instanceof FormData ? formData : formData);
       await fetchPosts();
-      setActiveModal({ type: "success", message: "Post updated successfully!" });
+
+      setActiveModal({
+        type: "success",
+        message: "Post updated successfully!",
+      });
     } catch (e) {
       console.error(e);
       setError("Failed to update post.");
     }
+
     setIsSubmitting(false);
   };
 
@@ -538,6 +704,7 @@ const BlogSection: React.FC = () => {
     try {
       await deletePost(id);
       await fetchPosts();
+
       setActiveModal({ type: "success", message: "Post deleted successfully!" });
     } catch (e) {
       console.error(e);
@@ -550,29 +717,29 @@ const BlogSection: React.FC = () => {
     return <BlogSectionSkeleton postsPerPage={postsPerPage} />;
   }
 
-  /* ---------- Render ---------- */
+  /* ---------- Render UI ---------- */
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* New header design (compact) */}
+        {/* Header */}
         <header className="bg-gradient-to-r from-sky-600 to-indigo-600 text-white py-6 rounded-2xl shadow-lg mb-6">
           <div className="px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-7xl mx-auto">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Insights &amp; Inspirations</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Insights & Inspirations
+              </h1>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="text-sm hidden sm:block">
-                {/* removed Welcome back / Administrator per request */}
-              </div>
-
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setIsAdmin(false);
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${!isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"}`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${
+                    !isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"
+                  }`}
                 >
                   Reader View
                 </button>
@@ -582,7 +749,9 @@ const BlogSection: React.FC = () => {
                     setIsAdmin(true);
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"}`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${
+                    isAdmin ? "bg-white text-sky-700" : "bg-white/20 text-white"
+                  }`}
                 >
                   Admin View
                 </button>
@@ -591,29 +760,55 @@ const BlogSection: React.FC = () => {
           </div>
         </header>
 
-        {/* Main grid */}
+        {/* Main Grid */}
         <main className="grid grid-cols-12 gap-6">
-          {/* Left main column */}
+          {/* Left Column */}
           <section className="col-span-12 lg:col-span-8 space-y-4">
-            {/* controls */}
+            {/* Controls */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 text-sm">
                 <div className="text-slate-400">Showing</div>
-                <div className="font-semibold">{isAdmin ? (viewMode === "published" ? "Published" : "Drafts") : "Published"}</div>
-                <div className="text-slate-400">• {filteredPosts.length} items</div>
+                <div className="font-semibold">
+                  {isAdmin
+                    ? viewMode === "published"
+                      ? "Published"
+                      : "Drafts"
+                    : "Published"}
+                </div>
+                <div className="text-slate-400">
+                  • {filteredPosts.length} items
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 bg-white rounded-full px-3 py-1 shadow-sm border">
-                  <input placeholder="Search title..." className="bg-transparent outline-none text-sm w-36" onChange={() => {}} />
-                </div>
-
                 {isAdmin && (
                   <div className="flex gap-1">
-                    <button onClick={() => { setViewMode("published"); setCurrentPage(1); }} className={`px-3 py-1 rounded-full text-sm font-semibold ${viewMode === "published" ? "bg-amber-300 text-amber-900" : "bg-white/60"}`}>
-                      Published ({posts.filter((p) => p.status === "published").length})
+                    <button
+                      onClick={() => {
+                        setViewMode("published");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        viewMode === "published"
+                          ? "bg-amber-300 text-amber-900"
+                          : "bg-white/60"
+                      }`}
+                    >
+                      Published (
+                      {posts.filter((p) => p.status === "published").length})
                     </button>
-                    <button onClick={() => { setViewMode("draft"); setCurrentPage(1); }} className={`px-3 py-1 rounded-full text-sm font-semibold ${viewMode === "draft" ? "bg-amber-300 text-amber-900" : "bg-white/60"}`}>
+
+                    <button
+                      onClick={() => {
+                        setViewMode("draft");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        viewMode === "draft"
+                          ? "bg-amber-300 text-amber-900"
+                          : "bg-white/60"
+                      }`}
+                    >
                       Drafts ({posts.filter((p) => p.status === "draft").length})
                     </button>
                   </div>
@@ -621,21 +816,40 @@ const BlogSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Admin: Publish new article (file-only, compact) */}
+            {/* Admin: Create New Post */}
             {isAdmin && (
               <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-sky-800">Publish New Article</h2>
-                    <p className="text-sm text-slate-500 mt-1">Write and publish a short article for the site.</p>
+                    <h2 className="text-lg font-semibold text-sky-800">
+                      Publish New Article
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Write and publish a short article for the site.
+                    </p>
 
                     <form onSubmit={handleSaveRequest} className="mt-3 space-y-2">
-                      <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter title" required className="w-full p-2 border rounded-lg text-sm" />
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Enter title"
+                        required
+                        className="w-full p-2 border rounded-lg text-sm"
+                      />
 
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">Upload Image</span>
+                        <span className="font-medium text-slate-700">
+                          Upload Image
+                        </span>
 
-                        <select value={status} onChange={(e) => setStatus(e.target.value as "draft" | "published")} className="p-1 border rounded text-sm">
+                        <select
+                          value={status}
+                          onChange={(e) =>
+                            setStatus(e.target.value as "draft" | "published")
+                          }
+                          className="p-1 border rounded text-sm"
+                        >
                           <option value="draft">Draft</option>
                           <option value="published">Published</option>
                         </select>
@@ -648,34 +862,48 @@ const BlogSection: React.FC = () => {
                           const file = e.target.files?.[0] ?? null;
                           setImageFile(file);
                           setError(null);
-                          if (file && file.size > MAX_IMAGE_SIZE) setError("Image file exceeds 2 MB");
+                          if (file && file.size > MAX_IMAGE_SIZE)
+                            setError("Image file exceeds 2 MB");
                         }}
                         className="w-full text-sm"
                       />
 
                       <RTEToolbar targetId="newPostEditor" />
-                      <div id="newPostEditor" ref={newEditorRef} contentEditable role="textbox" aria-multiline className="w-full p-2 border rounded-lg min-h-[120px] bg-white dark:bg-slate-900 text-sm" />
+                      <div
+                        id="newPostEditor"
+                        ref={newEditorRef}
+                        contentEditable
+                        role="textbox"
+                        aria-multiline
+                        className="w-full p-2 border rounded-lg min-h-[120px] bg-white dark:bg-slate-900 text-sm"
+                      />
 
-                      {error && <p className="text-red-500 text-sm">{error}</p>}
+                      {error && (
+                        <p className="text-red-500 text-sm">{error}</p>
+                      )}
 
                       <div className="flex justify-end">
-                        <button type="submit" disabled={isSubmitting} className="px-4 py-1.5 rounded-full bg-sky-700 text-white text-sm font-semibold">
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="px-4 py-1.5 rounded-full bg-sky-700 text-white text-sm font-semibold"
+                        >
                           {isSubmitting ? "Publishing..." : "Save New Post"}
                         </button>
                       </div>
                     </form>
                   </div>
-
-                  {/* intentionally removed preview per request */}
                 </div>
               </div>
             )}
 
-            {/* Posts listing */}
+            {/* Posts List */}
             <div className="space-y-3">
               {currentPosts.length === 0 ? (
                 <div className="bg-white rounded-xl p-4 shadow-sm">
-                  <p className="text-slate-500 text-center">No {isAdmin ? viewMode : "published"} articles found.</p>
+                  <p className="text-slate-500 text-center">
+                    No {isAdmin ? viewMode : "published"} articles found.
+                  </p>
                 </div>
               ) : isAdmin ? (
                 <div className="space-y-3">
@@ -686,16 +914,28 @@ const BlogSection: React.FC = () => {
                       isAdmin={isAdmin}
                       onReadMore={(p) => setActiveModal({ type: "read", post: p })}
                       onEdit={(p) => openEdit(p)}
-                      onDelete={(p) => setActiveModal({ type: "delete", post: p })}
-                      onPublish={(p) => setActiveModal({ type: "publishConfirm", post: p })}
-                      onMakePrivate={(p) => setActiveModal({ type: "private", post: p })}
+                      onDelete={(p) =>
+                        setActiveModal({ type: "delete", post: p })
+                      }
+                      onPublish={(p) =>
+                        setActiveModal({ type: "publishConfirm", post: p })
+                      }
+                      onMakePrivate={(p) =>
+                        setActiveModal({ type: "private", post: p })
+                      }
                     />
                   ))}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {currentPosts.map((post) => (
-                    <PostCardUserView key={post._id} post={post} onReadMore={(p) => setActiveModal({ type: "read", post: p })} />
+                    <PostCardUserView
+                      key={post._id}
+                      post={post}
+                      onReadMore={(p) =>
+                        setActiveModal({ type: "read", post: p })
+                      }
+                    />
                   ))}
                 </div>
               )}
@@ -703,11 +943,15 @@ const BlogSection: React.FC = () => {
 
             {/* Pagination */}
             <div className="mt-4">
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(p) => setCurrentPage(p)} />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(p) => setCurrentPage(p)}
+              />
             </div>
           </section>
 
-          {/* Right column (overview + recent posts) */}
+          {/* Right Sidebar */}
           <aside className="col-span-12 lg:col-span-4 space-y-3">
             <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
               <div className="flex items-center justify-between">
@@ -724,33 +968,50 @@ const BlogSection: React.FC = () => {
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <div className="text-slate-600">Published</div>
-                  <div className="font-semibold">{posts.filter((p) => p.status === "published").length}</div>
+                  <div className="font-semibold">
+                    {posts.filter((p) => p.status === "published").length}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="text-slate-600">Drafts</div>
-                  <div className="font-semibold">{posts.filter((p) => p.status === "draft").length}</div>
+                  <div className="font-semibold">
+                    {posts.filter((p) => p.status === "draft").length}
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl p-3 border">
               <h4 className="font-semibold text-sky-800 text-sm">Recent Posts</h4>
+
               <ul className="mt-2 space-y-2 text-sm">
                 {posts.slice(0, 4).map((p) => {
                   const hasImage = !!p.imageUrl && p.imageUrl.trim().length > 0;
+
                   return (
                     <li key={p._id} className="flex items-center gap-2 py-1">
                       <div className="w-12 h-8 rounded-md overflow-hidden bg-sky-50 border flex-shrink-0">
                         {hasImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.imageUrl as string} alt={p.title} className="w-full h-full object-cover" />
+                          <img
+                            src={p.imageUrl as string}
+                            alt={p.title}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">No</div>
+                          <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
+                            No
+                          </div>
                         )}
                       </div>
+
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold line-clamp-1">{p.title}</div>
-                        <div className="text-xs text-slate-400">{formatDateShort(p.createdAt ?? Date.now())}</div>
+                        <div className="text-sm font-semibold line-clamp-1">
+                          {p.title}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {formatDateShort(p.createdAt ?? Date.now())}
+                        </div>
                       </div>
                     </li>
                   );
@@ -766,10 +1027,16 @@ const BlogSection: React.FC = () => {
       {/* Read Modal */}
       {activeModal?.type === "read" && (
         <Modal onClose={() => setActiveModal(null)} title={activeModal.post.title}>
-          {activeModal.post.imageUrl && activeModal.post.imageUrl.trim().length > 0 && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={activeModal.post.imageUrl} alt={activeModal.post.title} className="w-full max-h-80 object-cover rounded mb-4" />
-          )}
+          {activeModal.post.imageUrl &&
+            activeModal.post.imageUrl.trim().length > 0 && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={activeModal.post.imageUrl}
+                alt={activeModal.post.title}
+                className="w-full max-h-80 object-cover rounded mb-4"
+              />
+            )}
+
           <div dangerouslySetInnerHTML={{ __html: activeModal.post.content }} />
         </Modal>
       )}
@@ -785,7 +1052,12 @@ const BlogSection: React.FC = () => {
           title={`Edit: ${activeModal.post.title}`}
           showCloseX
         >
-          <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full p-2 border rounded-lg mb-3 text-lg" />
+          <input
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            className="w-full p-2 border rounded-lg mb-3 text-lg"
+          />
 
           <label className="block mb-2 font-semibold">Edit Image (optional)</label>
           <input
@@ -795,13 +1067,23 @@ const BlogSection: React.FC = () => {
               const file = e.target.files?.[0] ?? null;
               setEditImageFile(file);
               setError(null);
-              if (file && file.size > MAX_IMAGE_SIZE) setError("Image file size exceeds 2 MB limit.");
+
+              if (file && file.size > MAX_IMAGE_SIZE)
+                setError("Image file size exceeds 2 MB");
             }}
             className="w-full mb-3 text-sm"
           />
-          {editImageFile && <img src={URL.createObjectURL(editImageFile)} alt="Preview" className="mb-3 max-w-xs rounded" />}
+
+          {editImageFile && (
+            <img
+              src={URL.createObjectURL(editImageFile)}
+              alt="Preview"
+              className="mb-3 max-w-xs rounded"
+            />
+          )}
 
           <RTEToolbar targetId="editPostEditor" />
+
           <div
             id="editPostEditor"
             ref={editEditorRef}
@@ -810,7 +1092,10 @@ const BlogSection: React.FC = () => {
             aria-multiline
             className="w-full p-2 mb-3 border rounded-lg min-h-[140px] bg-white text-sm"
             onFocus={() => {
-              if (editEditorRef.current && editEditorRef.current.innerHTML.trim() === "") {
+              if (
+                editEditorRef.current &&
+                editEditorRef.current.innerHTML.trim() === ""
+              ) {
                 editEditorRef.current.innerHTML = editContentInitial || "";
               }
             }}
@@ -829,6 +1114,7 @@ const BlogSection: React.FC = () => {
             >
               Cancel
             </button>
+
             <button
               className="px-4 py-1.5 bg-sky-700 text-white rounded"
               onClick={() => {
@@ -850,40 +1136,54 @@ const BlogSection: React.FC = () => {
           message={`Are you sure you want to permanently delete "${activeModal.post.title}"?`}
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
-            if (activeModal.type === "delete") {
-              await confirmDelete(activeModal.post._id);
-              setActiveModal(null);
-            }
+            await confirmDelete(activeModal.post._id);
+            setActiveModal(null);
           }}
         />
       )}
 
-      {/* Publish Confirmation */}
+      {/* Publish Confirm */}
       {activeModal?.type === "publishConfirm" && (
         <ConfirmModal
           title="Confirm Publish"
           message={`Do you want to make "${activeModal.post.title}" public?`}
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
-            if (activeModal.type === "publishConfirm") {
-              try {
-                await updatePost(activeModal.post._id, { status: "published" });
-                await fetchPosts();
-                setActiveModal({ type: "success", message: "Post published successfully!" });
-              } catch (e) {
-                console.error(e);
-                setError("Failed to publish post");
-              }
+            try {
+              await updatePost(activeModal.post._id, { status: "published" });
+              await fetchPosts();
+
+              setActiveModal({
+                type: "success",
+                message: "Post published successfully!",
+              });
+            } catch (e) {
+              console.error(e);
+              setError("Failed to publish post.");
             }
           }}
         />
       )}
 
-      {/* Save New Post Confirmation */}
-      {activeModal?.type === "saveConfirm" && <ConfirmModal title="Confirm Save" message="Are you sure you want to save this post?" onCancel={() => setActiveModal(null)} onConfirm={confirmSave} />}
+      {/* Save New Post Confirm */}
+      {activeModal?.type === "saveConfirm" && (
+        <ConfirmModal
+          title="Confirm Save"
+          message="Are you sure you want to save this post?"
+          onCancel={() => setActiveModal(null)}
+          onConfirm={confirmSave}
+        />
+      )}
 
       {/* Save Edit Confirm */}
-      {activeModal?.type === "saveEditConfirm" && <ConfirmModal title="Confirm Edit Save" message="Are you sure you want to save these edits?" onCancel={() => setActiveModal(null)} onConfirm={async () => await confirmEditSave()} />}
+      {activeModal?.type === "saveEditConfirm" && (
+        <ConfirmModal
+          title="Confirm Edit Save"
+          message="Are you sure you want to save these edits?"
+          onCancel={() => setActiveModal(null)}
+          onConfirm={confirmEditSave}
+        />
+      )}
 
       {/* Make Private */}
       {activeModal?.type === "private" && (
@@ -892,27 +1192,34 @@ const BlogSection: React.FC = () => {
           message={`Do you want to make "${activeModal.post.title}" private (draft)?`}
           onCancel={() => setActiveModal(null)}
           onConfirm={async () => {
-            if (activeModal.type === "private") {
-              try {
-                await updatePost(activeModal.post._id, { status: "draft" });
-                await fetchPosts();
-                setActiveModal({ type: "success", message: "Post marked as private!" });
-              } catch (e) {
-                console.error(e);
-                setError("Failed to mark private");
-              }
+            try {
+              await updatePost(activeModal.post._id, { status: "draft" });
+              await fetchPosts();
+
+              setActiveModal({
+                type: "success",
+                message: "Post marked as private!",
+              });
+            } catch (e) {
+              console.error(e);
+              setError("Failed to mark private.");
             }
           }}
         />
       )}
 
       {/* Success */}
-      {activeModal?.type === "success" && <SuccessModal message={activeModal.message} onClose={() => setActiveModal(null)} />}
+      {activeModal?.type === "success" && (
+        <SuccessModal
+          message={activeModal.message}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
     </div>
   );
 };
 
-/* ---------- App wrapper export ---------- */
+/* ---------- App Wrapper ---------- */
 const App: React.FC = () => (
   <div className="min-h-screen">
     <BlogSection />
