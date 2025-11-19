@@ -548,6 +548,7 @@ export default function ServicesPage() {
   const shouldReduceMotion = useReducedMotion();
   const [showModal, setShowModal] = React.useState(false);
 
+
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
