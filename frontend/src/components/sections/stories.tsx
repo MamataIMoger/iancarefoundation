@@ -484,45 +484,46 @@ export default function StoriesPage() {
 
       {/* ------------ Submitted Story Modal ------------ */}
       {showConfirmation && submittedStory && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+  <div
+    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+    onClick={() => setShowConfirmation(false)}
+  >
+    <div
+      className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2 className="text-2xl font-bold mb-4">Story Submitted!</h2>
+      <p className="mb-4 font-semibold text-gray-800">
+        Admin will review your story soon.
+      </p>
+
+      <article className="bg-gray-100 border border-gray-300 rounded p-4">
+        <h3 className="text-xl font-semibold mb-2">
+          {submittedStory.title}
+        </h3>
+
+        <p className="mb-2 text-gray-700">
+          {submittedStory.content}
+        </p>
+
+        <p className="text-sm text-gray-500">
+          By: {submittedStory.author} | Category:{" "}
+          {submittedStory.category || "General"}
+        </p>
+      </article>
+
+      <div className="flex justify-end mt-4">
+        <button
+          className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
           onClick={() => setShowConfirmation(false)}
         >
-          <div
-            className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-2xl font-bold mb-4">Story Submitted!</h2>
-            <p className="mb-4 font-semibold text-gray-800">
-              Admin will review your story soon.
-            </p>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-            <article className="bg-gray-100 border border-gray-300 rounded p-4">
-              <h3 className="text-xl font-semibold mb-2">
-                {submittedStory.title}
-              </h3>
-
-              <p className="mb-2 text-gray-700">
-                {submittedStory.content}
-              </p>
-
-              <p className="text-sm text-gray-500">
-                By: {submittedStory.author} | Category:{" "}
-                {submittedStory.category || "General"}
-              </p>
-            </article>
-
-            <div className="flex justify-end mt-4">
-              <button
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
-                onClick={() => setShowConfirmation(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
             {/* ------------ Failure Popup ------------ */}
       {showError && <FailurePopup message={errorMessage} />}

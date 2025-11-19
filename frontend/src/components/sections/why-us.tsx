@@ -192,8 +192,8 @@ export default function WhyUs() {
               </div>
 
               {/* TIMELINE */}
-              <div className="relative pl-12 mt-2">
-                <div className="absolute left-6 top-0 bottom-0 w-[3px] rounded-full" style={{ background: "linear-gradient(180deg,#007DC5,#FFC72C)" }} />
+              <div className="relative pl-6 sm:pl-12 mt-2">
+                <div className="absolute left-3 sm:left-6 top-0 bottom-0 w-[3px] rounded-fulll" style={{ background: "linear-gradient(180deg,#007DC5,#FFC72C)" }} />
                 <div className="space-y-12">
                   {features.map((f, i) => (
                     <motion.div
@@ -202,11 +202,12 @@ export default function WhyUs() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, amount: 0.2 }}
                       transition={{ duration: 0.55, delay: i * 0.08 }}
-                      className="relative pl-16"
+                      className="relative pl-14 sm:pl-16"
+
                     >
                       <motion.div
                         whileHover={{ scale: 1.06, boxShadow: "0 12px 30px rgba(0,0,0,0.12)" }}
-                        className="absolute -left-12 top-0 w-24 h-24 rounded-full overflow-hidden ring-4 ring-white shadow-lg"
+                        className="absolute -left-10 sm:-left-12 top-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-4 ring-white shadow-lg"
                         style={{ background: "linear-gradient(90deg,#005A9C,#FFC72C)" }}
                       >
                         <Image src={f.img} alt={f.title} width={96} height={96} className="object-cover w-full h-full" />

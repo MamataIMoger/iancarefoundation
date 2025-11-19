@@ -222,7 +222,11 @@ export default function About() {
             <h3 className="text-2xl md:text-3xl font-extrabold mb-4"><span className="text-amber-600">Core</span> Values</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {coreValues.map((v, i) => (
-                <motion.div key={i} className={`p-4 rounded-2xl bg-white border ${v.border} ${v.shadow}`} whileHover={{ y: -6 }}>
+<motion.div
+  key={i}
+  className={`p-4 rounded-2xl bg-white border ${v.border} ${v.shadow} flex flex-col items-center text-center`}
+  whileHover={{ y: -6 }}
+>
                   <div className={`w-12 h-12 flex items-center justify-center rounded-lg mb-3 ${v.bg} border ${v.border}`}>
                     <v.icon className={`w-7 h-7 ${v.color}`} />
                   </div>
@@ -250,7 +254,7 @@ export default function About() {
                 <h3 className="text-2xl font-extrabold text-sky-900 mb-2">The Sarva Dharma Sangama Centre</h3>
                 <p className="text-gray-700 mb-2">Located in Quila, Kinnigoli, the Centre is a rehabilitation and wellness sanctuary rooted in unity and faith.</p>
                 <p className="text-gray-700 mb-2">Programs include group therapy, meditation, family reintegration, and vocational support.</p>
-                <div className="mt-4 flex gap-3">
+                <div className="mt-4 flex justify-center">
                   <button onClick={() => router.push("/contact")} className="px-4 py-2 bg-sky-600 text-white rounded-full font-semibold">Visit Us</button>
                 </div>
               </div>
