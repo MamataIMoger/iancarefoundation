@@ -13,9 +13,6 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Theme state that changes on button click
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -46,8 +43,6 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
         setMessage("✅ Password updated successfully.");
         setCurrentPassword("");
         setNewPassword("");
-        // Toggle theme on successful update
-        setTheme((prev) => (prev === "light" ? "dark" : "light"));
       }
     } catch (err) {
       console.error(err);
@@ -59,99 +54,81 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
 
   return (
     <div
-      className={`min-h-[90vh] flex justify-center items-center p-8 transition-colors duration-500 ${
-        theme === "light" ? "bg-white text-gray-900" : "bg-gray-900 text-white"
-      }`}
-      style={{ fontFamily: "'Poppins', sans-serif" }}
+      className="min-h-[90vh] flex justify-center items-center p-8 transition-colors duration-500"
+      style={{
+        background: "var(--muted)",
+        color: "var(--foreground)",
+      }}
     >
+      {/* LOADING OVERLAY */}
       {loading && (
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-md flex flex-col items-center justify-center z-20 animate-fadeIn">
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-md flex flex-col items-center justify-center z-20">
           <div className="relative w-20 h-20 flex items-center justify-center">
-            <div className="absolute inset-0 border-[6px] border-amber-400/40 border-t-amber-500 rounded-full animate-spinRing" />
-            <div className="absolute w-10 h-10 bg-amber-400/20 rounded-full blur-md animate-pulseGlow" />
+            <div className="absolute inset-0 border-[6px] border-yellow-400/40 border-t-yellow-500 rounded-full animate-spinRing" />
+            <div className="absolute w-10 h-10 bg-yellow-400/20 rounded-full blur-md animate-pulseGlow" />
           </div>
-          <p className="text-amber-600 font-semibold mt-5 animate-pulse">
+          <p className="text-yellow-600 font-semibold mt-5 animate-pulse">
             Updating password...
           </p>
         </div>
       )}
 
       <div
-        className={`relative p-8 rounded-2xl shadow-2xl w-full max-w-md border z-10 animate-fadeUp ${
-          theme === "light"
-            ? "bg-white border-gray-100"
-            : "bg-gray-800 border-gray-700"
-        }`}
+        className="relative p-8 rounded-2xl shadow-xl w-full max-w-md border z-10 animate-fadeUp"
+        style={{
+          background: "var(--card)",
+          borderColor: "var(--border)",
+          color: "var(--foreground)",
+        }}
       >
         <div className="flex items-center justify-center mb-4">
-          <Lock
-            className={`w-8 h-8 mr-2 ${
-              theme === "light" ? "text-[#004D99]" : "text-[#88b0f4]"
-            }`}
-          />
-          <h2
-            className={`text-2xl font-bold ${
-              theme === "light" ? "text-[#004D99]" : "text-[#88b0f4]"
-            }`}
-          >
+          <Lock className="w-8 h-8 mr-2" style={{ color: "var(--accent)" }} />
+          <h2 className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
             Change Password
           </h2>
         </div>
 
-        <p
-          className={`text-sm mb-6 text-center ${
-            theme === "light" ? "text-gray-600" : "text-gray-300"
-          }`}
-        >
+        <p className="text-sm mb-6 text-center opacity-80">
           Logged in as{" "}
-          <strong
-            className={`${
-              theme === "light" ? "text-[#004D99]" : "text-[#a8c0ff]"
-            }`}
-          >
-            {email}
-          </strong>
+          <strong style={{ color: "var(--accent)" }}>{email}</strong>
         </p>
 
+        {/* FORM */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label
-              className={`block text-sm font-medium mb-1 ${
-                theme === "light" ? "text-gray-700" : "text-gray-300"
-              }`}
-            >
+            <label className="block text-sm font-medium mb-1 opacity-80">
               Current Password
             </label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className={`w-full p-3 rounded-lg focus:ring-2 ${
-                theme === "light"
-                  ? "border border-gray-300 focus:border-[#004D99] focus:ring-[#004D99]/30"
-                  : "border border-gray-600 bg-gray-700 focus:border-[#88b0f4] focus:ring-[#88b0f4]/40 text-white"
-              }`}
+              className="w-full p-3 rounded-lg focus:ring-2 outline-none"
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+                caretColor: "var(--accent)",
+              }}
               required
             />
           </div>
 
           <div>
-            <label
-              className={`block text-sm font-medium mb-1 ${
-                theme === "light" ? "text-gray-700" : "text-gray-300"
-              }`}
-            >
+            <label className="block text-sm font-medium mb-1 opacity-80">
               New Password
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className={`w-full p-3 rounded-lg focus:ring-2 ${
-                theme === "light"
-                  ? "border border-gray-300 focus:border-[#004D99] focus:ring-[#004D99]/30"
-                  : "border border-gray-600 bg-gray-700 focus:border-[#88b0f4] focus:ring-[#88b0f4]/40 text-white"
-              }`}
+              className="w-full p-3 rounded-lg focus:ring-2 outline-none"
+              style={{
+                background: "var(--muted)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+                caretColor: "var(--accent)",
+              }}
               required
             />
           </div>
@@ -159,12 +136,15 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-amber-500 text-white font-semibold rounded-lg shadow-lg hover:bg-amber-600 transition disabled:opacity-60 flex items-center justify-center"
+            className="w-full py-3 font-semibold rounded-lg shadow-md hover:opacity-90 transition flex items-center justify-center"
+            style={{
+              background: "#FFC72C",
+              color: "#0050A4",
+            }}
           >
             {loading ? (
               <>
-                <span className="loaderRingSmall mr-3" />
-                Updating...
+                <span className="loaderRingSmall mr-3" /> Updating...
               </>
             ) : (
               "Update Password"
@@ -174,13 +154,14 @@ const ChangePasswordForm: React.FC<Props> = ({ email }) => {
 
         {message && (
           <p
-            className={`mt-5 text-center text-sm font-medium ${
-              message.startsWith("✅")
-                ? "text-green-600"
+            className="mt-5 text-center text-sm font-medium"
+            style={{
+              color: message.startsWith("✅")
+                ? "#22C55E"
                 : message.startsWith("⚠️")
-                ? "text-yellow-600"
-                : "text-red-600"
-            }`}
+                ? "#EAB308"
+                : "#EF4444",
+            }}
           >
             {message}
           </p>
