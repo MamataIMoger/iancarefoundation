@@ -10,6 +10,9 @@ import path from "path";
 // Middleware
 import { proxy } from "./middleware/proxy";
 
+//serverless
+import serverless from "serverless-http";
+
 // Modular Routers
 import clientRouter from "./routes/client/clients";
 import contactSubmitRouter from "./routes/contact/submit";
@@ -104,8 +107,13 @@ app.post("/api/form/consult-form", consultFormHandler);
 app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// For Vercel
+export const handler = serverless(app);
+
+// For local development (only runs when not in Vercel)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Local server running on port ${PORT}`);
+  });
+}
