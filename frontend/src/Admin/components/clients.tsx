@@ -80,6 +80,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 
 
@@ -356,7 +357,7 @@ function EditClientForm({
     e.preventDefault();
     // Validate fields like in AddClientForm
     try {
-      const res = await fetch(`/api/clients/${client.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/clients/${client.id}`,{
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -437,12 +438,14 @@ function EditClientForm({
   </Select>
 
   {/* Notes */}
+  <DialogDescription>
   <Label>Client's Condition / Problem</Label>
   <Input
     value={form.notes}
     onChange={(e) => setForm({ ...form, notes: e.target.value })}
     placeholder="Describe condition or issue"
   />
+  </DialogDescription>
 
   {/* Footer */}
   <DialogFooter>
@@ -452,7 +455,6 @@ function EditClientForm({
 </form>
   );
 }
-
 
 
 export default function ClientsDashboard() {
@@ -989,7 +991,8 @@ if (!res.ok) {
                 Client Profile
               </DialogTitle>
             </DialogHeader>
-
+              
+            <DialogDescription>
             {selectedClient && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted dark:bg-[#111827] rounded-md">
                 {/* Image */}
@@ -1027,7 +1030,6 @@ if (!res.ok) {
                     </span>{" "}
                     {selectedClient.address || "—"}
                   </p>
-                  <div>
                     <Label className="block mb-1 text-muted-foreground">
                       Condition Notes
                     </Label>
@@ -1037,10 +1039,10 @@ if (!res.ok) {
                       rows={3}
                       className="w-full bg-background text-foreground border border-border rounded-md p-2 resize-none"
                     />
-                  </div>
                 </div>
               </div>
             )}
+            </DialogDescription>
           </DialogContent>
         </Dialog>
           
@@ -1050,6 +1052,7 @@ if (!res.ok) {
     <DialogHeader>
       <DialogTitle>Edit Client</DialogTitle>
     </DialogHeader>
+    <DialogDescription>
     {editingClient && (
       <EditClientForm
         client={editingClient}
@@ -1061,6 +1064,7 @@ if (!res.ok) {
         }}
       />
     )}
+    </DialogDescription>
   </DialogContent>
 </Dialog>
       </div>
@@ -1082,15 +1086,12 @@ function AddClientForm({
 }) {
   return (
     <DialogContent className="max-w-lg bg-card text-card-foreground border border-border dark:bg-[#1F2937] dark:text-[#F3F4F6] overflow-y-auto max-h-[90vh]">
-      <div>  {/* ← WRAPPER ADDED */}
-
         <DialogHeader>
           <DialogTitle>Add Client</DialogTitle>
         </DialogHeader>
-
         <form onSubmit={onSubmit} className="space-y-4">
+          <DialogDescription>
           <div className="grid grid-cols-1 gap-3">
-
             <div>
               <Label htmlFor="name" className="block mb-2">
                 Name
@@ -1196,6 +1197,7 @@ function AddClientForm({
               />
             </div>
           </div>
+          </DialogDescription>
 
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>
@@ -1205,8 +1207,6 @@ function AddClientForm({
             <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
-
-      </div>
     </DialogContent>
   );
 }
