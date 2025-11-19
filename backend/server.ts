@@ -45,11 +45,12 @@ app.use(
   cors({
     origin: [
       "https://iancarefoundation-frontend.vercel.app",
-      "http://localhost:3000",
+      "http://localhost:3000"
     ],
     credentials: true,
   })
 );
+
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
@@ -96,9 +97,9 @@ app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
 // ===============================
-// ✅ EXPORT HANDLER FOR VERCEL
+// ✅ EXPORT DEFAULT HANDLER FOR VERCEL
 // ===============================
-export const handler = serverless(app);
+export default serverless(app);
 
 // ===============================
 // ✅ LOCAL DEVELOPMENT SERVER
@@ -109,3 +110,4 @@ if (process.env.NODE_ENV !== "production") {
     console.log(`Local server running on port ${PORT}`);
   });
 }
+
