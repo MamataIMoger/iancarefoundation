@@ -36,6 +36,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -80,7 +81,6 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { DialogDescription } from "@radix-ui/react-dialog";
 
 
 
@@ -431,9 +431,10 @@ function EditClientForm({
       <SelectValue />
     </SelectTrigger>
     <SelectContent>
-      <SelectItem value="Program A">Program A</SelectItem>
-      <SelectItem value="Program B">Program B</SelectItem>
-      <SelectItem value="Program C">Program C</SelectItem>
+      <SelectItem value="Drug Addict">Drug Addict</SelectItem>
+<SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
+<SelectItem value="General">General</SelectItem>
+
     </SelectContent>
   </Select>
 
@@ -621,7 +622,7 @@ const programs = ["Drug Addict", "Alcohol Addict", "General"] as const;
     name: "",
     contact: "",
     joinDate: new Date().toISOString().slice(0, 10),
-    status: "New" as Client["status"],
+    status: "New",
     program: "Drug Addict" as Client["program"],
     notes: "",
     address: "",
@@ -643,7 +644,7 @@ const programs = ["Drug Addict", "Alcohol Addict", "General"] as const;
       name: form.name.trim(),
       contact: form.contact.trim(),
       joinDate: form.joinDate,
-      status: form.status,
+      status: "New",
       program: form.program,
       address: form.address?.trim() || "",
       notes: form.notes?.trim() || "",
@@ -815,7 +816,7 @@ if (!res.ok) {
   <CardHeader>
     <CardTitle className="text-base font-semibold flex items-center gap-2">
       <Users className="w-4 h-4 text-[#005691]" />
-      Client Recovery Progress
+      Monthly Distribution of New, Ongoing & Recovered Clients
     </CardTitle>
   </CardHeader>
 
@@ -969,17 +970,6 @@ if (!res.ok) {
         </div>
 
         {/* Floating Action Button */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="fixed bottom-5 right-5 h-12 w-12 rounded-full shadow-lg md:hidden"
-              aria-label="Add Client"
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
-          </DialogTrigger>
-          <AddClientForm form={form} setForm={setForm} onSubmit={handleAddClient} onClose={() => setOpen(false)}/>
-        </Dialog>
 
         {/* View Client Modal */}
         <Dialog open={viewOpen} onOpenChange={setViewOpen}>
@@ -988,9 +978,11 @@ if (!res.ok) {
               <DialogTitle className="text-xl font-bold text-[#005691] dark:text-[#A5D8FF]">
                 Client Profile
               </DialogTitle>
+               <DialogDescription>
+      Basic client details.
+    </DialogDescription>
             </DialogHeader>
               
-            <DialogDescription asChild>
             {selectedClient && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted dark:bg-[#111827] rounded-md">
                 {/* Image */}
@@ -1040,7 +1032,6 @@ if (!res.ok) {
                 </div>
               </div>
             )}
-            </DialogDescription>
           </DialogContent>
         </Dialog>
           
@@ -1049,8 +1040,11 @@ if (!res.ok) {
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Edit Client</DialogTitle>
+       <DialogDescription>
+      Update client information here.
+    </DialogDescription>
     </DialogHeader>
-    <DialogDescription asChild>
+
     {editingClient && (
       <EditClientForm
         client={editingClient}
@@ -1062,7 +1056,6 @@ if (!res.ok) {
         }}
       />
     )}
-    </DialogDescription>
   </DialogContent>
 </Dialog>
       </div>
@@ -1082,131 +1075,121 @@ function AddClientForm({
   onSubmit: any;
   onClose: () => void;
 }) {
-  return (
-    <DialogContent className="max-w-lg bg-card text-card-foreground border border-border dark:bg-[#1F2937] dark:text-[#F3F4F6] overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Add Client</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <DialogDescription asChild>
-          <div className="grid grid-cols-1 gap-3">
-            <div>
-              <Label htmlFor="name" className="block mb-2">
-                Name
-              </Label>
-              <Input
-                id="name"
-                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-                value={form.name}
-                onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))}
-                placeholder="Enter full name"
-                required
-              />
-            </div>
+return (
+  <DialogContent className="max-w-lg bg-card text-card-foreground border border-border dark:bg-[#1F2937] dark:text-[#F3F4F6] overflow-y-auto max-h-[90vh]">
+    <DialogHeader>
+      <DialogTitle>Add Client</DialogTitle>
+      <DialogDescription>Fill the details below to add a new client.</DialogDescription>
+    </DialogHeader>
 
-            <div>
-              <Label htmlFor="contact" className="block mb-2">
-                Contact
-              </Label>
-              <Input
-                id="contact"
-                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-                value={form.contact}
-                onChange={(e) => setForm((s: any) => ({ ...s, contact: e.target.value }))}
-                placeholder="+91-XXXXXXXXXX"
-                required
-              />
-            </div>
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 gap-3">
 
-            <div>
-              <Label htmlFor="address" className="block mb-2">
-                Address
-              </Label>
-              <Input
-                id="address"
-                value={form.address || ""}
-                onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))}
-                placeholder="Enter full address"
-                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-                required
-              />
-            </div>
+        {/* Name */}
+        <div>
+          <Label htmlFor="name" className="block mb-2">Name</Label>
+          <Input
+            id="name"
+            className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+            value={form.name}
+            onChange={(e) => setForm((s: any) => ({ ...s, name: e.target.value }))}
+            placeholder="Enter full name"
+            required
+          />
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="joinDate" className="block mb-2">
-                  Join Date
-                </Label>
-                <Input
-                  id="joinDate"
-                  type="date"
-                  value={form.joinDate}
-                  onChange={(e) => setForm((s: any) => ({ ...s, joinDate: e.target.value }))}
-                  className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-                  required
-                />
-              </div>
+        {/* Contact */}
+        <div>
+          <Label htmlFor="contact" className="block mb-2">Contact</Label>
+          <Input
+            id="contact"
+            className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+            value={form.contact}
+            onChange={(e) => setForm((s: any) => ({ ...s, contact: e.target.value }))}
+            placeholder="+91-XXXXXXXXXX"
+            required
+          />
+        </div>
 
-              <div>
-                <Label className="block mb-2">Status</Label>
-                <Select
-                  value={form.status}
-                  onValueChange={(v) => setForm((s: any) => ({ ...s, status: v }))}
-                >
-                  <SelectTrigger className="bg-muted text-foreground border border-border mb-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="New">New</SelectItem>
-                    <SelectItem value="Under Recovery">Under Recovery</SelectItem>
-                    <SelectItem value="Recovered">Recovered</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        {/* Address */}
+        <div>
+          <Label htmlFor="address" className="block mb-2">Address</Label>
+          <Input
+            id="address"
+            value={form.address || ""}
+            onChange={(e) => setForm((s: any) => ({ ...s, address: e.target.value }))}
+            placeholder="Enter full address"
+            className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+            required
+          />
+        </div>
 
-            <div>
-              <Label className="block mb-2">Program</Label>
-              <Select
-                value={form.program}
-                onValueChange={(v) => setForm((s: any) => ({ ...s, program: v }))}
-              >
-                <SelectTrigger className="bg-muted text-foreground border border-border mb-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Drug Addict">Drug Addict</SelectItem>
-                  <SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
-                  <SelectItem value="General">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="notes" className="block mb-2">
-                Client's Condition / Problem
-              </Label>
-              <Input
-                id="notes"
-                value={form.notes || ""}
-                onChange={(e) => setForm((s: any) => ({ ...s, notes: e.target.value }))}
-                placeholder="Describe condition or issue"
-                className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
-              />
-            </div>
+        {/* Join Date + Program */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          
+          {/* Join Date */}
+          <div>
+            <Label htmlFor="joinDate" className="block mb-2">Join Date</Label>
+            <Input
+              id="joinDate"
+              type="date"
+              value={form.joinDate}
+              onChange={(e) =>
+                setForm((s: any) => ({ ...s, joinDate: e.target.value }))
+              }
+              className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+              required
+            />
           </div>
-          </DialogDescription>
 
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
+          {/* Program */}
+          <div>
+            <Label className="block mb-2">Program</Label>
+            <Select
+              value={form.program}
+              onValueChange={(v) => setForm((s: any) => ({ ...s, program: v }))}
+            >
+              <SelectTrigger className="bg-muted text-foreground border border-border mb-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Drug Addict">Drug Addict</SelectItem>
+                <SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
+                <SelectItem value="General">General</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <Button type="submit">Save</Button>
-          </DialogFooter>
-        </form>
-    </DialogContent>
-  );
+        </div>
+
+        {/* Notes */}
+        <div>
+          <Label htmlFor="notes" className="block mb-2">
+            Client's Condition / Problem
+          </Label>
+          <Input
+            id="notes"
+            value={form.notes || ""}
+            onChange={(e) =>
+              setForm((s: any) => ({ ...s, notes: e.target.value }))
+            }
+            placeholder="Describe condition or issue"
+            className="bg-muted text-foreground border border-border placeholder-subtle mb-2"
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="gap-2">
+        <Button type="button" variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit">Save</Button>
+      </DialogFooter>
+
+    </form>
+  </DialogContent>
+);
+
 }
 
 

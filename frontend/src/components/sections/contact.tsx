@@ -107,11 +107,45 @@ const Contact: React.FC = () => {
 
             <div className="pt-4 border-t border-gray-200">
               <h3 className="text-lg font-semibold mb-3 text-[#000000]">Follow Us</h3>
-              <div className="flex gap-6 justify-start">
-                <FaFacebookF className="text-[#0B3D43] text-2xl hover:text-[#FFC72C] transition-colors duration-300 cursor-pointer" />
-                <FaInstagram className="text-[#0B3D43] text-2xl hover:text-[#FFC72C] transition-colors duration-300 cursor-pointer" />
-                <FaLinkedinIn className="text-[#0B3D43] text-2xl hover:text-[#FFC72C] transition-colors duration-300 cursor-pointer" />
-              </div>
+
+          {/* SOCIAL ICONS */}
+          <div className="flex gap-6 mt-6">
+            <a
+              href="https://www.instagram.com/iancaresfoundation/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#FFC72C] transition"
+              aria-label="Ian Cares Instagram"
+            >
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7.5 2h9A5.5 5.5 0 0122 7.5v9A5.5 5.5 0 0116.5 22h-9A5.5 5.5 0 012 16.5v-9A5.5 5.5 0 017.5 2zm0 2A3.5 3.5 0 004 7.5v9A3.5 3.5 0 007.5 20h9a3.5 3.5 0 003.5-3.5v-9A3.5 3.5 0 0016.5 4h-9zm4.5 3.25A4.75 4.75 0 1112 16.75 4.75 4.75 0 0112 7.25zm0 2A2.75 2.75 0 1014.75 12 2.75 2.75 0 0012 9.25zm4.75-.75a.75.75 0 11.75-.75.75.75 0 01-.75.75z" />
+              </svg>
+            </a>
+
+            <a
+              href="https://www.linkedin.com/company/ian-cares-foundation/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#FFC72C] transition"
+              aria-label="Ian Cares LinkedIn"
+            >
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3A2 2 0 0121 5v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zM8.34 17.34V10.7H6v6.64h2.34zm-1.17-7.72a1.35 1.35 0 11.01-2.7 1.35 1.35 0 01-.01 2.7zM18 17.34v-3.56c0-1.9-.4-3.37-2.57-3.37-1.11 0-1.86.61-2.17 1.18h-.03V10.7H11v6.64h2.23v-3.29c0-.87.17-1.72 1.25-1.72 1.06 0 1.08.99 1.08 1.78v3.23H18z" />
+              </svg>
+            </a>
+
+            <a
+              href="https://www.facebook.com/IanCaresFoundation/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#FFC72C] transition"
+              aria-label="Ian Cares Facebook"
+            >
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22 12a10 10 0 10-11.5 9.95V15h-2v-3h2v-2.3C10.5 7.9 11.92 6.5 14.4 6.5c1.02 0 2.1.18 2.1.18v2.3h-1.18c-1.16 0-1.52.72-1.52 1.45V12h2.58l-.41 3h-2.17v6.95A10 10 0 0022 12z" />
+              </svg>
+            </a>
+          </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 mt-8 border-t border-gray-300 pt-4 max-w-md mx-auto w-full">
