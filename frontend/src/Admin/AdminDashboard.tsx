@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+
 import Sidebar from "./components/Sidebar";
 import DashboardView from "./DashboardView";
 import ClientManager from "./components/clients";
@@ -14,13 +16,26 @@ import ChangePasswordForm from "./components/ChangePasswordForm";
 import ThemeToggle from "./ThemeToggle";
 
 const AdminDashboard = () => {
-  const [activeView, setActiveView] = useState("dashboard");
+  const searchParams = useSearchParams();
+
+  // Read `tab=` from URL, default to "dashboard"
+  const tabFromUrl = searchParams.get("tab") || "dashboard";
+
+  const [activeView, setActiveView] = useState(tabFromUrl);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [adminEmail, setAdminEmail] = useState("");
 
-  /* ---------------------------------------------------------
-     FETCH LOGGED-IN ADMIN EMAIL (USING NEW admin-me.ts ROUTE)
-  -----------------------------------------------------------*/
+  /* ---------------------------------------------------
+     UPDATE activeView whenever the URL param changes
+  --------------------------------------------------- */
+  useEffect(() => {
+    const currentTab = searchParams.get("tab") || "dashboard";
+    setActiveView(currentTab);
+  }, [searchParams]);
+
+  /* ---------------------------------------------------
+     FETCH LOGGED-IN ADMIN EMAIL
+  --------------------------------------------------- */
   useEffect(() => {
     const fetchAdmin = async () => {
       try {
@@ -44,7 +59,7 @@ const AdminDashboard = () => {
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-500">
 
-      {/* ---------- SIDEBAR ---------- */}
+      {/* SIDEBAR */}
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -53,15 +68,15 @@ const AdminDashboard = () => {
         onOpen={() => setSidebarOpen(true)}
       />
 
-      {/* ---------- MAIN AREA ---------- */}
+      {/* MAIN AREA */}
       <div className="flex-1 flex flex-col sm:ml-64 transition-all duration-300">
 
-        {/* ---------- HEADER ---------- */}
+        {/* HEADER */}
         <header className="flex items-center justify-end px-6 py-4 theme-surface theme-border border-b theme-fade">
           <ThemeToggle />
         </header>
 
-        {/* ---------- PAGE CONTENT ---------- */}
+        {/* PAGE CONTENT */}
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
 
           {activeView === "dashboard" && <DashboardView />}
@@ -73,7 +88,6 @@ const AdminDashboard = () => {
           {activeView === "contact" && <ContactMessagesView />}
           {activeView === "Consult-request" && <ConsultRequest />}
 
-          {/* PASS ACTUAL BACKEND ADMIN EMAIL */}
           {activeView === "change-password" && adminEmail && (
             <ChangePasswordForm email={adminEmail} />
           )}

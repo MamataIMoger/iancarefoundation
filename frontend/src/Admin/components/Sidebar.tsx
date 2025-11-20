@@ -123,9 +123,11 @@ export default function Sidebar({
               <li key={item.key}>
                 <button
                   onClick={() => {
-                    setActiveView(item.key);
-                    onClose();
-                  }}
+  router.push(`/admin?tab=${item.key}`);  // 🔥 update URL
+  setActiveView(item.key);                // update UI state
+  onClose();
+}}
+
                   className={navItemClass(item.key)}
                 >
                   <span className="text-gray-500 dark:text-gray-400">{iconMap[item.key]}</span>

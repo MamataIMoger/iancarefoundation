@@ -109,15 +109,12 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
         <div className="p-6 flex flex-col justify-between flex-grow">
           <div>
             <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-semibold bg-amber-300 text-amber-900 px-3 py-1 rounded-full uppercase tracking-wider">
-                {post.category || "General"}
-              </span>
               <span className="text-sm text-gray-500">
                 {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ""}
               </span>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h3>
-            <p className="text-gray-700 mb-6 leading-relaxed">
+            <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{post.title}</h3>
+            <p className="text-gray-700 mb-6 leading-relaxed text-justify">
             {stripHtml(post.content).length > 120
               ? stripHtml(post.content).substring(0, 120) + "..."
               : stripHtml(post.content)}
@@ -144,7 +141,7 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
             className="bg-white rounded-xl shadow-2xl p-6 max-w-lg md:max-w-3xl w-full max-h-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">{post.title}</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 text-center">{post.title}</h2>
             <img
               src={post.imageUrl || "/placeholder.png"}
               alt={post.title}
@@ -156,7 +153,7 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => {
               }}
             />
            <div
-            className="text-gray-700 leading-relaxed mb-6"
+            className="text-gray-700 leading-relaxed mb-6 text-justify"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
 
