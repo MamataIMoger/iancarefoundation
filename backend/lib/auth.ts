@@ -1,3 +1,4 @@
+// backend/lib/auth.ts
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { serialize } from "cookie";
@@ -7,41 +8,34 @@ import { Admin } from "../models/Admin";
 const COOKIE_NAME = "adminToken";
 
 /* --------------------------------------------------------
-   UNIVERSAL DOMAIN HANDLER
+   COOKIE DOMAIN (Auto — No forced domain)
 --------------------------------------------------------- */
 function getCookieDomain(): string | null {
-  const isProd = process.env.NODE_ENV === "production";
-
-  if (!isProd) return null; // Localhost
-
-  if (process.env.COOKIE_DOMAIN) return process.env.COOKIE_DOMAIN; // Custom domain
-
-  return ".vercel.app"; // Default fallback for Vercel
+  // Auto domain based on browser
+  return null;
 }
 
 /* --------------------------------------------------------
-   SAFE COOKIE OPTIONS (no TS errors)
+   SAFE COOKIE OPTIONS (Production-ready)
 --------------------------------------------------------- */
 function buildCookieOptions(isProd: boolean, maxAge: number) {
   const domain = getCookieDomain();
 
-  // Base cookie properties
   const options: {
     httpOnly: true;
     secure: boolean;
     sameSite: "none" | "lax";
     path: string;
     maxAge: number;
-    domain?: string; // optional — avoids TS error
+    domain?: string;
   } = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
+    secure: isProd,                  // Required for HTTPS cookies
+    sameSite: isProd ? "none" : "lax", // Allows cross-domain cookies
     path: "/",
     maxAge,
   };
 
-  // Add domain ONLY if it exists
   if (domain) {
     options.domain = domain;
   }
@@ -50,7 +44,7 @@ function buildCookieOptions(isProd: boolean, maxAge: number) {
 }
 
 /* --------------------------------------------------------
-   SIGN TOKEN
+   SIGN JWT TOKEN
 --------------------------------------------------------- */
 export function signAdminToken(adminId: string) {
   const secret = process.env.JWT_SECRET;
@@ -60,7 +54,7 @@ export function signAdminToken(adminId: string) {
 }
 
 /* --------------------------------------------------------
-   SET COOKIE — UNIVERSAL + TYPE-SAFE
+   SET COOKIE SAFELY
 --------------------------------------------------------- */
 export function setAdminCookie(res: Response, token: string) {
   const isProd = process.env.NODE_ENV === "production";
@@ -73,7 +67,7 @@ export function setAdminCookie(res: Response, token: string) {
 }
 
 /* --------------------------------------------------------
-   CLEAR COOKIE — UNIVERSAL + TYPE-SAFE
+   CLEAR COOKIE
 --------------------------------------------------------- */
 export function clearAdminCookie(res: Response) {
   const isProd = process.env.NODE_ENV === "production";
@@ -86,7 +80,7 @@ export function clearAdminCookie(res: Response) {
 }
 
 /* --------------------------------------------------------
-   GET CURRENT ADMIN
+   GET CURRENT ADMIN FROM REQUEST COOKIE
 --------------------------------------------------------- */
 export async function getCurrentAdmin(req: Request) {
   const secret = process.env.JWT_SECRET;

@@ -7,10 +7,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 
+import dbConnect from "./config/mongodb";
+
 // Middleware
 import { proxy } from "./middleware/proxy";
 
-// Modular Routers
+// Routers
 import clientRouter from "./routes/client/clients";
 import contactSubmitRouter from "./routes/contact/submit";
 import contactMessagesRouter from "./routes/contact/contactMessages";
@@ -21,61 +23,73 @@ import galleryRouter from "./routes/gallery/index";
 import storyRouter from "./routes/story/index";
 import dashboardRoute from "./routes/dashboard/index";
 
-// Admin Handlers
+// Admin handlers
 import loginHandler from "./routes/admin/admin-login";
 import logoutHandler from "./routes/admin/admin-logout";
 import meHandler from "./routes/admin/admin-me";
 import changePasswordHandler from "./routes/admin/admin-change-password";
 import requestResetHandler from "./routes/admin/admin-request-reset";
 import resetPasswordHandler from "./routes/admin/admin-reset-password";
+
+// Consult handlers
 import bookConsultHandler from "./routes/book/book-consult";
 import consultFormHandler from "./routes/form/consult-form";
 import consultRequestsHandler from "./routes/request/consult-requests";
 import updateConsultStatusHandler from "./routes/consult-request/status";
 
 const app = express();
-const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// Middleware
-const allowedOrigins = (process.env.FRONTEND_URL || "").split(",");
-
+// ----------------------------------------------
+// ✅ CORS
+// ----------------------------------------------
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS: " + origin), false);
-      }
-    },
+    origin: [
+      "https://iancarefoundation-frontend.vercel.app",
+      "http://localhost:3000",
+    ],
     credentials: true,
   })
 );
 
-
+// ----------------------------------------------
+// ✅ BASIC MIDDLEWARE
+// ----------------------------------------------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 app.use(proxy);
 
-// Serve uploaded images
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "public/uploads"))
-);
+// ----------------------------------------------
+// ✅ CONNECT TO MONGO
+// ----------------------------------------------
+app.use(async (_req, _res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (err) {
+    console.error("❌ DB Connection Error:", err);
+    return _res.status(500).json({ error: "Database connection failed" });
+  }
+});
 
-// Root
-app.get("/", (req, res) => {
+// ----------------------------------------------
+// STATIC FILES
+// ----------------------------------------------
+app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
+
+// ----------------------------------------------
+// ROOT
+// ----------------------------------------------
+app.get("/", (_req, res) => {
   res.send("API is running");
 });
 
-// Routers
-
-app.use("/api/blog/crud", blogCrudRouter); // specific route first
-app.use("/api/blog", blogRouter);  
+// ----------------------------------------------
+// ROUTERS
+// ----------------------------------------------
+app.use("/api/blog/crud", blogCrudRouter);
+app.use("/api/blog", blogRouter);
 
 app.use("/api/clients", clientRouter);
 app.use("/api/contact-messages", contactMessagesRouter);
@@ -86,8 +100,7 @@ app.use("/api/gallery", galleryRouter);
 app.use("/api/stories", storyRouter);
 app.use("/api/dashboard", dashboardRoute);
 
-
-// Admin Authentication
+// Admin Auth
 app.post("/api/admin/admin-login", loginHandler);
 app.post("/api/admin/admin-logout", logoutHandler);
 app.get("/api/admin/admin-me", meHandler);
@@ -95,7 +108,7 @@ app.post("/api/admin/change-password", changePasswordHandler);
 app.post("/api/admin/admin-request-reset", requestResetHandler);
 app.post("/api/admin/admin-reset-password", resetPasswordHandler);
 
-// Consult Request Routes
+// Consult
 app.post("/api/book/book-consult", bookConsultHandler);
 app.get("/api/book/book-consult", bookConsultHandler);
 app.patch("/api/book/book-consult", bookConsultHandler);
@@ -104,8 +117,10 @@ app.post("/api/form/consult-form", consultFormHandler);
 app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
-// Start server
+// ----------------------------------------------
+// 🚀 START EXPRESS SERVER
+// ----------------------------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Express server running on port ${PORT}`);
 });
