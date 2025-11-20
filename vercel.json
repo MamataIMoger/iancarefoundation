@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/**/*.ts": {
+    "backend/api/**/*.ts": {
       "runtime": "nodejs18.x",
       "maxDuration": 60
     }
