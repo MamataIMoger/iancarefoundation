@@ -1,3 +1,4 @@
+//Admin/components/reset_password.tsx
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation"; // ✅ App Router
