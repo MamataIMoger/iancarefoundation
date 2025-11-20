@@ -30,13 +30,22 @@ export async function POST(req: Request) {
     }
 
     const token = signAdminToken(admin._id.toString());
-    setAdminCookie(token);
 
-    return Response.json({
-      success: true,
-      email: admin.email,
-      role: admin.role,
-    });
+    // 🔥 Create response headers
+    const headers = new Headers();
+    setAdminCookie(headers, token);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        email: admin.email,
+        role: admin.role,
+      }),
+      {
+        status: 200,
+        headers,
+      }
+    );
   } catch (err) {
     console.error(err);
     return Response.json({ error: "Server error" }, { status: 500 });

@@ -1,7 +1,18 @@
 import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
 import { connectDB } from "./db";
 import { Admin } from "../../models/Admin";
+
+// Vercel-style helper
+function setCookie(headers: Headers, name: string, value: string, maxAge: number) {
+  const isProd = process.env.NODE_ENV === "production";
+
+  headers.append(
+    "Set-Cookie",
+    `${name}=${value}; Path=/; HttpOnly; ${
+      isProd ? "Secure; SameSite=None" : "SameSite=Lax"
+    }; Max-Age=${maxAge}`
+  );
+}
 
 const COOKIE_NAME = "adminToken";
 
@@ -15,51 +26,30 @@ export function signAdminToken(adminId: string) {
 }
 
 /* --------------------------------------------------------
-   SET COOKIE (async)
+   SET COOKIE
 --------------------------------------------------------- */
-export async function setAdminCookie(token: string) {
-  const isProd = process.env.NODE_ENV === "production";
-
-  const cookieStore = await cookies(); // FIX
-
-  cookieStore.set({
-    name: COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60,
-  });
+export function setAdminCookie(headers: Headers, token: string) {
+  setCookie(headers, COOKIE_NAME, token, 7 * 24 * 60 * 60);
 }
 
 /* --------------------------------------------------------
-   CLEAR COOKIE (async)
+   CLEAR COOKIE
 --------------------------------------------------------- */
-export async function clearAdminCookie() {
-  const isProd = process.env.NODE_ENV === "production";
-
-  const cookieStore = await cookies(); // FIX
-
-  cookieStore.set({
-    name: COOKIE_NAME,
-    value: "",
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-    path: "/",
-    maxAge: 0,
-  });
+export function clearAdminCookie(headers: Headers) {
+  setCookie(headers, COOKIE_NAME, "", 0);
 }
 
 /* --------------------------------------------------------
-   GET CURRENT ADMIN (async)
+   DECODE CURRENT ADMIN TOKEN
 --------------------------------------------------------- */
-export async function getCurrentAdmin() {
+export async function getCurrentAdminFromRequest(req: Request) {
   const secret = process.env.JWT_SECRET;
 
-  const cookieStore = await cookies(); // FIX
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const cookieHeader = req.headers.get("cookie") || "";
+  const token = cookieHeader
+    .split(";")
+    .find((c) => c.trim().startsWith(`${COOKIE_NAME}=`))
+    ?.split("=")[1];
 
   if (!token) return null;
 
@@ -72,7 +62,6 @@ export async function getCurrentAdmin() {
 
   await connectDB();
   const admin = await Admin.findById(payload.id);
-
   if (!admin || !admin.active) return null;
 
   return admin;
