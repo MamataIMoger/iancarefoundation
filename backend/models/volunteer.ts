@@ -17,7 +17,7 @@ const VolunteerSchema: Schema<VolunteerDocument> = new Schema(
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phone: { type: String, required: true, unique: true },
-    whatsAppNumber: { type: String },
+    whatsAppNumber: { type: String, required: true},
     gender: { type: String },
     address: { type: String },
     timeCommitment: { type: [String], default: [] },

@@ -181,7 +181,7 @@ const ContactMessagesView: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1); // reset pagination on search
               }}
-              className="w-full pl-10 pr-4 py-2 border rounded-full text-sm"
+              className="w-full pl-10 pr-4 py-2 border rounded-full text-sm dark:placeholder:text-slate-400"
               style={{
                 borderColor: colors.BORDER,
                 background: colors.BG,

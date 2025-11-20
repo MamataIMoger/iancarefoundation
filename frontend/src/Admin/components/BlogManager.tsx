@@ -185,7 +185,7 @@ const ColorPickerPopover: React.FC<{
       <div className="mt-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded" style={{ backgroundColor: color, border: "1px solid rgba(0,0,0,0.12)" }} />
-          <div className="text-xs text-slate-600">{color.toUpperCase()}</div>
+          <div className="text-xs text-slate-600 dark:text-slate-300">{color.toUpperCase()}</div>
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={onClose} className="px-3 py-1 rounded border text-sm">
@@ -234,7 +234,7 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
                 {isPublished ? "PUBLISHED" : "DRAFT"}
               </Badge>
             )}
-            <h3 className="text-sm font-semibold text-sky-800 line-clamp-1 truncate">
+            <h3 className="text-sm font-semibold text-sky-800 dark:text-sky-300 line-clamp-1 truncate">
               {post.title}
             </h3>
           </div>
@@ -242,7 +242,7 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
         </div>
 
         <p
-          className="text-slate-600 text-sm mt-1 line-clamp-2"
+          className="text-slate-600 dark:text-slate-300 text-sm mt-1 line-clamp-2"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
@@ -251,14 +251,14 @@ const PostCardAdminView: React.FC<PostCardProps> = ({
             <button
               type="button"
               onClick={() => onReadMore(post)}
-              className="text-sky-700 text-sm px-2 py-1 rounded hover:bg-sky-50"
+              className="text-sky-700 dark:text-sky-300 text-sm px-2 py-1 rounded hover:bg-slate-700"
             >
               Read
             </button>
             <button
               type="button"
               onClick={() => onEdit(post)}
-              className="text-slate-700 text-sm px-2 py-1 rounded hover:bg-slate-50"
+              className="text-slate-700 dark:text-slate-200 text-sm px-2 py-1 rounded hover:bg-slate-50"
             >
               Edit
             </button>
@@ -336,11 +336,11 @@ const PostCardUserView: React.FC<{
 
       {/* Content */}
       <div className="p-3 flex flex-col flex-grow">
-        <h3 className="text-sm font-semibold text-sky-800 line-clamp-2 mb-1">
+        <h3 className="text-sm font-semibold text-sky-800 dark:text-sky-300 line-clamp-2 mb-1 text-center">
           {post.title}
         </h3>
 
-        <p className="text-slate-600 mt-1 text-sm flex-grow">
+        <p className="text-slate-600 dark:text-slate-300 mt-1 text-sm flex-grow text-justify">
           {createSnippet(post.content)}
         </p>
 
@@ -417,7 +417,7 @@ const Modal: React.FC<{
       className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
       onClick={(e) => e.stopPropagation()}
     >
-      {title && <h2 className="text-lg font-bold text-sky-800 mb-3">{title}</h2>}
+      {title && <h2 className="text-lg font-bold text-sky-800 dark:text-sky-300 mb-3">{title}</h2>}
       {showCloseX && (
         <button
           type="button"
@@ -456,8 +456,8 @@ const ConfirmModal: React.FC<{
       className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-4 max-w-md w-full"
       onClick={(e) => e.stopPropagation()}
     >
-      <h3 className="text-md font-bold text-sky-800 mb-2">{title}</h3>
-      <p className="text-sm text-slate-600 mb-4">{message}</p>
+      <h3 className="text-md font-bold text-sky-800 dark:text-sky-300 mb-2">{title}</h3>
+      <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{message}</p>
 
       <div className="flex justify-end gap-2">
         <button type="button" className="px-3 py-1 rounded border" onClick={onCancel}>
@@ -936,7 +936,7 @@ const BlogSection: React.FC = () => {
               <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 border">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-sky-800">Publish New Article</h2>
+                    <h2 className="text-lg font-semibold text-sky-800 dark:text-sky-300">Publish New Article</h2>
                     <p className="text-sm text-slate-500 mt-1">Write and publish a short article for the site.</p>
 
                     <form onSubmit={handleSaveRequest} className="mt-3 space-y-2">
@@ -950,7 +950,7 @@ const BlogSection: React.FC = () => {
                       />
 
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">Upload Image</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-200">Upload Image</span>
 
                         <select
                           value={status}
@@ -1079,7 +1079,7 @@ const BlogSection: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-sky-800">Overview</h3>
+                  <h3 className="text-sm font-semibold text-sky-800 dark:text-sky-300">Overview</h3>
                   <p className="text-xs text-slate-500">Quick stats</p>
                 </div>
                 <div className="text-right">
@@ -1090,18 +1090,18 @@ const BlogSection: React.FC = () => {
 
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-slate-600">Published</div>
+                  <div className="text-slate-600 dark:text-slate-300">Published</div>
                   <div className="font-semibold">{posts.filter((p) => p.status === "published").length}</div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-slate-600">Drafts</div>
+                  <div className="text-slate-600 dark:text-slate-300">Drafts</div>
                   <div className="font-semibold">{posts.filter((p) => p.status === "draft").length}</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl p-3 border">
-              <h4 className="font-semibold text-sky-800 text-sm">Recent Posts</h4>
+              <h4 className="font-semibold text-sky-800 dark:text-sky-300 text-sm">Recent Posts</h4>
 
               <ul className="mt-2 space-y-2 text-sm">
                 {posts.slice(0, 4).map((p) => {

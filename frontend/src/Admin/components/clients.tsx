@@ -373,46 +373,51 @@ function EditClientForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+
   {/* Name */}
-  <Label>Name</Label>
+  <Label className="text-foreground">Name</Label>
   <Input
+    className="bg-card border-border text-foreground placeholder:text-muted-foreground"
     value={form.name}
     onChange={(e) => setForm({ ...form, name: e.target.value })}
     placeholder="Enter full name"
   />
 
   {/* Contact */}
-  <Label>Contact</Label>
+  <Label className="text-foreground">Contact</Label>
   <Input
+    className="bg-card border-border text-foreground placeholder:text-muted-foreground"
     value={form.contact}
     onChange={(e) => setForm({ ...form, contact: e.target.value })}
     placeholder="+91-XXXXXXXXXX"
   />
 
   {/* Address */}
-  <Label>Address</Label>
+  <Label className="text-foreground">Address</Label>
   <Input
+    className="bg-card border-border text-foreground placeholder:text-muted-foreground"
     value={form.address}
     onChange={(e) => setForm({ ...form, address: e.target.value })}
     placeholder="Enter full address"
   />
 
   {/* Join Date */}
-  <Label>Join Date</Label>
+  <Label className="text-foreground">Join Date</Label>
   <Input
     type="date"
+    className="bg-card border-border text-foreground"
     value={form.joinDate}
     onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
   />
 
   {/* Status */}
-  <Label>Status</Label>
+  <Label className="text-foreground">Status</Label>
   <Select
     value={form.status}
     onValueChange={(value) => setForm({ ...form, status: value as Client["status"] })}
   >
-    <SelectTrigger>
-      <SelectValue />
+    <SelectTrigger className="bg-card border-border text-foreground">
+      <SelectValue placeholder="Select status" />
     </SelectTrigger>
     <SelectContent>
       <SelectItem value="New">New</SelectItem>
@@ -422,25 +427,25 @@ function EditClientForm({
   </Select>
 
   {/* Program */}
-  <Label>Program</Label>
+  <Label className="text-foreground">Program</Label>
   <Select
     value={form.program}
     onValueChange={(value) => setForm({ ...form, program: value as Client["program"] })}
   >
-    <SelectTrigger>
-      <SelectValue />
+    <SelectTrigger className="bg-card border-border text-foreground">
+      <SelectValue placeholder="Select program" />
     </SelectTrigger>
     <SelectContent>
       <SelectItem value="Drug Addict">Drug Addict</SelectItem>
-<SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
-<SelectItem value="General">General</SelectItem>
-
+      <SelectItem value="Alcohol Addict">Alcohol Addict</SelectItem>
+      <SelectItem value="General">General</SelectItem>
     </SelectContent>
   </Select>
 
   {/* Notes */}
-  <Label>Client's Condition / Problem</Label>
+  <Label className="text-foreground">Client's Condition / Problem</Label>
   <Input
+    className="bg-card border-border text-foreground placeholder:text-muted-foreground"
     value={form.notes}
     onChange={(e) => setForm({ ...form, notes: e.target.value })}
     placeholder="Describe condition or issue"
@@ -448,10 +453,19 @@ function EditClientForm({
 
   {/* Footer */}
   <DialogFooter>
-    <Button type="button" onClick={onClose}>Cancel</Button>
+    <Button 
+  type="button" 
+  variant="outline" 
+  className="border-border text-foreground hover:bg-muted"
+  onClick={onClose}
+>
+  Cancel
+</Button>
     <Button type="submit">Save</Button>
   </DialogFooter>
+
 </form>
+
   );
 }
 
@@ -1297,7 +1311,12 @@ function PaginatedTable({
     </AlertDialogHeader>
 
     <AlertDialogFooter>
-      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogCancel
+  className="border border-border text-foreground hover:bg-muted"
+>
+  Cancel
+</AlertDialogCancel>
+
       <AlertDialogAction
         className="bg-red-600 hover:bg-red-700"
         onClick={() => handleDelete(client)}

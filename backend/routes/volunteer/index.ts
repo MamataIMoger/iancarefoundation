@@ -26,7 +26,7 @@ router.post(
   "/",
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await dbConnect();
-const { fullName, email, phone, gender, address, timeCommitment, dob } = req.body;
+const { fullName, email, phone, whatsAppNumber, gender, address, timeCommitment, dob } = req.body;
 
     if (!fullName || !email || !phone) {
       res.status(400).json({ success: false, message: "Missing required fields" });
@@ -48,6 +48,7 @@ const { fullName, email, phone, gender, address, timeCommitment, dob } = req.bod
         fullName,
         email,
         phone,
+        whatsAppNumber,
         gender,
         address,
         timeCommitment,
