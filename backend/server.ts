@@ -6,7 +6,6 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
-import serverless from "serverless-http";
 
 import dbConnect from "./config/mongodb";
 
@@ -41,7 +40,7 @@ import updateConsultStatusHandler from "./routes/consult-request/status";
 const app = express();
 
 // ----------------------------------------------
-// ✅ CORS FIRST
+// ✅ CORS
 // ----------------------------------------------
 app.use(
   cors({
@@ -62,7 +61,7 @@ app.use(cookieParser());
 app.use(proxy);
 
 // ----------------------------------------------
-// ✅ CONNECT TO MONGO FOR EVERY REQUEST
+// ✅ CONNECT TO MONGO
 // ----------------------------------------------
 app.use(async (_req, _res, next) => {
   try {
@@ -119,16 +118,9 @@ app.get("/api/request/consult-requests", consultRequestsHandler);
 app.post("/api/consult-request/status", updateConsultStatusHandler);
 
 // ----------------------------------------------
-// ✅ EXPORT FOR VERCEL
+// 🚀 START EXPRESS SERVER
 // ----------------------------------------------
-module.exports = serverless(app);
-
-// ----------------------------------------------
-// LOCAL DEV SERVER
-// ----------------------------------------------
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Local server running on port ${PORT}`);
-  });
-}
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Express server running on port ${PORT}`);
+});
