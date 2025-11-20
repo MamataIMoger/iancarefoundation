@@ -18,35 +18,44 @@ export default async function handler(req: Request, res: Response) {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // generate token
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 🔍 Check if admin exists
+    const admin = await Admin.findOne({ email: normalizedEmail });
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    // 🔐 Generate token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // save token + expiry in DB
-    await Admin.updateOne(
-      { email: email.trim().toLowerCase() },
-      { resetToken, resetTokenExpiresAt: new Date(Date.now() + 3600000) } // 1 hour expiry
-    );
+    // 🕒 Set expiry + save in DB
+    admin.resetToken = resetToken;
+    admin.resetTokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour
+    await admin.save();
 
-    // configure transporter
+    // 📧 Configure transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // ✅ matches your .env
-        pass: process.env.EMAIL_PASS, // ✅ matches your .env
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-
-    // send email
+    // 📬 Send email
     await transporter.sendMail({
       from: "no-reply@iancare.org",
-      to: email,
+      to: normalizedEmail,
       subject: "IanCare Admin Password Reset",
       text: `Use this token to reset your password: ${resetToken}`,
     });
 
-    // ✅ return token for frontend testing
-    return res.status(200).json({ resetToken });
+    return res.status(200).json({
+      message: "Reset email sent. Token valid for 1 hour.",
+      resetToken, // keep for testing, remove in production
+    });
+
   } catch (err) {
     console.error("Error sending reset email:", err);
     return res.status(500).json({ error: "Server error" });
