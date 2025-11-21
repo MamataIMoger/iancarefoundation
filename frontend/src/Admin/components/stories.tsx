@@ -1,147 +1,165 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Loader2, Search as SearchIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import React, {
+  JSX,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Loader2,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
-interface Story {
+/**
+ * Design reference image (local):
+ * /mnt/data/9c5281a3-09e3-4dec-93ec-2f2a22906fc2.png
+ */
+
+/* ===========================
+   Types
+   =========================== */
+export interface Story {
   _id: string;
-  title: string;
+  title: string; // shown as name/title in UI
   content: string;
   author: string;
-  category?: "General" | "Recovery" | string;
+  email?: string;
   approved?: boolean;
   rejected?: boolean;
   status?: "approved" | "pending" | "rejected" | string;
   createdAt?: string;
-  updatedAt?: string;
 }
 
-/* ---------- Theme helper (client-only) ---------- */
-const getThemeColors = (isDark?: boolean) => {
-  const dark =
-    typeof isDark === "boolean"
-      ? isDark
-      : typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  if (!dark) {
-    return {
-      COLOR_PRIMARY: "#0050A4",
-      COLOR_SECONDARY: "#FFC72C",
-      COLOR_TEXT: "#1E272E",
-      CARD_BG: "var(--card)",
-      MUTED_BG: "var(--muted)",
-      BORDER: "var(--border)",
-    };
-  }
-  return {
-    COLOR_PRIMARY: "var(--primary)",
-    COLOR_SECONDARY: "var(--secondary)",
-    COLOR_TEXT: "var(--foreground)",
-    CARD_BG: "var(--card)",
-    MUTED_BG: "var(--muted)",
-    BORDER: "var(--border)",
-  };
+type ModalState =
+  | { type: "approve" | "reject" | "delete"; payload: Story }
+  | { type: "success"; payload: string }
+  | null;
+
+/* ===========================
+   UI helpers
+   =========================== */
+const statusColors: Record<
+  "approved" | "pending" | "rejected",
+  { bg: string; text: string; border: string }
+> = {
+  approved: {
+    bg: "bg-green-50 dark:bg-green-900/20",
+    text: "text-green-700 dark:text-green-200",
+    border: "border-green-100 dark:border-green-700",
+  },
+  rejected: {
+    bg: "bg-red-50 dark:bg-red-900/20",
+    text: "text-red-700 dark:text-red-200",
+    border: "border-red-100 dark:border-red-700",
+  },
+  pending: {
+    bg: "bg-yellow-50 dark:bg-yellow-900/20",
+    text: "text-yellow-800 dark:text-yellow-200",
+    border: "border-yellow-100 dark:border-yellow-700",
+  },
 };
 
-/* ---------- Small UI components ---------- */
-const ConfirmModal: React.FC<{
-  title: string;
-  message: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-  loading?: boolean;
-}> = ({ title, message, onCancel, onConfirm, loading }) => (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4"
-    onClick={onCancel}
-    aria-modal="true"
-    role="dialog"
-  >
-    <div
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-5"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <h4 className="text-lg font-semibold mb-2" style={{ color: "var(--foreground)" }}>
-        {title}
-      </h4>
-      <p className="mb-4 text-sm text-muted-foreground">{message}</p>
-      <div className="flex justify-end gap-3">
-        <button
-          className="px-4 py-2 rounded bg-gray-100 dark:bg-gray-700"
-          onClick={onCancel}
-          disabled={!!loading}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 rounded bg-green-600 text-white flex items-center gap-2"
-          onClick={onConfirm}
-          disabled={!!loading}
-        >
-          {loading ? <Loader2 className="animate-spin h-4 w-4" /> : "Confirm"}
-        </button>
-      </div>
-    </div>
-  </div>
-);
+/* ===========================
+   Motion variants
+   =========================== */
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.02, type: "spring", stiffness: 90 } }),
+  exit: { opacity: 0, y: 6, transition: { duration: 0.15 } },
+};
 
-const SuccessPopup: React.FC<{ message: string }> = ({ message }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 text-center pointer-events-auto min-w-[200px]">
-      <div className="text-3xl mb-2 text-green-500">✓</div>
-      <div className="font-semibold mb-1 text-gray-900 dark:text-gray-100">{message}</div>
-    </div>
-  </div>
-);
+const slideInMobile: Variants = {
+  hidden: { y: "100%" },
+  visible: { y: 0, transition: { type: "spring", stiffness: 120 } },
+  exit: { y: "100%", transition: { duration: 0.18 } },
+};
 
-/* ---------- Main component ---------- */
-export default function AdminStoriesManager() {
+/* ===========================
+   Component
+   =========================== */
+export default function AdminStoriesManager(): JSX.Element {
   const [stories, setStories] = useState<Story[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"approved" | "pending" | "rejected" | "all">("pending");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const storiesPerPage = 6;
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const [filter, setFilter] = useState<"approved" | "pending" | "rejected" | "all">("pending");
+  const [search, setSearch] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
 
   const [selected, setSelected] = useState<Story | null>(null);
-  const [activeModal, setActiveModal] = useState<null | { type: "approve" | "reject" | "delete" | "success"; payload?: any }>(null);
-  const [actionLoadingMap, setActionLoadingMap] = useState<Record<string, boolean>>({});
-  const [themeColors, setThemeColors] = useState(getThemeColors());
+  const [showDetail, setShowDetail] = useState<boolean>(false);
 
-  /* Theme listener (MutationObserver) */
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [modal, setModal] = useState<ModalState>(null);
+
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // Refs
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  // Prevent global scrollbar: set container to overflow-hidden
+  // Left and right panels will handle their own scrolling.
   useEffect(() => {
-    const update = () => setThemeColors(getThemeColors());
-    update();
-    if (typeof document !== "undefined") {
-      const mo = new MutationObserver(update);
-      mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-      return () => mo.disconnect();
-    }
-    return;
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  /* Fetch stories */
+  // keep selected visible on desktop
+  useEffect(() => {
+    if (!isMobile && selected && listRef.current) {
+      const el = listRef.current.querySelector(`[data-id="${selected._id}"]`) as HTMLElement | null;
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [selected, isMobile]);
+
+  /* -------------------------
+     Fetch stories (backend logic unchanged)
+  --------------------------*/
   const fetchStories = useCallback(async () => {
     setLoading(true);
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
       const url = base ? `${base}/stories?admin=true` : `/api/stories?admin=true`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) throw new Error("Failed fetch");
       const data = await res.json();
-      const rawArray = Array.isArray(data) ? data : data.data ?? [];
-      const normalized: Story[] = rawArray.map((s: any) => ({
+      const raw: any[] = Array.isArray(data) ? data : data.data ?? [];
+      const normalized: Story[] = raw.map((s: any) => ({
         ...s,
+        email: s.email ?? s.authorEmail ?? undefined,
         status: s.approved ? "approved" : s.rejected ? "rejected" : "pending",
       }));
-      // sort by createdAt desc
-      const sorted = normalized.sort((a, b) => (new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
-      setStories(sorted);
-      setSelected(sorted[0] ?? null);
+      normalized.sort((a: Story, b: Story) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+      setStories(normalized);
+
+      try {
+        if (typeof window !== "undefined") {
+          const saved = localStorage.getItem("stories_selected");
+          if (saved) {
+            const found = normalized.find((st) => st._id === saved) || null;
+            setSelected(found);
+            if (found) setShowDetail(true);
+          }
+        }
+      } catch {
+        // ignore localStorage errors
+      }
     } catch (err) {
-      console.error("fetchStories error:", err);
       setStories([]);
       setSelected(null);
+      setShowDetail(false);
     } finally {
       setLoading(false);
     }
@@ -151,391 +169,613 @@ export default function AdminStoriesManager() {
     fetchStories();
   }, [fetchStories]);
 
-  /* Filter + search */
+  /* -------------------------
+     Filtering
+  --------------------------*/
   const filtered = useMemo(() => {
-    let arr = stories.slice();
-    if (viewMode !== "all") arr = arr.filter((s) => (s.status || "pending") === viewMode);
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      arr = arr.filter(
-        (s) => (s.title || "").toLowerCase().includes(q) || (s.author || "").toLowerCase().includes(q)
+    let arr: Story[] = stories.slice();
+
+    if (filter !== "all") arr = arr.filter((s: Story) => s.status === filter);
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      arr = arr.filter((s: Story) =>
+        (s.title || "").toLowerCase().includes(q) ||
+        (s.author || "").toLowerCase().includes(q) ||
+        (s.email || "").toLowerCase().includes(q)
       );
     }
+
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      arr = arr.filter((s: Story) => {
+        if (!s.createdAt) return false;
+        const d = new Date(s.createdAt);
+        if (start && d < start) return false;
+        if (end) {
+          const endDay = new Date(end);
+          endDay.setHours(23, 59, 59, 999);
+          if (d > endDay) return false;
+        }
+        return true;
+      });
+    }
+
     return arr;
-  }, [stories, viewMode, searchTerm]);
+  }, [stories, filter, search, startDate, endDate]);
 
+  /* -------------------------
+     Pagination
+  --------------------------*/
+  const storiesPerPage = 6;
   const totalPages = Math.max(1, Math.ceil(filtered.length / storiesPerPage));
-  const pageData = filtered.slice((currentPage - 1) * storiesPerPage, currentPage * storiesPerPage);
+  const pageData: Story[] = filtered.slice((page - 1) * storiesPerPage, page * storiesPerPage);
 
-  /* Actions */
-  const updateStoryStatus = async (id: string, status: "approved" | "rejected") => {
-    setActionLoadingMap((p) => ({ ...p, [id]: true }));
+  /* -------------------------
+     Actions
+  --------------------------*/
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
+    setActionLoading((p) => ({ ...p, [id]: true }));
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
       const url = base ? `${base}/stories/${id}` : `/api/stories/${id}`;
       const body = status === "approved" ? { approved: true, rejected: false } : { approved: false, rejected: true };
-      const res = await fetch(url, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!res.ok) throw new Error("failed");
-      setStories((prev) => prev.map((s) => (s._id === id ? { ...s, approved: status === "approved", rejected: status === "rejected", status } : s)));
-      setSelected((cur) => (cur?._id === id ? { ...cur, approved: status === "approved", rejected: status === "rejected", status } : cur));
-      setActiveModal({ type: "success", payload: `${status === "approved" ? "Approved" : "Rejected"} successfully` });
-      setTimeout(() => setActiveModal(null), 1600);
-    } catch (err) {
-      console.error(err);
+
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error("Failed");
+
+      setStories((prev) => prev.map((s: Story) => (s._id === id ? { ...s, approved: body.approved, rejected: body.rejected, status } : s)));
+      if (selected?._id === id) setSelected((cur) => (cur ? { ...cur, approved: body.approved, rejected: body.rejected, status } : cur));
+
+      setModal({ type: "success", payload: status === "approved" ? "Accepted" : "Rejected" });
+      setTimeout(() => setModal(null), 1400);
+    } catch {
+      alert("Update failed");
     } finally {
-      setActionLoadingMap((p) => ({ ...p, [id]: false }));
+      setActionLoading((p) => ({ ...p, [id]: false }));
     }
   };
 
   const deleteStory = async (id: string) => {
-    setActionLoadingMap((p) => ({ ...p, [id]: true }));
+    setActionLoading((p) => ({ ...p, [id]: true }));
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
       const url = base ? `${base}/stories/${id}` : `/api/stories/${id}`;
       const res = await fetch(url, { method: "DELETE" });
-      if (!res.ok) throw new Error("delete failed");
-      setStories((prev) => prev.filter((s) => s._id !== id));
-      setSelected((cur) => (cur?._id === id ? null : cur));
-      setActiveModal({ type: "success", payload: "Deleted successfully" });
-      setTimeout(() => setActiveModal(null), 1600);
-    } catch (err) {
-      console.error(err);
+      if (!res.ok) throw new Error("Delete failed");
+
+      setStories((prev) => prev.filter((s: Story) => s._id !== id));
+      if (selected?._id === id) {
+        setSelected(null);
+        setShowDetail(false);
+      }
+
+      setModal({ type: "success", payload: "Deleted successfully" });
+      setTimeout(() => setModal(null), 1400);
+    } catch {
+      alert("Delete failed");
     } finally {
-      setActionLoadingMap((p) => ({ ...p, [id]: false }));
+      setActionLoading((p) => ({ ...p, [id]: false }));
     }
   };
 
-  const openConfirm = (type: "approve" | "reject" | "delete", story: Story) => {
-    setActiveModal({ type, payload: story });
+  /* -------------------------
+    Helpers
+  --------------------------*/
+  const openConfirm = (type: "approve" | "reject" | "delete", s: Story) => setModal({ type, payload: s });
+
+  const closeDetailMobile = () => {
+    setShowDetail(false);
+    setSelected(null);
+    document.body.style.overflow = "";
+  };
+  const openDetailMobile = () => {
+    document.body.style.overflow = "hidden";
+    setShowDetail(true);
   };
 
-  /* Loading state */
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--background)" }}>
-        <Loader2 className="animate-spin h-6 w-6" />
-      </div>
-    );
-  }
+  const onSelectStory = (s: Story) => {
+    setSelected(s);
+    try {
+      if (typeof window !== "undefined") localStorage.setItem("stories_selected", s._id);
+    } catch {}
+    if (isMobile) openDetailMobile();
+    else setShowDetail(true);
+  };
 
-  /* Responsive UI */
+  /* -------------------------
+     Render
+  --------------------------*/
   return (
-    <div className="min-h-screen p-4 sm:p-6" style={{ background: "var(--muted)" }}>
-      {activeModal?.type === "success" && <SuccessPopup message={activeModal.payload || "Done"} />}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 overflow-hidden">
+      <div className="max-w-[1100px] mx-auto">
 
-      <div className="mx-auto rounded-2xl shadow-md overflow-hidden w-full" style={{ background: "var(--card)", maxWidth: 1200 }}>
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b" style={{ borderColor: "var(--border)" }}>
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-            <div className="w-full lg:w-auto">
-              <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: themeColors.COLOR_PRIMARY }}>
-                Stories Manager
-              </h1>
-              <p className="text-sm opacity-75 mt-1">Review, moderate and manage user-submitted stories.</p>
-            </div>
+{/* FILTER / CONTROLS — COMPACT VERSION */}
+{/* FILTER / CONTROLS — 2 ROW COMPACT LAYOUT */}
+<section
+  className="
+    w-full 
+    rounded-xl 
+    shadow-md 
+    mb-4 
+    p-4 
+    bg-gradient-to-r from-sky-700 to-indigo-600 
+    text-white
+  "
+>
+  <h2 className="text-lg font-semibold mb-3">Filter Stories</h2>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
-              <div className="flex items-center px-3 py-2 rounded-full border w-full sm:w-auto" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-                <SearchIcon className="w-4 h-4 mr-2 text-muted-foreground" />
-                <input
-                  placeholder="Search title or author..."
-                  className="outline-none bg-transparent text-sm w-full"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  style={{ color: "var(--foreground)" }}
-                />
-              </div>
+  {/* ROW 1 — Search + Status Buttons */}
+  <div className="flex flex-wrap items-center gap-3 mb-3">
 
-              <div className="flex gap-2 flex-wrap">
-                {(["all", "pending", "approved", "rejected"] as const).map((s) => {
-                  const active = viewMode === s;
-                  const label = s === "all" ? "All" : s[0].toUpperCase() + s.slice(1);
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setViewMode(s as any);
-                        setCurrentPage(1);
-                      }}
-                      className="px-3 py-1 rounded-full text-sm font-medium"
-                      style={{
-                        background: active ? themeColors.COLOR_PRIMARY : "transparent",
-                        color: active ? "#fff" : "var(--foreground)",
-                        border: `1px solid var(--border)`,
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
+    {/* Search */}
+    <input
+      type="text"
+      placeholder="Search..."
+      value={search}
+      onChange={(e) => {
+        setSearch(e.target.value);
+        setPage(1);
+      }}
+      className="
+        w-48              /* SMALLER WIDTH */
+        px-3 py-2 
+        rounded-lg 
+        bg-white 
+        text-gray-800 
+        text-sm
+        border border-gray-200 
+        focus:outline-none 
+        focus:ring-2 
+        focus:ring-amber-400
+        shadow-sm
+      "
+    />
 
-        {/* Content */}
-        <div className="p-4 sm:p-6" style={{ background: "var(--muted)" }}>
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 max-w-[1150px] mx-auto">
-            {/* Left list */}
-            <div className="rounded-xl p-4 sm:p-5" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold" style={{ color: themeColors.COLOR_PRIMARY }}>
-                  Stories
-                </h3>
-                <span className="text-sm opacity-75">{filtered.length} results</span>
-              </div>
+    {/* Filter Buttons */}
+    <div className="flex items-center gap-2">
+      {(["all", "pending", "approved", "rejected"] as const).map((f) => (
+        <button
+          key={f}
+          onClick={() => {
+            setFilter(f);
+            setPage(1);
+          }}
+          className={`
+            px-3 py-1 
+            rounded-full 
+            text-xs font-semibold 
+            transition 
+            shadow-sm
+            ${filter === f
+              ? "bg-amber-400 text-gray-900"
+              : "bg-white/30 backdrop-blur text-white border border-white/40"}
+          `}
+        >
+          {f[0].toUpperCase() + f.slice(1)}
+        </button>
+      ))}
+    </div>
+  </div>
 
-              <div className="space-y-4">
-  {pageData.map((s, idx) => {
-    const initials = (s.author || "U")
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-
-    const isLoading = actionLoadingMap[s._id];
-
-return (
-  <motion.div
-    key={s._id}
-    initial={{ y: 6, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ delay: idx * 0.03 }}
+  {/* ROW 2 — Date Filters + Clear Button */}
+  <div
     className="
-      rounded-xl border p-4 w-full
-      bg-white dark:bg-gray-800 
-      hover:shadow-md transition-shadow cursor-pointer
-      flex flex-col sm:flex-row sm:items-center gap-4
+      flex flex-wrap items-center 
+      gap-2 
+      bg-white/20 
+      p-2 
+      rounded-lg 
+      backdrop-blur 
+      border border-white/40
     "
-    style={{ borderColor: "var(--border)" }}
-    onClick={() => setSelected(s)}
   >
-    {/* LEFT – Avatar */}
-    <div className="flex-shrink-0 flex justify-center sm:justify-start">
+    {/* Small Labels + Small Inputs */}
+    <label className="text-xs text-white font-medium">From:</label>
+    <input
+      type="date"
+      value={startDate ?? ""}
+      onChange={(e) => {
+        setStartDate(e.target.value || null);
+        setPage(1);
+      }}
+      className="
+        w-28            /* <<< SMALL WIDTH */
+        px-2 py-1 
+        rounded 
+        text-xs 
+        bg-white 
+        text-gray-800 
+        border border-gray-300
+      "
+    />
+
+    <label className="text-xs text-white font-medium">To:</label>
+    <input
+      type="date"
+      value={endDate ?? ""}
+      onChange={(e) => {
+        setEndDate(e.target.value || null);
+        setPage(1);
+      }}
+      className="
+        w-28             /* <<< SMALL WIDTH */
+        px-2 py-1 
+        rounded 
+        text-xs 
+        bg-white 
+        text-gray-800 
+        border border-gray-300
+      "
+    />
+
+    {/* ALIGN RIGHT — CLEAR BUTTON */}
+    <button
+      onClick={() => {
+        setStartDate(null);
+        setEndDate(null);
+        setPage(1);
+      }}
+      className="
+        ml-auto                /* PUSH TO RIGHT */
+        px-3 py-1 
+        rounded-full 
+        text-xs font-semibold
+        bg-white 
+        text-amber-600 
+        hover:bg-amber-100 
+        transition
+      "
+    >
+      Clear
+    </button>
+  </div>
+</section>
+
+
+
+
+        {/* GRID: left list (scroll) + right detail (fixed height, internal scroll) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* LEFT: List (scrollable column only) */}
+          <section className="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden">
+            <div ref={listRef} className="overflow-y-auto p-4 space-y-3" style={{ maxHeight: "78vh" }}>
+              <AnimatePresence>
+                {loading ? (
+                  <div className="p-6 text-center">Loading...</div>
+                ) : filtered.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500">No stories found.</div>
+                ) : (
+                  pageData.map((story: Story, idx: number) => {
+                    const initials = (story.author || "U").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+                    const isSelected = selected?._id === story._id;
+                    const statusKey = (story.status ?? "pending") as keyof typeof statusColors;
+
+                    return (
+<motion.div
+  key={story._id}
+  custom={idx}
+  initial="hidden"
+  animate="visible"
+  exit="exit"
+  variants={cardVariants}
+  layout
+  data-id={story._id}
+  onClick={() => onSelectStory(story)}
+  className={`
+    group
+    p-4 
+    rounded-2xl
+    border
+    cursor-pointer 
+    transition-all 
+    duration-200
+    bg-[var(--card)] 
+    dark:bg-gray-800
+    shadow-sm
+
+    hover:shadow-md hover:-translate-y-0.5
+
+    ${isSelected ? "ring-2 ring-[#0050A4] shadow-lg bg-blue-50/40 dark:bg-blue-900/20" : ""}
+  `}
+>
+  <div className="flex items-center justify-between">
+
+    {/* LEFT — Avatar + Title */}
+    <div className="flex items-center gap-4 min-w-0">
+
+      {/* CAM-STYLE BLUE AVATAR */}
       <div
         className="
-          w-14 h-14 rounded-full flex items-center 
-          justify-center text-xl font-bold shadow-sm
+          w-14 h-14 
+          rounded-full 
+          bg-gradient-to-br 
+          from-[#0050A4] 
+          to-[#003D7A]
+          flex items-center 
+          justify-center 
+          text-[#FFC72C]
+          font-bold 
+          text-lg
+          shadow-sm
+          group-hover:scale-105
+          transition-transform
         "
-        style={{ background: themeColors.COLOR_PRIMARY, color: "white" }}
       >
         {initials}
       </div>
-    </div>
 
-    {/* MIDDLE – Info Section */}
-    <div className="flex flex-col flex-1 min-w-0">
-      {/* Title & Date */}
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-[16px] truncate text-blue-800 dark:text-blue-300">
-          {s.title}
+      <div className="min-w-0">
+        <h3 className="text-[15px] font-semibold text-[#0050A4] truncate">
+          {story.title || story.author}
         </h3>
 
-        <span className="text-xs opacity-70">
-          {s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "—"}
-        </span>
+        <p className="text-xs text-gray-500 truncate">
+          {story.email ?? story.author}
+        </p>
       </div>
-
-      {/* Author */}
-      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-        {s.author}
-      </p>
-
-      {/* Status Pill */}
-      <span
-        className="
-          mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold w-fit
-        "
-        style={{
-          background:
-            s.status === "approved"
-              ? "#d1fae5"
-              : s.status === "rejected"
-              ? "#fee2e2"
-              : "#fef9c3",
-          color:
-            s.status === "approved"
-              ? "#065f46"
-              : s.status === "rejected"
-              ? "#991b1b"
-              : "#854d0e",
-        }}
-      >
-        {s.status?.toUpperCase() || "PENDING"}
-      </span>
     </div>
 
-    {/* RIGHT – Action Chips (Non-button UI) */}
-    <div
-      className="
-        flex sm:flex-col gap-2 justify-between sm:justify-center
-        w-full sm:w-[130px]
-      "
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Approve Chip */}
-      <div
-        onClick={() => openConfirm("approve", s)}
+    {/* RIGHT — Date + Status */}
+    <div className="flex flex-col items-end gap-1">
+      <time className="text-xs text-gray-400">
+        {story.createdAt ? new Date(story.createdAt).toLocaleDateString() : "—"}
+      </time>
+
+      <span
+        className={`
+          px-3 py-0.5 
+          rounded-full 
+          text-xs font-semibold 
+          border
+          ${statusColors[statusKey].bg}
+          ${statusColors[statusKey].text}
+          ${statusColors[statusKey].border}
+        `}
+      >
+        {story.status?.toUpperCase()}
+      </span>
+    </div>
+  </div>
+
+  {/* ACTIONS */}
+  <div className="mt-4 flex items-center justify-between">
+
+    <div className="flex gap-2">
+
+      {/* Accept - CAM BLUE */}
+      <button
+        onClick={(e) => { e.stopPropagation(); openConfirm("approve", story); }}
+        disabled={!!actionLoading[story._id]}
         className="
-          px-3 py-1.5 rounded-full text-xs font-semibold 
-          bg-green-100 text-green-700
-          hover:bg-green-200 transition
-          text-center cursor-pointer select-none
+          px-3 py-1.5 
+          rounded-full 
+          bg-[#0050A4] 
+          text-white 
+          text-sm 
+          font-medium 
+          shadow-sm
+          hover:bg-[#003D7A]
+          transition
         "
       >
-        Approve
-      </div>
+        Accept
+      </button>
 
-      {/* Reject Chip */}
-      <div
-        onClick={() => openConfirm("reject", s)}
+      {/* Reject - CAM YELLOW */}
+      <button
+        onClick={(e) => { e.stopPropagation(); openConfirm("reject", story); }}
+        disabled={!!actionLoading[story._id]}
         className="
-          px-3 py-1.5 rounded-full text-xs font-semibold 
-          bg-red-100 text-red-700
-          hover:bg-red-200 transition
-          text-center cursor-pointer select-none
+          px-3 py-1.5 
+          rounded-full 
+          bg-[#FFC72C] 
+          text-[#0050A4] 
+          text-sm 
+          font-semibold 
+          shadow-sm
+          hover:bg-[#ffda63]
+          transition
         "
       >
         Reject
-      </div>
+      </button>
     </div>
-  </motion.div>
-);
+
+    {/* Delete Button */}
+    <button
+      onClick={(e) => { 
+        e.stopPropagation(); 
+        setModal({ type: "delete", payload: story }); 
+      }}
+      className="
+        w-10 h-10 rounded-full 
+        bg-gray-100 dark:bg-gray-700 
+        flex items-center justify-center 
+        text-red-600 
+        hover:bg-red-100 hover:text-red-700
+        transition
+        shadow-sm
+      "
+    >
+      <Trash2 size={16} />
+    </button>
+  </div>
+</motion.div>
 
 
-
-  })}
-</div>
-
-
-              {/* Pagination */}
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
-                <button
-                  className="px-3 py-1 rounded border"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  Prev
-                </button>
-
-                {Array.from({ length: totalPages }).map((_, i) => {
-                  const p = i + 1;
-                  const active = p === currentPage;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setCurrentPage(p)}
-                      className="px-3 py-1 rounded border text-sm"
-                      style={{
-                        borderColor: active ? themeColors.COLOR_PRIMARY : "var(--border)",
-                        background: active ? themeColors.COLOR_PRIMARY : "transparent",
-                        color: active ? "#fff" : "var(--foreground)",
-                      }}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
-
-                <button
-                  className="px-3 py-1 rounded border"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  Next
-                </button>
-              </div>
+                    );
+                  })
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Detail panel */}
-            <aside
-              className="rounded-xl p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 min-h-[300px] overflow-y-auto"
-              style={{ maxWidth: 420 }}
-            >
-              {!selected ? (
-                <div className="flex items-center justify-center h-full text-muted-foreground font-semibold">
-                  Select a story to view details
+            {/* Pagination footer (non-scrolling) */}
+            <div className="p-3 border-t bg-white dark:bg-gray-800 rounded-b-2xl">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {filtered.length === 0 ? 0 : (page - 1) * storiesPerPage + 1}–{Math.min(page * storiesPerPage, filtered.length)} of {filtered.length}
                 </div>
-              ) : (
+
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded border disabled:opacity-50">
+                    <ChevronLeft />
+                  </button>
+
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button key={i} onClick={() => setPage(i + 1)} className={`px-3 py-1 rounded text-sm ${page === i + 1 ? "bg-sky-600 text-white shadow-md" : "border hover:bg-slate-50"}`}>
+                      {i + 1}
+                    </button>
+                  ))}
+
+                  <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded border disabled:opacity-50">
+                    <ChevronRight />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT: Detail (fixed height + internal scroll) */}
+          <section
+            className="hidden lg:block rounded-2xl p-6 bg-white dark:bg-gray-800 shadow"
+            style={{ maxHeight: "78vh", overflow: "hidden" }}
+          >
+            <div className="h-full overflow-y-auto pr-2" style={{ maxHeight: "calc(78vh - 0px)" }}>
+              {selected ? (
                 <>
-                  <div className="flex flex-col items-center text-center mb-4">
-                    <div
-                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-indigo-100 dark:bg-indigo-700 flex items-center justify-center text-indigo-600 dark:text-indigo-200 text-3xl sm:text-4xl font-bold mb-3 select-none"
-                      aria-hidden
-                    >
-                      {(selected.author || "U")
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")
-                        .toUpperCase()}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-yellow-100 flex items-center justify-center text-4xl font-bold">
+                      {(selected.author || "U").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                     </div>
-
-                    <h2 className="text-xl sm:text-2xl font-bold mb-1">{selected.title}</h2>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      By <span className="font-semibold">{selected.author}</span>
-                    </p>
-                    <time className="text-xs text-muted-foreground" dateTime={selected.createdAt || ""}>
-                      {selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "Date unavailable"}
-                    </time>
-
-                    <span
-                      className={`mt-3 inline-block px-4 py-1 rounded-full text-sm font-semibold ${
-                        selected.status === "approved"
-                          ? "bg-green-600 text-white"
-                          : selected.status === "rejected"
-                          ? "bg-red-600 text-white"
-                          : "bg-yellow-400 text-yellow-900"
-                      }`}
-                    >
-                      {selected.status?.toUpperCase() || "PENDING"}
-                    </span>
+                    <div>
+                      <h2 className="text-2xl font-bold">{selected.title}</h2>
+                      <div className="text-sm text-gray-500">{selected.email ?? selected.author}</div>
+                      <time className="text-xs text-gray-400 block mt-1">{selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "Date unavailable"}</time>
+                      <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${selected.status === "approved" ? "bg-green-600 text-white" : selected.status === "rejected" ? "bg-red-600 text-white" : "bg-yellow-400 text-yellow-900"}`}>
+                        {selected.status?.toUpperCase() ?? "PENDING"}
+                      </span>
+                    </div>
                   </div>
 
-                  <article className="prose prose-indigo dark:prose-invert max-w-full">
-                    <p className="whitespace-pre-wrap">{selected.content}</p>
+                  <article className="prose dark:prose-invert whitespace-pre-wrap">
+                    {selected.content}
                   </article>
-                </>
-              )}
-            </aside>
-          </div>
-        </div>
-      </div>
 
-      {/* Confirm modals */}
-      {activeModal && (activeModal.type === "approve" || activeModal.type === "reject" || activeModal.type === "delete") && activeModal.payload && (
-        <ConfirmModal
-          title={
-            activeModal.type === "approve"
-              ? "Confirm Approve"
-              : activeModal.type === "reject"
-              ? "Confirm Reject"
-              : "Confirm Delete"
-          }
-          message={
-            activeModal.type === "delete"
-              ? `Are you sure you want to permanently delete "${activeModal.payload.title}"?`
-              : `Do you want to ${activeModal.type === "approve" ? "approve" : "reject"} "${activeModal.payload.title}"?`
-          }
-          onCancel={() => setActiveModal(null)}
-          loading={!!actionLoadingMap[activeModal.payload._id]}
-          onConfirm={async () => {
-            const id = activeModal.payload._id;
-            if (activeModal.type === "delete") {
-              await deleteStory(id);
-            } else {
-              await updateStoryStatus(id, activeModal.type === "approve" ? "approved" : "rejected");
-            }
-            setActiveModal(null);
-          }}
-        />
-      )}
+                  <div className="flex gap-3 mt-6">
+                    <button onClick={() => openConfirm("approve", selected)} disabled={!!actionLoading[selected._id]} className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white shadow-sm">
+                      <CheckCircle2 className="w-5 h-5" /> Accept
+                    </button>
+                    <button onClick={() => openConfirm("reject", selected)} disabled={!!actionLoading[selected._id]} className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500 text-white shadow-sm">
+                      <XCircle className="w-5 h-5" /> Reject
+                    </button>
+                    <button onClick={() => setModal({ type: "delete", payload: selected })} disabled={!!actionLoading[selected._id]} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900 text-white shadow-sm">
+                      <Trash2 className="w-5 h-5" /> Delete
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-400">Select a story to view details</div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Mobile detail bottom sheet */}
+        <AnimatePresence>
+          {isMobile && showDetail && selected && (
+            <>
+              <motion.div className="fixed inset-0 z-40 bg-black/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeDetailMobile} />
+              <motion.section className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-2xl z-50 p-6 max-h-[85vh] overflow-y-auto" variants={slideInMobile} initial="hidden" animate="visible" exit="exit">
+                <button onClick={closeDetailMobile} className="w-full text-center text-2xl text-gray-500 mb-4">×</button>
+                <h2 className="text-2xl font-bold">{selected.title}</h2>
+                <div className="text-sm text-gray-500">{selected.email ?? selected.author}</div>
+                <time className="text-xs text-gray-400">{selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "Date unavailable"}</time>
+                <article className="prose dark:prose-invert whitespace-pre-wrap my-4">{selected.content}</article>
+                <div className="flex gap-2 justify-center">
+                  <button onClick={() => openConfirm("approve", selected)} className="px-4 py-2 bg-blue-600 text-white rounded-full">Accept</button>
+                  <button onClick={() => openConfirm("reject", selected)} className="px-4 py-2 bg-amber-500 text-white rounded-full">Reject</button>
+                  <button onClick={() => setModal({ type: "delete", payload: selected })} className="px-4 py-2 bg-gray-900 text-white rounded-full">Delete</button>
+                </div>
+              </motion.section>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Confirm modal */}
+        {modal && modal.type !== "success" && modal.payload && (
+          <ConfirmModal
+            title={modal.type === "delete" ? "Confirm Delete" : modal.type === "approve" ? "Confirm Accept" : "Confirm Reject"}
+            message={modal.type === "delete" ? `Are you sure you want to permanently delete “${modal.payload.title}”?` : `Do you want to ${modal.type === "approve" ? "accept" : "reject"} “${modal.payload.title}”?`}
+            loading={!!actionLoading[modal.payload._id]}
+            onCancel={() => setModal(null)}
+            onConfirm={async () => {
+              const id = modal.payload._id;
+              if (modal.type === "delete") await deleteStory(id);
+              else await updateStatus(id, modal.type === "approve" ? "approved" : "rejected");
+              setModal(null);
+            }}
+          />
+        )}
+
+        {/* Success popup */}
+        {modal?.type === "success" && modal.payload && <SuccessPopup message={modal.payload} />}
+      </div>
     </div>
   );
 }
+
+/* ===========================
+   ConfirmModal component
+   =========================== */
+const ConfirmModal: React.FC<{
+  title: string;
+  message: string;
+  loading?: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}> = ({ title, message, loading, onCancel, onConfirm }) => {
+  return (
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onCancel}>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">{title}</h3>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button onClick={onCancel} disabled={loading} className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition disabled:opacity-50">Cancel</button>
+          <button onClick={onConfirm} disabled={loading} className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2">
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-white" />}
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ===========================
+   Success popup
+   =========================== */
+const SuccessPopup: React.FC<{ message: string }> = ({ message }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4">
+      <div className="pointer-events-auto bg-green-600 text-white rounded-xl px-6 py-4 shadow-xl animate-fadeIn">
+        <p className="text-lg font-semibold">✓ {message}</p>
+      </div>
+    </div>
+  );
+};
+
+/* Optional global CSS additions (add to globals.css):
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn .25s ease-out forwards; }
+*/

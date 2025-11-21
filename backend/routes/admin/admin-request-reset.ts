@@ -20,21 +20,22 @@ export default async function handler(req: Request, res: Response) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 🔍 Check if admin exists
+    // ❗ Check admin exists first
     const admin = await Admin.findOne({ email: normalizedEmail });
+
     if (!admin) {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    // 🔐 Generate token
+    // generate token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // 🕒 Set expiry + save in DB
+    // save token + expiry
     admin.resetToken = resetToken;
     admin.resetTokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour
-    await admin.save();
+    await admin.save();  // ❗ IMPORTANT: save() actually writes to database
 
-    // 📧 Configure transporter
+    // email transport
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -43,18 +44,15 @@ export default async function handler(req: Request, res: Response) {
       },
     });
 
-    // 📬 Send email
+    // send email
     await transporter.sendMail({
       from: "no-reply@iancare.org",
-      to: normalizedEmail,
+      to: email,
       subject: "IanCare Admin Password Reset",
       text: `Use this token to reset your password: ${resetToken}`,
     });
 
-    return res.status(200).json({
-      message: "Reset email sent. Token valid for 1 hour.",
-      resetToken, // keep for testing, remove in production
-    });
+    return res.status(200).json({ message: "Reset token sent!" });
 
   } catch (err) {
     console.error("Error sending reset email:", err);

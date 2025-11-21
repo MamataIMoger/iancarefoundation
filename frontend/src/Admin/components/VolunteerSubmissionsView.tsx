@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Mail,
   Phone,
@@ -174,19 +174,21 @@ const VolunteerDetailsPanel: React.FC<{
   getCommitmentLabels: (values: string[]) => string;
   colors: ReturnType<typeof getThemeColors>;
 }> = ({ volunteer, handleContact, handleUpdateStatus, updatingId, getCommitmentLabels, colors }) => {
-  if (!volunteer)
-    return (
-      <aside
-        className="rounded-xl p-5 flex items-center justify-center text-muted-foreground w-full"
-        style={{
-          background: "var(--card)",
-          border: "1px solid var(--border)",
-          minHeight: 420,
-        }}
-      >
-        Select a volunteer to view details
-      </aside>
-    );
+if (!volunteer)
+  return (
+    <aside
+      className="rounded-xl p-5 flex items-center justify-center text-muted-foreground w-full lg:sticky lg:top-4"
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        minHeight: 220,
+      }}
+    >
+      Select a volunteer to view details
+    </aside>
+  );
+
+
 
   const isUpdating = updatingId === volunteer._id;
 
@@ -326,6 +328,20 @@ const VolunteerSubmissionsDashboard: React.FC = () => {
   const [popup, setPopup] = useState<null | "approved" | "rejected">(null);
 
   const [colors, setColors] = useState(getThemeColors());
+
+  // RIGHT PANEL REF (for auto-scroll on small screens)
+const rightPanelRef = useRef<HTMLDivElement | null>(null);
+
+const scrollToRightPanel = () => {
+  // only auto-scroll for narrow screens (mobile / tablet)
+  if (typeof window === "undefined") return;
+  if (window.innerWidth < 1024) {
+    // small timeout to allow layout to settle
+    setTimeout(() => {
+      rightPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }
+};
 
   /* THEME LISTENER */
   useEffect(() => {
@@ -533,11 +549,17 @@ const VolunteerSubmissionsDashboard: React.FC = () => {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: i * 0.03 }}
                       whileHover={{ scale: 1.01 }}
-                      onClick={() => setSelectedVolunteer(sub)}
-                      className="p-3 sm:p-4 rounded-lg border cursor-pointer w-full"
+                      onClick={() => {
+                        setSelectedVolunteer(sub);
+                        scrollToRightPanel();
+                      }}
+                      className={`p-3 sm:p-4 rounded-lg border cursor-pointer w-full transition-all ${
+                        selectedVolunteer?._id === sub._id ? "ring-2 ring-offset-1" : ""
+                      }`}
                       style={{
                         background: "var(--card)",
-                        borderColor: "var(--border)",
+                        borderColor: selectedVolunteer?._id === sub._id ? colors.COLOR_PRIMARY : "var(--border)",
+                        boxShadow: selectedVolunteer?._id === sub._id ? "0 6px 18px rgba(2,6,23,0.06)" : undefined,
                       }}
                     >
                       <div className="flex items-center justify-between">
@@ -610,15 +632,18 @@ const VolunteerSubmissionsDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* RIGHT PANEL */}
-            <VolunteerDetailsPanel
-              volunteer={selectedVolunteer}
-              updatingId={updatingId}
-              handleUpdateStatus={handleUpdateStatus}
-              handleContact={handleContact}
-              getCommitmentLabels={getCommitmentLabels}
-              colors={colors}
-            />
+            {/* RIGHT PANEL (wrapped with ref for scroll) */}
+            <div ref={rightPanelRef} className="w-full">
+              <VolunteerDetailsPanel
+                volunteer={selectedVolunteer}
+                updatingId={updatingId}
+                handleUpdateStatus={handleUpdateStatus}
+                handleContact={handleContact}
+                getCommitmentLabels={getCommitmentLabels}
+                colors={colors}
+              />
+            </div>
+
           </div>
         </div>
       </div>
