@@ -14,6 +14,19 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import { motion } from "framer-motion";
 
+const formatWhatsappNumber = (num: string): string => {
+  if (!num) return "";
+
+  let clean = num.replace(/\D/g, ""); // remove all non-digits
+  clean = clean.replace(/^0+/, "");   // remove leading zeros
+
+  if (!clean.startsWith("91")) {
+    clean = "91" + clean;            // ensure India code
+  }
+
+  return clean;
+};
+
 /* --------------------------------------------------------
    Submission Type (IMPORTANT)
 --------------------------------------------------------- */
@@ -22,6 +35,7 @@ export interface Submission {
   fullName: string;
   email: string;
   phone: string;
+  whatsAppNumber: string;
   gender: string;
   timeCommitment: string[];
   status: "pending" | "approved" | "rejected";
@@ -244,6 +258,7 @@ if (!volunteer)
       <div className="mt-5 space-y-3">
         <DetailRow label="Email" value={volunteer.email} icon={<Mail />} colors={colors} />
         <DetailRow label="Phone" value={volunteer.phone} icon={<Phone />} colors={colors} />
+        <DetailRow label="WhatsApp" value={volunteer.whatsAppNumber} icon={<FaWhatsapp />} colors={colors} />
         <DetailRow label="Gender" value={volunteer.gender} icon={<Users />} colors={colors} />
         <DetailRow label="DOB" value={volunteer.dob || "N/A"} icon={<Clock />} colors={colors} />
         <DetailRow
@@ -270,7 +285,7 @@ if (!volunteer)
             background: colors.COLOR_SECONDARY,
             color: colors.COLOR_PRIMARY,
           }}
-          onClick={() => handleContact(volunteer.fullName, volunteer.phone)}
+          onClick={() => handleContact(volunteer.fullName, volunteer.whatsAppNumber)}
         >
           <FaWhatsapp className="mr-2" /> 
         </button>
@@ -284,8 +299,7 @@ if (!volunteer)
               handleUpdateStatus(volunteer._id, "approved");
 
               // send whatsapp message after approve (country code fix + encode)
-              const raw = (volunteer.phone || "").replace(/\D/g, "");
-              const num = raw.length === 10 ? `91${raw}` : raw;
+              const num = formatWhatsappNumber(volunteer.whatsAppNumber);
               const msg = `Hello ${volunteer.fullName}, thank you for showing interest in becoming a volunteer. We will contact you when we need you.`;
               window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, "_blank");
             }}
@@ -409,8 +423,7 @@ const scrollToRightPanel = () => {
 
   /* WhatsApp Contact */
   const handleContact = (name: string, phone: string) => {
-    const raw = (phone || "").replace(/\D/g, "");
-    const num = raw.length === 10 ? `91${raw}` : raw;
+    const num = formatWhatsappNumber(phone);
     const msg = `Hello ${name}, thank you for contacting us!`;
     window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, "_blank");
   };

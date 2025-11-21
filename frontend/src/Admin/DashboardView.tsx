@@ -201,7 +201,7 @@ const DashboardView: React.FC = () => {
       {/* RECOVERY CHART */}
       <ChartBlock title="Client Recovery Progress" icon={<HeartPulse />}>
         <BarChart data={recoveryStackData}>
-          <CartesianGrid stroke="color-mix(in srgb, var(--text) 10%, transparent)" />
+          <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" stroke="var(--muted-foreground)" />
           <YAxis stroke="var(--muted-foreground)" />
           <Tooltip />
